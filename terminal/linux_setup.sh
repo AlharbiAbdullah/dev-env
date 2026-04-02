@@ -60,31 +60,13 @@ echo "Copying config files..."
 cp "$SCRIPT_DIR/.zshrc.linux" "$HOME/.zshrc"
 echo "  -> ~/.zshrc"
 
-cp "$SCRIPT_DIR/.wezterm.lua" "$HOME/.wezterm.lua"
+cp "$SCRIPT_DIR/.wezterm.linux.lua" "$HOME/.wezterm.lua"
 echo "  -> ~/.wezterm.lua"
 
 # --- Fonts ---
 echo ""
 echo "Installing fonts..."
-mkdir -p "$HOME/.local/share/fonts"
-
-# Noto Sans Mono Nerd Font
-if ! fc-list | grep -qi "NotoSansM Nerd"; then
-    echo "Downloading NotoSansM Nerd Font..."
-    curl -fsSL -L -o /tmp/NotoSansMono.tar.xz \
-        "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/NotoSansMono.tar.xz" && \
-        mkdir -p "$HOME/.local/share/fonts/NotoSansMono" && \
-        tar -xf /tmp/NotoSansMono.tar.xz -C "$HOME/.local/share/fonts/NotoSansMono/" && \
-        rm /tmp/NotoSansMono.tar.xz && \
-        echo "  NotoSansM Nerd Font installed." || \
-        echo "WARNING: Could not install Nerd Font."
-fi
-
-# Cairo font
-if ! fc-list | grep -qi "Cairo"; then
-    sudo apt install -y fonts-cairo || echo "WARNING: Could not install Cairo font."
-fi
-
+sudo apt install -y fonts-jetbrains-mono fonts-cairo
 fc-cache -fv
 
 # --- Set default shell to zsh ---
