@@ -3,7 +3,7 @@
 set $mod Control
 
 # Font
-font pango:NotoSansM Nerd Font 10
+font pango:JetBrains Mono Bold 12
 
 # =============================================================================
 # GAPS (matches Aerospace gaps)
@@ -14,8 +14,8 @@ gaps outer 5
 # =============================================================================
 # BORDERS (Gruvbox bright purple, matching Aerospace)
 # =============================================================================
-default_border pixel 3
-default_floating_border pixel 3
+default_border pixel 5
+default_floating_border pixel 5
 
 # class                 border  backgr  text    indicator child_border
 client.focused          #d3869b #d3869b #282828 #d3869b   #d3869b
