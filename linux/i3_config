@@ -133,8 +133,8 @@ for_window [class=".*"] border pixel 5
 exec --no-startup-id nm-applet
 exec --no-startup-id feh --bg-scale ~/wallpaper.jpg
 
-# Screenshot (flameshot)
-bindsym Print exec --no-startup-id flameshot gui
+# Screenshot
+bindsym Print exec --no-startup-id flameshot full -p ~/Pictures/
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 
 # Reload / restart
