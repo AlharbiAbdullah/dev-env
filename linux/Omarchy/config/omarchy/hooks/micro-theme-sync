@@ -1,0 +1,76 @@
+#!/bin/bash
+# Generate micro editor colorscheme from Omarchy theme colors.
+# Called by the theme-set hook after every theme change.
+
+COLORS_FILE="$HOME/.config/omarchy/current/theme/colors.toml"
+MICRO_SCHEME="$HOME/.config/micro/colorschemes/omarchy.micro"
+
+if [[ ! -f $COLORS_FILE ]]; then
+  exit 0
+fi
+
+# Parse colors from TOML
+get_color() {
+  grep "^$1 " "$COLORS_FILE" | sed 's/.*= *"//;s/".*//'
+}
+
+bg=$(get_color background)
+fg=$(get_color foreground)
+accent=$(get_color accent)
+c0=$(get_color color0)
+c1=$(get_color color1)
+c2=$(get_color color2)
+c3=$(get_color color3)
+c4=$(get_color color4)
+c5=$(get_color color5)
+c6=$(get_color color6)
+
+# Compute a dim comment color by averaging bg and fg (visible but muted).
+blend_colors() {
+  local c1="$1" c2="$2"
+  local r1=$((16#${c1:1:2})) g1=$((16#${c1:3:2})) b1=$((16#${c1:5:2}))
+  local r2=$((16#${c2:1:2})) g2=$((16#${c2:3:2})) b2=$((16#${c2:5:2}))
+  printf "#%02x%02x%02x" $(( (r1+r2)/2 )) $(( (g1+g2)/2 )) $(( (b1+b2)/2 ))
+}
+comment=$(blend_colors "$bg" "$fg")
+
+# Subtle cursor line bg: 85% bg + 15% fg (just a hint lighter than background)
+lighten_bg() {
+  local r1=$((16#${bg:1:2})) g1=$((16#${bg:3:2})) b1=$((16#${bg:5:2}))
+  local r2=$((16#${fg:1:2})) g2=$((16#${fg:3:2})) b2=$((16#${fg:5:2}))
+  printf "#%02x%02x%02x" $(( (r1*85 + r2*15) / 100 )) $(( (g1*85 + g2*15) / 100 )) $(( (b1*85 + b2*15) / 100 ))
+}
+cursorline_bg=$(lighten_bg)
+
+mkdir -p "$(dirname "$MICRO_SCHEME")"
+
+cat > "$MICRO_SCHEME" <<EOF
+color-link default "$fg,$bg"
+color-link comment "$comment,$bg"
+color-link identifier "$c4,$bg"
+color-link constant "$c5,$bg"
+color-link constant.number "$c5,$bg"
+color-link constant.string "$c2,$bg"
+color-link statement "$c1,$bg"
+color-link symbol "$fg,$bg"
+color-link preproc "$c3,$bg"
+color-link type "$c3,$bg"
+color-link special "$c6,$bg"
+color-link underlined "$c4,$bg"
+color-link error "bold $c1,$bg"
+color-link todo "bold $c3,$bg"
+color-link statusline "$fg,$c0"
+color-link tabbar "$fg,$c0"
+color-link indent-char "$c0,$bg"
+color-link line-number "$comment,$bg"
+color-link current-line-number "$fg,$bg"
+color-link diff-added "$c2,$bg"
+color-link diff-modified "$c3,$bg"
+color-link diff-deleted "$c1,$bg"
+color-link gutter-error "$c1,$bg"
+color-link gutter-warning "$c3,$bg"
+color-link cursor-line "$fg,$cursorline_bg"
+color-link color-column "$fg,$cursorline_bg"
+color-link match-brace "$c3,$c0"
+color-link divider "$fg,$bg"
+EOF

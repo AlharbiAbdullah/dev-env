@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# Called with the snake-cased name of the theme just set.
+
+THEME_NAME="$1"
+BACKGROUNDS_DIR="$HOME/.config/omarchy/current/theme/backgrounds"
+
+# --- Obsidian sync -----------------------------------------------------------
+# Mirror Omarchy theme into the Brain vault's Obsidian snippets and flip the
+# base dark/light mode to match.
+OBSIDIAN_VAULT="$HOME/brain/.obsidian"
+OBSIDIAN_SNIPPET="$OBSIDIAN_VAULT/snippets/omarchy-theme.css"
+OBSIDIAN_THEME_SRC="$HOME/.config/omarchy/current/theme/obsidian.css"
+OBSIDIAN_APPEARANCE="$OBSIDIAN_VAULT/appearance.json"
+
+if [[ -f $OBSIDIAN_THEME_SRC && -d $OBSIDIAN_VAULT ]]; then
+  mkdir -p "$OBSIDIAN_VAULT/snippets"
+
+  # Remove any stale symlink from a previous install, then copy the file.
+  # Obsidian's snippet loader on Linux/Electron does not follow symlinks.
+  [[ -L $OBSIDIAN_SNIPPET ]] && rm -f "$OBSIDIAN_SNIPPET"
+  cp -f "$OBSIDIAN_THEME_SRC" "$OBSIDIAN_SNIPPET"
+
+  # Flip base theme to match Omarchy's light/dark mode.
+  if [[ -f $OBSIDIAN_APPEARANCE ]]; then
+    if [[ -f $HOME/.config/omarchy/current/theme/light.mode ]]; then
+      BASE_THEME="moonstone"
+    else
+      BASE_THEME="obsidian"
+    fi
+    tmp=$(mktemp)
+    if jq --arg t "$BASE_THEME" \
+          '.theme = $t
+           | .enabledCssSnippets = ((.enabledCssSnippets // []) + ["omarchy-theme"] | unique)' \
+          "$OBSIDIAN_APPEARANCE" >"$tmp" 2>/dev/null; then
+      mv "$tmp" "$OBSIDIAN_APPEARANCE"
+    else
+      rm -f "$tmp"
+    fi
+  fi
+fi
+# --- /Obsidian sync ----------------------------------------------------------
+
+# --- Google Chrome theme color -----------------------------------------------
+# Omarchy's built-in theme-set-browser only writes policy for chromium/brave.
+# Mirror the same accent color into Chrome's managed policy so Chrome also
+# picks up the current theme's color (still accent-only: Chrome has no full
+# theming hook on Linux, so tabs/toolbar still follow system light/dark).
+CHROME_POLICY_DIR="/etc/opt/chrome/policies/managed"
+CHROMIUM_THEME_FILE="$HOME/.config/omarchy/current/theme/chromium.theme"
+
+if command -v google-chrome-stable >/dev/null 2>&1 && [[ -d $CHROME_POLICY_DIR ]]; then
+  if [[ -f $CHROMIUM_THEME_FILE ]]; then
+    RGB=$(<"$CHROMIUM_THEME_FILE")
+    HEX=$(printf '#%02x%02x%02x' ${RGB//,/ })
+  else
+    HEX="#1c2027"
+  fi
+  printf '{"BrowserThemeColor": "%s", "BrowserColorScheme": "device"}\n' "$HEX" \
+    > "$CHROME_POLICY_DIR/color.json"
+  google-chrome-stable --refresh-platform-policy --no-startup-window >/dev/null 2>&1 &
+fi
+# --- /Google Chrome theme color ----------------------------------------------
+
+# --- Micro editor sync -------------------------------------------------------
+"$HOME/.config/omarchy/hooks/micro-theme-sync"
+# --- /Micro editor sync ------------------------------------------------------
+
+# --- WezTerm sync ------------------------------------------------------------
+# WezTerm reads colors.toml directly. Touch config to trigger reload.
+WEZTERM_CONFIG="$HOME/.config/wezterm/wezterm.lua"
+if [[ -f $WEZTERM_CONFIG ]]; then
+  touch "$WEZTERM_CONFIG"
+fi
+# --- /WezTerm sync -----------------------------------------------------------
+
+# Per-theme background pruning: keep only the listed files.
+case "$THEME_NAME" in
+  gruvbox)
+    KEEP=("3-village-square.jpg")
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+
+if [[ ! -d $BACKGROUNDS_DIR ]]; then
+  exit 0
+fi
+
+for f in "$BACKGROUNDS_DIR"/*; do
+  [[ -e $f ]] || continue
+  name=$(basename "$f")
+  keep=0
+  for k in "${KEEP[@]}"; do
+    if [[ $name == "$k" ]]; then
+      keep=1
+      break
+    fi
+  done
+  if [[ $keep -eq 0 ]]; then
+    rm -f "$f"
+  fi
+done
