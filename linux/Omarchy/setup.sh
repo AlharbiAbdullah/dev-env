@@ -1,11 +1,17 @@
 #!/bin/bash
-# Omarchy (Arch + Hyprland) setup. Mirrors macOS terminal/wm setup.
+# Omarchy post-install customization.
+# Run after a fresh Omarchy install to restore personal config.
+#
+# Prerequisites:
+#   - Omarchy installed (https://omarchy.org)
+#   - Internet connection
+#   - ~/brain cloned (for Claude Code PAI symlinks)
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 if [ "$(uname -s)" = "Darwin" ]; then
-    echo "This script is for Linux only."
+    echo "This script is for Linux/Omarchy only."
     exit 1
 fi
 
@@ -14,9 +20,9 @@ if ! command -v pacman >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "=== Omarchy Mirror Setup ==="
+echo "=== Omarchy Post-Install Setup ==="
 
-# --- yay (AUR helper) ---
+# --- yay (AUR helper) --------------------------------------------------------
 if ! command -v yay >/dev/null 2>&1; then
     echo "Installing yay..."
     sudo pacman -S --needed --noconfirm base-devel git
@@ -26,96 +32,122 @@ if ! command -v yay >/dev/null 2>&1; then
     rm -rf "$tmpdir"
 fi
 
-# --- Core packages ---
-echo "Installing packages..."
+# --- Extra packages (not in base Omarchy) ------------------------------------
+echo "Installing extra packages..."
 sudo pacman -S --needed --noconfirm \
-    zsh git curl unzip \
-    wezterm \
     tmux \
-    eza \
-    wl-clipboard grim slurp \
-    zsh-syntax-highlighting zsh-autosuggestions \
-    noto-fonts noto-fonts-emoji ttf-nerd-fonts-symbols \
-    fontconfig
+    docker docker-buildx docker-compose \
+    lazydocker lazygit \
+    obs-studio \
+    kdenlive \
+    localsend \
+    ollama-cuda \
+    bat dust fd ripgrep fzf zoxide \
+    python-poetry-core \
+    ruby rust luarocks \
+    postgresql-libs mariadb-libs
 
-# Cairo font (AUR)
-yay -S --needed --noconfirm ttf-cairo || true
-# Nerd Font (matches mac WezTerm font family)
-yay -S --needed --noconfirm ttf-noto-nerd || true
+# AUR packages
+yay -S --needed --noconfirm \
+    google-chrome \
+    wezterm-nightly-bin \
+    visual-studio-code-bin \
+    simplenote-electron-bin \
+    signal-desktop \
+    spotify \
+    typora \
+    obsidian \
+    1password-beta 1password-cli \
+    blesh-git \
+    claude-code \
+    mise \
+    ttf-scheherazade-new \
+    || true
 
-# --- Oh My Zsh ---
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo "Installing Oh My Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-fi
-
-# Link pacman-installed plugins into oh-my-zsh custom dir
-ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-mkdir -p "$ZSH_CUSTOM/plugins"
-
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
-    ln -sf /usr/share/zsh/plugins/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" 2>/dev/null \
-        || git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
-fi
-
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
-    ln -sf /usr/share/zsh/plugins/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions" 2>/dev/null \
-        || git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
-fi
-
-# --- pyenv (AUR) ---
-if ! command -v pyenv >/dev/null 2>&1; then
-    yay -S --needed --noconfirm pyenv || true
-fi
-
-# --- nvm ---
-if [ ! -d "$HOME/.nvm" ]; then
-    echo "Installing nvm..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-fi
-
-# --- TPM (tmux plugin manager) ---
-if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
-    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-fi
-
-# --- Copy configs ---
+# --- Deploy config files -----------------------------------------------------
 echo ""
-echo "Copying configs..."
+echo "Deploying configs..."
 
-cp "$SCRIPT_DIR/.zshrc" "$HOME/.zshrc"
-echo "  -> ~/.zshrc"
+# Hyprland
+cp "$SCRIPT_DIR/config/hypr/"*.conf "$HOME/.config/hypr/"
+echo "  -> ~/.config/hypr/ (all configs)"
 
-cp "$SCRIPT_DIR/.wezterm.lua" "$HOME/.wezterm.lua"
-echo "  -> ~/.wezterm.lua"
+# Waybar
+cp "$SCRIPT_DIR/config/waybar/config.jsonc" "$HOME/.config/waybar/config.jsonc"
+cp "$SCRIPT_DIR/config/waybar/style.css" "$HOME/.config/waybar/style.css"
+echo "  -> ~/.config/waybar/"
 
-cp "$SCRIPT_DIR/.tmux.conf" "$HOME/.tmux.conf"
-echo "  -> ~/.tmux.conf"
+# WezTerm
+mkdir -p "$HOME/.config/wezterm"
+cp "$SCRIPT_DIR/config/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
+echo "  -> ~/.config/wezterm/"
 
-mkdir -p "$HOME/.config/hypr"
-cp "$SCRIPT_DIR/hyprland-mac-mirror.conf" "$HOME/.config/hypr/hyprland-mac-mirror.conf"
-echo "  -> ~/.config/hypr/hyprland-mac-mirror.conf"
+# Walker
+cp "$SCRIPT_DIR/config/walker/config.toml" "$HOME/.config/walker/config.toml"
+echo "  -> ~/.config/walker/"
 
-# Source the override from the main hyprland.conf if not already
-HYPR_MAIN="$HOME/.config/hypr/hyprland.conf"
-if [ -f "$HYPR_MAIN" ] && ! grep -q "hyprland-mac-mirror.conf" "$HYPR_MAIN"; then
-    echo "" >> "$HYPR_MAIN"
-    echo "# Mac mirror overrides" >> "$HYPR_MAIN"
-    echo "source = ~/.config/hypr/hyprland-mac-mirror.conf" >> "$HYPR_MAIN"
-    echo "  -> appended source line to hyprland.conf"
-fi
+# Micro
+mkdir -p "$HOME/.config/micro"
+cp "$SCRIPT_DIR/config/micro/settings.json" "$HOME/.config/micro/settings.json"
+echo "  -> ~/.config/micro/"
 
-# --- Refresh font cache ---
-fc-cache -fv >/dev/null
+# Git
+mkdir -p "$HOME/.config/git"
+cp "$SCRIPT_DIR/config/git/config" "$HOME/.config/git/config"
+echo "  -> ~/.config/git/"
 
-# --- Default shell ---
-if [ "$SHELL" != "$(which zsh)" ]; then
-    echo "Setting zsh as default shell..."
-    chsh -s "$(which zsh)"
-fi
+# Starship
+cp "$SCRIPT_DIR/config/starship.toml" "$HOME/.config/starship.toml"
+echo "  -> ~/.config/starship.toml"
+
+# Bashrc
+cp "$SCRIPT_DIR/.bashrc" "$HOME/.bashrc"
+echo "  -> ~/.bashrc"
+
+# Omarchy hooks
+mkdir -p "$HOME/.config/omarchy/hooks"
+cp "$SCRIPT_DIR/config/omarchy/hooks/theme-set" "$HOME/.config/omarchy/hooks/theme-set"
+cp "$SCRIPT_DIR/config/omarchy/hooks/micro-theme-sync" "$HOME/.config/omarchy/hooks/micro-theme-sync"
+chmod +x "$HOME/.config/omarchy/hooks/theme-set"
+chmod +x "$HOME/.config/omarchy/hooks/micro-theme-sync"
+echo "  -> ~/.config/omarchy/hooks/"
+
+# --- Custom themes ------------------------------------------------------------
+echo ""
+echo "Installing custom themes..."
+THEMES=(
+    "https://github.com/hoblin/omarchy-cobalt2-theme"
+    "https://github.com/Kushal0924/omarchy-gruvbox-light-theme"
+    "https://github.com/ItsABigIgloo/omarchy-mapquest-theme"
+    "https://github.com/Nirmal314/omarchy-van-gogh-theme"
+)
+for url in "${THEMES[@]}"; do
+    omarchy-theme-install "$url" 2>/dev/null || echo "  (already installed or failed: $url)"
+done
+
+# --- Claude Code --------------------------------------------------------------
+echo ""
+echo "Setting up Claude Code..."
+"$SCRIPT_DIR/install-claude.sh"
+"$SCRIPT_DIR/link-claude.sh"
+
+# --- Services -----------------------------------------------------------------
+echo ""
+echo "Enabling services..."
+sudo systemctl enable --now docker 2>/dev/null || true
+sudo usermod -aG docker "$USER" 2>/dev/null || true
+
+# --- Restart affected components ----------------------------------------------
+echo ""
+echo "Restarting components..."
+omarchy-restart-waybar 2>/dev/null || true
+omarchy-restart-walker 2>/dev/null || true
 
 echo ""
 echo "=== Done ==="
-echo "1. Reload Hyprland: SUPER+ESC or 'hyprctl reload'"
-echo "2. Open WezTerm and run: tmux, then prefix + I to install tmux plugins"
-echo "3. Restart your shell: exec zsh"
+echo ""
+echo "Manual steps:"
+echo "  1. hyprctl reload (or log out/in for full effect)"
+echo "  2. Set theme: omarchy-theme-set 'Tokyo Night'"
+echo "  3. Log out and back in for docker group membership"
+echo "  4. Open WezTerm: it should pick up BiDi + omarchy theme colors"
