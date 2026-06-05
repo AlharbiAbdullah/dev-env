@@ -1,0 +1,9 @@
+# Machine state — created by the theme script, never committed
+common/themes/current.lua
+
+# Machine-local secrets (sourced by .zshrc, never committed)
+*.local
+.zshrc.local
+
+# macOS noise
+.DS_Store
