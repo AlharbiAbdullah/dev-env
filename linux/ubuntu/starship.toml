@@ -7,6 +7,10 @@ format = "$directory$git_branch$git_status$cmd_duration$character "
 
 add_newline = true
 
+# git can exceed the 500ms default in large repos (e.g. ~/helm), which
+# spams [WARN] timeout lines into the prompt.
+command_timeout = 2000
+
 [character]
 success_symbol = "[\u279c](bold fg:accent)"
 error_symbol = "[\u2717](bold fg:red)"
