@@ -66,8 +66,7 @@ sudo apt-get install -y \
     hyprpolkitagent xdg-desktop-portal-hyprland \
     wl-clipboard grim slurp \
     eza zoxide fzf bat btop fastfetch gh starship lazygit jq \
-    zsh git curl unzip fontconfig \
-    zsh-syntax-highlighting zsh-autosuggestions \
+    git curl unzip fontconfig bash-completion \
     fonts-cairo fonts-noto fonts-noto-color-emoji \
     wezterm tmux \
     build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
@@ -116,7 +115,7 @@ mkdir -p \
 echo ""
 echo "Copying configs..."
 
-cp "$SCRIPT_DIR/.zshrc"        "$HOME/.zshrc";                       echo "  -> ~/.zshrc"
+cp "$SCRIPT_DIR/.bashrc"       "$HOME/.bashrc";                      echo "  -> ~/.bashrc"
 cp "$SCRIPT_DIR/.wezterm.lua"  "$HOME/.wezterm.lua";                 echo "  -> ~/.wezterm.lua"
 cp "$SCRIPT_DIR/.tmux.conf"    "$HOME/.tmux.conf";                   echo "  -> ~/.tmux.conf"
 cp "$SCRIPT_DIR/starship.toml" "$HOME/.config/starship.toml";        echo "  -> ~/.config/starship.toml"
@@ -142,20 +141,15 @@ if [ ! -e "$HOME/.config/themes/current.lua" ]; then
     echo "  -> default theme: everforest"
 fi
 
-# --- Default shell ---
-ZSH_BIN="$(command -v zsh)"
-if [ "${SHELL:-}" != "$ZSH_BIN" ]; then
-    echo "Setting zsh as default shell..."
-    chsh -s "$ZSH_BIN" || echo "  chsh failed; run manually: chsh -s $ZSH_BIN"
-fi
+# --- Default shell: bash (Ubuntu default — mac uses zsh, linux stays bash) ---
 
 # --- Done ---
 cat <<EOF
 
 === Done ===
 1. Log out, then pick "Hyprland" from the session menu in GDM and log back in.
-2. Create ~/.zshrc.local with your secret(s):
-     echo 'export OPENROUTER_API_KEY="sk-or-..."' > ~/.zshrc.local
+2. Create ~/.bashrc.local with your secret(s):
+     echo 'export OPENROUTER_API_KEY="sk-or-..."' > ~/.bashrc.local
 3. Install Claude Code:
      "$SCRIPT_DIR/install-claude.sh"
 4. In WezTerm, run tmux, then press prefix + I to install tmux plugins.

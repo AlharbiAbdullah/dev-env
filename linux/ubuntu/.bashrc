@@ -22,36 +22,28 @@ export LC_ALL=en_US.UTF-8
 # =============================================================================
 # HISTORY
 # =============================================================================
-HISTFILE=~/.zsh_history
 HISTSIZE=50000
-SAVEHIST=50000
-setopt HIST_IGNORE_ALL_DUPS
-setopt HIST_IGNORE_SPACE
-setopt HIST_VERIFY
-setopt SHARE_HISTORY
-setopt APPEND_HISTORY
-setopt INC_APPEND_HISTORY
+HISTFILESIZE=50000
+HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend
 
 # =============================================================================
 # COMPLETION
 # =============================================================================
-autoload -Uz compinit
-compinit
-
-# =============================================================================
-# ZSH PLUGINS (apt-installed, replace oh-my-zsh)
-# =============================================================================
-[ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ] && \
-  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && \
-  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
 
 # =============================================================================
 # TOOLS
 # =============================================================================
-command -v starship >/dev/null && eval "$(starship init zsh)"
-command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
-command -v fzf >/dev/null && fzf --zsh >/dev/null 2>&1 && source <(fzf --zsh)
+command -v starship >/dev/null && eval "$(starship init bash)"
+command -v zoxide >/dev/null && eval "$(zoxide init bash)"
+command -v fzf >/dev/null && fzf --bash >/dev/null 2>&1 && eval "$(fzf --bash)"
 
 # =============================================================================
 # ALIASES
@@ -83,4 +75,4 @@ alias gl="git pull"
 alias c='clear'
 
 # Machine-local secrets and overrides (gitignored, never committed)
-[ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+[ -r "$HOME/.bashrc.local" ] && source "$HOME/.bashrc.local"

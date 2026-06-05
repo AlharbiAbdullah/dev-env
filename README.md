@@ -7,7 +7,7 @@ Personal dev environment for macOS + Ubuntu, mirrored 1:1.
 | Path | Contents |
 |---|---|
 | `mac/` | zsh, WezTerm, tmux, AeroSpace, starship, ghostty, theme system, Brewfile, `setup.sh` |
-| `linux/ubuntu/` | Hyprland mirror of the Mac setup for Ubuntu 26.04 LTS, `setup.sh` |
+| `linux/ubuntu/` | Hyprland mirror of the Mac setup for Ubuntu 26.04 LTS (bash shell), `setup.sh` |
 | `linux/Omarchy/` | Arch + Hyprland reference, kept as-is |
 | `common/themes/` | 17 shared theme definitions + per-theme wallpapers, consumed by both platforms |
 | `common/wallpaper/` | General wallpaper collection |
@@ -32,13 +32,21 @@ cd linux/ubuntu && ./setup.sh   # pass --hyprland-ppa for the newer Hyprland PPA
 
 Then log out and pick **Hyprland** in the GDM session menu.
 
+## Shells
+
+Mac = **zsh**. Linux = **bash**. The rc files mirror the same tools and aliases
+(starship, zoxide, fzf, eza, git shortcuts) — only the shell differs.
+
 ## Secrets
 
-API keys live in `~/.zshrc.local`, which is gitignored. `.zshrc` sources it on
-startup. Copy the template and fill in real values:
+API keys live in a gitignored machine-local file the rc file sources on startup:
+`~/.zshrc.local` on Mac, `~/.bashrc.local` on Ubuntu.
 
 ```bash
+# Mac
 cp mac/.zshrc.local.example ~/.zshrc.local
+# Ubuntu
+echo 'export OPENROUTER_API_KEY="sk-or-..."' > ~/.bashrc.local
 ```
 
 ## Theme system
