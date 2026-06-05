@@ -67,7 +67,7 @@ sudo apt-get install -y \
     wl-clipboard grim slurp \
     eza zoxide fzf bat btop fastfetch gh starship lazygit jq \
     git curl unzip fontconfig bash-completion \
-    fonts-cairo fonts-noto fonts-noto-color-emoji \
+    fonts-noto fonts-noto-color-emoji \
     wezterm tmux \
     build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
     libsqlite3-dev libffi-dev liblzma-dev
@@ -82,6 +82,15 @@ if ! fc-list | grep -qi "NotoSansM Nerd Font"; then
     mkdir -p "$HOME/.local/share/fonts"
     find "$font_tmp/Noto" -name 'NotoSansMNerdFont*.ttf' -exec cp {} "$HOME/.local/share/fonts/" \;
     rm -rf "$font_tmp"
+    fc-cache -f
+fi
+
+# --- Cairo font (Arabic UI font; no apt package, fetch from Google Fonts) ---
+if ! fc-list | grep -qi "Cairo"; then
+    echo "Installing Cairo font..."
+    mkdir -p "$HOME/.local/share/fonts"
+    curl -fsSL -o "$HOME/.local/share/fonts/Cairo[slnt,wght].ttf" \
+        "https://github.com/google/fonts/raw/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf"
     fc-cache -f
 fi
 
