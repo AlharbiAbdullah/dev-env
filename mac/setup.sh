@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dev_Env macOS setup. Copies dotfiles/configs/scripts from the repo into $HOME.
+# dev-env macOS setup. Copies dotfiles/configs/scripts from the repo into $HOME.
 # Deploy model: COPY (not symlink) — re-run after `git pull` to sync. Idempotent.
 set -euo pipefail
 
@@ -9,7 +9,7 @@ if [ "$(uname -s)" != "Darwin" ]; then
     exit 1
 fi
 
-echo "=== Dev_Env macOS Setup ==="
+echo "=== dev-env macOS Setup ==="
 
 # --- Homebrew ---
 if ! command -v brew >/dev/null 2>&1; then

@@ -1,4 +1,4 @@
-# Dev_Env
+# dev-env
 
 Personal dev environment for macOS + Ubuntu, mirrored 1:1.
 
@@ -15,7 +15,7 @@ Personal dev environment for macOS + Ubuntu, mirrored 1:1.
 ## Usage
 
 ```bash
-git clone https://github.com/AlharbiAbdullah/Dev_Env.git
+git clone https://github.com/AlharbiAbdullah/dev-env.git
 ```
 
 **macOS:**
