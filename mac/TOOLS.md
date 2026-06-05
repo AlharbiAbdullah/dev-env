@@ -38,7 +38,7 @@ Inventory of tools I use on macOS. Add new ones as I install them.
 - Codex
 
 ## Languages & Runtimes
-- Python (pyenv)
+- Python (uv)
 - Node.js (nvm)
 
 ## Package Managers

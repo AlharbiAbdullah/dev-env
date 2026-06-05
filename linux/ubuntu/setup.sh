@@ -64,13 +64,12 @@ echo "Installing packages..."
 sudo apt-get install -y \
     hyprland waybar fuzzel swaybg mako-notifier hyprlock hypridle \
     hyprpolkitagent xdg-desktop-portal-hyprland \
-    wl-clipboard grim slurp \
+    wl-clipboard grim slurp ddcutil \
     eza zoxide fzf bat btop fastfetch gh starship lazygit jq \
     git curl unzip fontconfig bash-completion \
     fonts-noto fonts-noto-color-emoji \
     wezterm tmux \
-    build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
-    libsqlite3-dev libffi-dev liblzma-dev
+    build-essential
 
 # --- Nerd Font (matches WezTerm font family: NotoSansM Nerd Font) ---
 if ! fc-list | grep -qi "NotoSansM Nerd Font"; then
@@ -94,10 +93,17 @@ if ! fc-list | grep -qi "Cairo"; then
     fc-cache -f
 fi
 
-# --- pyenv ---
-if ! command -v pyenv >/dev/null 2>&1 && [ ! -d "$HOME/.pyenv" ]; then
-    echo "Installing pyenv..."
-    curl -fsSL https://pyenv.run | bash
+# --- ddcutil i2c access (monitor brightness keys; no kernel backlight on desktops) ---
+# ddcutil's udev rule covers seated sessions; the group covers everything else.
+if ! id -nG "$USER" | grep -qw i2c; then
+    echo "Adding $USER to i2c group (for ddcutil monitor brightness)..."
+    sudo usermod -aG i2c "$USER"
+fi
+
+# --- uv (Python toolchain; ships its own interpreters, no build deps needed) ---
+if ! command -v uv >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/uv" ]; then
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
 # --- nvm ---

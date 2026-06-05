@@ -3,10 +3,7 @@
 # =============================================================================
 export PATH="$HOME/.local/bin:$PATH"
 
-# pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-command -v pyenv >/dev/null && eval "$(pyenv init --path)"
+# uv (Python; installs to ~/.local/bin, already on PATH)
 
 # nvm
 export NVM_DIR="$HOME/.nvm"
