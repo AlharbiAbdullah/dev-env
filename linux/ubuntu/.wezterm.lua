@@ -15,10 +15,12 @@ config.font = wezterm.font_with_fallback({
     { family = "Cairo", weight = "Bold" },
     "Noto Color Emoji",
 })
-config.font_size = 16.0
+config.font_size = 14.0
 
--- Wayland (Hyprland)
-config.enable_wayland = true
+-- Wayland disabled: wezterm 20240203's Wayland frontend never maps its window
+-- on current Hyprland (known upstream bug). XWayland works fine.
+-- Re-enable once wezterm ships a release with the Wayland fixes (post-20240203).
+config.enable_wayland = false
 
 -- Load current theme (~/.config/themes/current.lua -> symlink)
 local theme_path = os.getenv("HOME") .. "/.config/themes/current.lua"
