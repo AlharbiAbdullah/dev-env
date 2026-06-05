@@ -1,0 +1,64 @@
+// Waybar config for the Ubuntu Hyprland session.
+// Single top bar. Minimal: workspaces / clock / network + audio + battery + tray.
+// Valid JSONC for waybar 0.15 (comments + trailing commas allowed).
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "spacing": 8,
+
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": ["network", "pulseaudio", "battery", "tray"],
+
+  "hyprland/workspaces": {
+    "format": "{name}",
+    "on-click": "activate"
+  },
+
+  "clock": {
+    "format": "{:%a %H:%M}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "mode": "month",
+      "on-scroll": 1,
+      "format": {
+        "today": "<b>{}</b>"
+      }
+    }
+  },
+
+  "network": {
+    "format-wifi": " {essid}",
+    "format-ethernet": " {ifname}",
+    "format-disconnected": "睊",
+    "tooltip-format": "{ifname} via {gwaddr}",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%)"
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": " muted",
+    "format-icons": {
+      "default": ["", "", ""]
+    },
+    // Left-click opens the full mixer.
+    "on-click": "pavucontrol"
+  },
+
+  "battery": {
+    "states": {
+      "warning": 30,
+      "critical": 15
+    },
+    "format": "{icon} {capacity}%",
+    "format-charging": " {capacity}%",
+    "format-plugged": " {capacity}%",
+    "format-icons": ["", "", "", "", ""]
+  },
+
+  "tray": {
+    "icon-size": 16,
+    "spacing": 8
+  }
+}

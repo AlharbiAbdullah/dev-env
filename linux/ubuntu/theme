@@ -1,0 +1,232 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# Unified theme switcher: WezTerm, Hyprland borders, VS Code, Cursor,
+# Starship prompt, swaybg wallpaper.
+#
+# Usage:
+#   theme                         list available themes + current
+#   theme <name>                  activate theme
+#   theme reload                  re-apply current (used by hyprland on startup)
+#   theme cycle                   switch to the next theme in list
+#   theme pick                    fzf picker with live preview
+#   theme wallpaper [next|prev|random]
+#                                 rotate wallpaper within current theme
+
+set -euo pipefail
+
+THEMES_DIR="$HOME/.config/themes"
+CACHE_DIR="$HOME/.cache/theme"
+STARSHIP_CONFIG="$HOME/.config/starship.toml"
+VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
+CURSOR_SETTINGS="$HOME/.config/Cursor/User/settings.json"
+
+mkdir -p "$CACHE_DIR"
+
+SELF="$HOME/.local/bin/theme"
+
+hud() {
+  local msg="$1" duration="${2:-2}"
+  command -v notify-send >/dev/null || return 0
+  notify-send -t $((duration * 1000)) "$msg" >/dev/null 2>&1 || true
+}
+
+# -----------------------------------------------------------------------------
+# helpers
+# -----------------------------------------------------------------------------
+
+list_themes() {
+  for d in "$THEMES_DIR"/*/; do
+    [[ -d "$d" ]] || continue
+    [[ -f "$d/theme.lua" ]] || continue
+    basename "$d"
+  done
+}
+
+current_theme() {
+  if [[ -L "$THEMES_DIR/current.lua" ]]; then
+    local target
+    target=$(readlink "$THEMES_DIR/current.lua")
+    basename "$(dirname "$target")"
+  fi
+}
+
+theme_wallpapers() {
+  local theme="$1"
+  find "$THEMES_DIR/$theme/wallpapers" -type f \
+    \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) 2>/dev/null | sort
+}
+
+set_wallpaper_on_disk() {
+  local wp="$1" theme="$2"
+  [[ -z "$wp" || ! -f "$wp" ]] && return 0
+  echo "$wp" > "$CACHE_DIR/$theme.wallpaper"
+  pkill -x swaybg 2>/dev/null || true
+  (swaybg -m fill -i "$wp" >/dev/null 2>&1 &) && disown 2>/dev/null || true
+}
+
+update_starship_palette() {
+  local palette="$1"
+  [[ -f "$STARSHIP_CONFIG" ]] || return 0
+  if grep -qE '^palette\s*=' "$STARSHIP_CONFIG"; then
+    sed -i -E "s|^palette[[:space:]]*=.*|palette = \"$palette\"|" "$STARSHIP_CONFIG"
+  fi
+}
+
+update_vscode_settings() {
+  local path="$1" theme="$2"
+  [[ -z "$theme" ]] && return 0
+  [[ ! -f "$path" ]] && return 0
+  python3 - "$path" "$theme" <<'PY'
+import re, sys
+path, theme = sys.argv[1], sys.argv[2]
+c = open(path).read()
+pat = r'("workbench\.colorTheme"\s*:\s*)"[^"]*"'
+if re.search(pat, c):
+    c = re.sub(pat, r'\1"' + theme + '"', c, count=1)
+else:
+    c = re.sub(r'\{', '{\n  "workbench.colorTheme": "' + theme + '",', c, count=1)
+open(path, 'w').write(c)
+PY
+}
+
+# -----------------------------------------------------------------------------
+# apply a theme end-to-end
+# -----------------------------------------------------------------------------
+
+apply_theme() {
+  local name="$1"
+  local theme_dir="$THEMES_DIR/$name"
+  local src="$theme_dir/theme.lua"
+
+  if [[ ! -f "$src" ]]; then
+    echo "theme not found: $name" >&2
+    return 1
+  fi
+
+  get_field() {
+    grep -E "^[[:space:]]*$1[[:space:]]*=" "$src" | head -1 | sed -E 's/.*"([^"]*)".*/\1/'
+  }
+
+  local border vscode_theme cursor_theme
+  border=$(get_field border)
+  vscode_theme=$(get_field vscode)
+  cursor_theme=$(get_field cursor)
+
+  ln -sfn "$src" "$THEMES_DIR/current.lua"
+
+  # Hyprland borders (raw 0xAARRGGBB is accepted natively)
+  [[ -z "$border" ]] && border="0xffd3869b"
+  hyprctl keyword general:col.active_border "$border" >/dev/null 2>&1 || true
+
+  # WezTerm (watches ~/.wezterm.lua; nudge it)
+  touch "$HOME/.wezterm.lua"
+
+  # Starship palette
+  update_starship_palette "$name"
+
+  # VS Code + Cursor
+  update_vscode_settings "$VSCODE_SETTINGS" "$vscode_theme"
+  update_vscode_settings "$CURSOR_SETTINGS" "$cursor_theme"
+
+  # Wallpaper: keep last-used for this theme if possible, else first
+  local state_file="$CACHE_DIR/$name.wallpaper"
+  local wp=""
+  if [[ -f "$state_file" ]]; then
+    local saved
+    saved=$(cat "$state_file")
+    [[ -f "$saved" ]] && wp="$saved"
+  fi
+  if [[ -z "$wp" ]]; then
+    wp=$(theme_wallpapers "$name" | head -1)
+  fi
+  set_wallpaper_on_disk "$wp" "$name"
+
+  hud "$name"
+
+  echo "theme: $name"
+  echo "  border:    $border"
+  echo "  vscode:    ${vscode_theme:-(skipped)}"
+  echo "  cursor:    ${cursor_theme:-(skipped)}"
+  echo "  wallpaper: ${wp:-(none)}"
+}
+
+# -----------------------------------------------------------------------------
+# commands
+# -----------------------------------------------------------------------------
+
+cmd="${1:-}"
+
+case "$cmd" in
+  "")
+    current=$(current_theme || true)
+    echo "current: ${current:-(none)}"
+    echo "available:"
+    list_themes | sed 's/^/  /'
+    ;;
+  reload)
+    name=$(current_theme || true)
+    [[ -z "$name" ]] && { echo "no current theme" >&2; exit 1; }
+    apply_theme "$name"
+    ;;
+  cycle)
+    current=$(current_theme || true)
+    themes=()
+    while IFS= read -r t; do themes+=("$t"); done < <(list_themes)
+    idx=0
+    for i in "${!themes[@]}"; do
+      [[ "${themes[$i]}" == "$current" ]] && { idx=$i; break; }
+    done
+    next=$(( (idx + 1) % ${#themes[@]} ))
+    apply_theme "${themes[$next]}"
+    ;;
+  pick)
+    original=$(current_theme || true)
+    if ! selected=$(list_themes | fzf \
+          --prompt "theme> " \
+          --height 50% \
+          --border rounded \
+          --preview "cat '$THEMES_DIR/{}/theme.lua'" \
+          --preview-window right:45% \
+          --bind "focus:execute-silent($SELF {} >/dev/null 2>&1)"); then
+      [[ -n "$original" ]] && "$SELF" "$original" >/dev/null
+      exit 0
+    fi
+    echo "theme: $selected"
+    ;;
+  wallpaper)
+    action="${2:-next}"
+    current=$(current_theme || true)
+    [[ -z "$current" ]] && { echo "no active theme" >&2; exit 1; }
+    wps=()
+    while IFS= read -r w; do wps+=("$w"); done < <(theme_wallpapers "$current")
+    if [[ ${#wps[@]} -eq 0 ]]; then
+      echo "no wallpapers for theme: $current" >&2
+      exit 0
+    fi
+
+    state_file="$CACHE_DIR/$current.wallpaper"
+    current_wp=""
+    [[ -f "$state_file" ]] && current_wp=$(cat "$state_file")
+
+    idx=0
+    for i in "${!wps[@]}"; do
+      [[ "${wps[$i]}" == "$current_wp" ]] && { idx=$i; break; }
+    done
+
+    case "$action" in
+      next)   new_idx=$(( (idx + 1) % ${#wps[@]} )) ;;
+      prev)   new_idx=$(( (idx - 1 + ${#wps[@]}) % ${#wps[@]} )) ;;
+      random) new_idx=$(( RANDOM % ${#wps[@]} )) ;;
+      *) echo "usage: theme wallpaper [next|prev|random]" >&2; exit 1 ;;
+    esac
+
+    new_wp="${wps[$new_idx]}"
+    set_wallpaper_on_disk "$new_wp" "$current"
+    wp_name=$(basename "$new_wp")
+    hud "$wp_name  ($((new_idx + 1))/${#wps[@]})"
+    echo "wallpaper: $wp_name  ($((new_idx + 1))/${#wps[@]})"
+    ;;
+  *)
+    apply_theme "$cmd"
+    ;;
+esac

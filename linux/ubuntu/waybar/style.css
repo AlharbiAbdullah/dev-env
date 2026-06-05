@@ -1,0 +1,76 @@
+/*
+ * Waybar style for the Ubuntu Hyprland session.
+ * Colors are everforest-static: the `theme` script does NOT restyle waybar.
+ * They are kept neutral/warm enough to sit fine under any of the warm-muted
+ * themes (gruvbox / everforest / kanagawa / ristretto), so no per-theme swap
+ * is needed. Everforest reference:
+ *   background  #2d353b
+ *   foreground  #d3c6aa  (~78% brightness — no stark white)
+ *   accent      #dbbc7f  (active workspace / charging)
+ *   warning     #dbbc7f  battery 30%
+ *   critical    #e67e80  battery 15%
+ * Flat: no gradients, no animations.
+ */
+
+* {
+  font-family: "NotoSansM Nerd Font";
+  font-size: 14px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background-color: #2d353b;
+  color: #d3c6aa;
+}
+
+#workspaces button {
+  padding: 0 8px;
+  color: #859289;
+  background-color: transparent;
+}
+
+#workspaces button:hover {
+  color: #d3c6aa;
+  background-color: #343f44;
+}
+
+#workspaces button.active {
+  color: #2d353b;
+  background-color: #dbbc7f;
+}
+
+#workspaces button.urgent {
+  color: #2d353b;
+  background-color: #e67e80;
+}
+
+#clock {
+  color: #d3c6aa;
+  padding: 0 12px;
+}
+
+#network,
+#pulseaudio,
+#battery,
+#tray {
+  padding: 0 10px;
+  color: #d3c6aa;
+}
+
+#battery.warning {
+  color: #dbbc7f;
+}
+
+#battery.critical {
+  color: #e67e80;
+}
+
+#battery.charging {
+  color: #a7c080;
+}
+
+#tray {
+  padding: 0 6px;
+}

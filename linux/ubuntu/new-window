@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# Open a new window of the currently focused app under Hyprland.
+# Bound to SUPER+N (the Mac cmd-n analog). Falls back to WezTerm
+# when nothing is focused or the focused window has no class.
+
+set -euo pipefail
+
+class=$(hyprctl activewindow -j | jq -r '.class // empty')
+
+# Nothing focused (e.g. empty workspace) -> a terminal is the sane default.
+[ -z "$class" ] && exec wezterm
+
+case "$class" in
+  # Browsers: window class differs from binary name, so map explicitly.
+  google-chrome*|Google-chrome*)   exec google-chrome --new-window ;;
+  chromium*|Chromium*)             exec chromium --new-window ;;
+  firefox*|Firefox*)               exec firefox --new-window ;;
+  brave*|Brave-browser*)           exec brave --new-window ;;
+
+  org.wezfurlong.wezterm|wezterm)  exec wezterm ;;
+
+  Code|code|code-url-handler)      exec code -n ;;
+
+  obsidian|Obsidian)               exec obsidian ;;
+
+  # Unknown app: try launching its class, then a lowercased class as a
+  # binary name (Hyprland class names are often Capitalized, binaries aren't).
+  *)
+    if command -v "$class" >/dev/null 2>&1; then
+      hyprctl dispatch exec -- "$class"
+    else
+      lc=$(printf '%s' "$class" | tr '[:upper:]' '[:lower:]')
+      if command -v "$lc" >/dev/null 2>&1; then
+        hyprctl dispatch exec -- "$lc"
+      else
+        hyprctl dispatch exec -- "$class"
+      fi
+    fi
+    ;;
+esac
