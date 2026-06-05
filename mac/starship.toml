@@ -1,0 +1,135 @@
+# Minimal two-line prompt, colors driven by the active theme palette.
+# The `theme` script updates the `palette = ...` line below on theme switch.
+
+palette = "everforest"
+
+format = "$directory$git_branch$git_status$cmd_duration$character "
+
+add_newline = true
+
+[character]
+success_symbol = "[\u279c](bold fg:accent)"
+error_symbol = "[\u2717](bold fg:red)"
+
+[directory]
+style = "bold fg:accent"
+truncation_length = 1
+truncation_symbol = ""
+truncate_to_repo = false
+format = "[$path]($style) "
+
+[git_branch]
+symbol = " "
+style = "fg:yellow"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "fg:red"
+format = '([\[$all_status$ahead_behind\]]($style) )'
+
+[cmd_duration]
+min_time = 2000
+style = "fg:blue"
+format = "[took $duration]($style) "
+
+# -----------------------------------------------------------------------------
+# palettes (one per theme; keys must match theme folder names)
+# -----------------------------------------------------------------------------
+
+[palettes.gruvbox]
+accent = "#d3869b"
+yellow = "#fabd2f"
+red = "#fb4934"
+blue = "#83a598"
+green = "#b8bb26"
+
+[palettes.gruvbox-light]
+accent = "#8f3f71"
+yellow = "#b57614"
+red = "#9d0006"
+blue = "#076678"
+green = "#79740e"
+
+[palettes.tokyo-night]
+accent = "#7aa2f7"
+yellow = "#e0af68"
+red = "#f7768e"
+blue = "#7aa2f7"
+green = "#9ece6a"
+
+[palettes.catppuccin]
+accent = "#cba6f7"
+yellow = "#f9e2af"
+red = "#f38ba8"
+blue = "#89b4fa"
+green = "#a6e3a1"
+
+[palettes.nord]
+accent = "#81a1c1"
+yellow = "#ebcb8b"
+red = "#bf616a"
+blue = "#81a1c1"
+green = "#a3be8c"
+
+[palettes.miasma]
+accent = "#78824b"
+yellow = "#c9a554"
+red = "#b36d43"
+blue = "#666666"
+green = "#5f875f"
+
+[palettes.cobalt2]
+accent = "#ffc600"
+yellow = "#ffc600"
+red = "#ff628c"
+blue = "#0088ff"
+green = "#3ad900"
+
+[palettes.everforest]
+accent = "#7fbbb3"
+yellow = "#dbbc7f"
+red = "#e67e80"
+blue = "#7fbbb3"
+green = "#a7c080"
+
+[palettes.kanagawa]
+accent = "#7e9cd8"
+yellow = "#c0a36e"
+red = "#c34043"
+blue = "#7e9cd8"
+green = "#76946a"
+
+[palettes.ristretto]
+accent = "#f38d70"
+yellow = "#f9cc6c"
+red = "#fd6883"
+blue = "#a8a9eb"
+green = "#adda78"
+
+[palettes.rose-pine]
+accent = "#c4a7e7"
+yellow = "#f6c177"
+red = "#eb6f92"
+blue = "#9ccfd8"
+green = "#31748f"
+
+[palettes.melange]
+accent = "#e49b5d"
+yellow = "#ebc06d"
+red = "#bd8183"
+blue = "#7f91b2"
+green = "#78997a"
+
+[palettes.bamboo]
+accent = "#81af58"
+yellow = "#ceba49"
+red = "#dc4f62"
+blue = "#409cdc"
+green = "#81af58"
+
+[palettes.kanagawa-dragon]
+accent = "#c4746e"
+yellow = "#c4b28a"
+red = "#c4746e"
+blue = "#8ba4b0"
+green = "#87a987"

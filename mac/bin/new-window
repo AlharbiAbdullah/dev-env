@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Opens a new window for the frontmost app. Bound to Cmd+N via AeroSpace.
+# Avoids synthetic keystrokes (which AeroSpace re-captures, causing lag).
+
+set -euo pipefail
+
+asn=$(lsappinfo front)
+name=$(lsappinfo info -only name "$asn" | sed -E 's/.*="([^"]+)".*/\1/')
+bundle=$(lsappinfo info -only bundleID "$asn" | sed -E 's/.*="([^"]+)".*/\1/')
+
+case "$bundle" in
+  com.google.Chrome|com.google.Chrome.canary|com.brave.Browser|com.apple.Safari|company.thebrowser.Browser|org.mozilla.firefox)
+    osascript -e "tell application \"$name\" to make new window" ;;
+  com.apple.finder)
+    osascript -e 'tell application "Finder" to make new Finder window' ;;
+  com.microsoft.VSCode|com.todesktop.230313mzl4w4u92|com.exafunction.windsurf)
+    open -na "$name" ;;
+  *)
+    open -na "$name" 2>/dev/null \
+      || osascript -e "tell application \"$name\" to make new window" ;;
+esac

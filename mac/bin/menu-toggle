@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Toggle macOS menu bar auto-hide (Tahoe-compatible via AppleScript).
+set -euo pipefail
+
+current=$(osascript -e 'tell application "System Events" to tell dock preferences to get autohide menu bar' 2>/dev/null)
+
+if [[ "$current" == "true" ]]; then
+  osascript -e 'tell application "System Events" to tell dock preferences to set autohide menu bar to false' >/dev/null 2>&1
+  msg="menu bar: shown"
+else
+  osascript -e 'tell application "System Events" to tell dock preferences to set autohide menu bar to true' >/dev/null 2>&1
+  msg="menu bar: hidden"
+fi
+
+/opt/homebrew/bin/hs -c "hs.alert.show(\"$msg\", 1)" >/dev/null 2>&1 || true

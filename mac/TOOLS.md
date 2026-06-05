@@ -5,18 +5,27 @@ Inventory of tools I use on macOS. Add new ones as I install them.
 ## Terminal & Shell
 - WezTerm
 - zsh
-- Oh My Zsh
-- zsh-syntax-highlighting
-- zsh-autosuggestions
-- tmux
-- TPM (tmux plugin manager)
-- tmux-resurrect
-- tmux-continuum
-- colorls
+- starship (prompt)
+- zoxide (smart cd)
+- fzf (fuzzy finder)
+- eza (ls replacement)
+- bat (cat replacement)
+- btop (process monitor)
+- fastfetch (system info)
+- tmux + TPM (plugin manager) + tmux-resurrect + tmux-continuum
+- micro (terminal editor)
 
 ## Window Management
-- AeroSpace
-- JankyBorders
+- AeroSpace (tiling WM)
+- JankyBorders (`borders`, active-window borders)
+- Hammerspoon (Lua automation)
+- Mos (smooth scroll)
+- Bartender (menu bar manager)
+- Stats (menu bar system monitor)
+
+## Theme System
+- `theme` / `menu-toggle` / `new-window` scripts (`mac/bin/`)
+- `~/.config/themes/` — 17 shared theme definitions (from `common/themes/`)
 
 ## Editors & IDEs
 - Cursor
@@ -24,43 +33,32 @@ Inventory of tools I use on macOS. Add new ones as I install them.
 
 ## AI / Coding Agents
 - Claude Code
-- Claude (Anthropic) desktop
 - Gemini CLI
 - OpenCode
+- Codex
 
 ## Languages & Runtimes
 - Python (pyenv)
 - Node.js (nvm)
-- Ruby
 
 ## Package Managers
-- Homebrew
-
-## Data & Engineering Stack
-- Apache Spark / PySpark
-- Dagster
-- dbt
-- ChromaDB
-- Docker
+- Homebrew + Brewfile
 
 ## Version Control
 - Git
-- GitHub
 - gh (GitHub CLI)
+- lazygit
 
-## Knowledge & Notes
-- Obsidian
-- Excalidraw
-
-## Communication
-- Slack
-
-## Browsers
-- Chrome
+## Apps
+- Raycast (launcher)
+- Shottr (screenshots)
+- OrbStack (containers/VMs)
+- Tailscale (mesh VPN)
+- 1Password CLI (`op`)
 
 ## Fonts
 - NotoSansM Nerd Font
 - Cairo
 
-## TODO / Add as needed
-- (fill in anything missing)
+> `mas`-installed App Store apps and npm global packages are captured in the
+> `Brewfile` too (`mas` and `npm` entries).

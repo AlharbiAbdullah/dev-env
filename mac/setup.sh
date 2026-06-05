@@ -1,87 +1,119 @@
-#!/bin/bash
-# Terminal setup for macOS
+#!/usr/bin/env bash
+# Dev_Env macOS setup. Copies dotfiles/configs/scripts from the repo into $HOME.
+# Deploy model: COPY (not symlink) — re-run after `git pull` to sync. Idempotent.
+set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
+# --- Darwin guard ---
 if [ "$(uname -s)" != "Darwin" ]; then
-    echo "This script is for macOS only. Use linux_setup.sh instead."
+    echo "This script is for macOS only. Use linux/ubuntu/setup.sh on Linux."
     exit 1
 fi
 
-echo "=== macOS Terminal Setup ==="
+echo "=== Dev_Env macOS Setup ==="
 
-# --- Zsh (already default on macOS, but just in case) ---
-if ! command -v zsh >/dev/null 2>&1; then
-    echo "Installing zsh..."
-    brew install zsh
+# --- Homebrew ---
+if ! command -v brew >/dev/null 2>&1; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-# --- Oh My Zsh ---
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo "Installing Oh My Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+# Load brew into this shell's environment (Apple Silicon vs Intel prefix).
+if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+else
+    echo "Homebrew install appears to have failed: no brew binary found." >&2
+    exit 1
 fi
 
-# --- Zsh plugins ---
-ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+# --- Paths ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
-    echo "Installing zsh-syntax-highlighting..."
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+# --- Brew bundle ---
+echo ""
+echo "Installing packages from Brewfile..."
+brew bundle --file="$SCRIPT_DIR/Brewfile"
+
+# --- Directories ---
+mkdir -p "$HOME/.config" "$HOME/.local/bin" "$HOME/.cache/theme"
+mkdir -p "$HOME/.config/ghostty"
+
+# --- Copy dotfiles and configs ---
+echo ""
+echo "Copying config files..."
+
+cp "$SCRIPT_DIR/.zshrc"           "$HOME/.zshrc";                    echo "  -> ~/.zshrc"
+cp "$SCRIPT_DIR/.zprofile"        "$HOME/.zprofile";                 echo "  -> ~/.zprofile"
+cp "$SCRIPT_DIR/.tmux.conf"       "$HOME/.tmux.conf";                echo "  -> ~/.tmux.conf"
+cp "$SCRIPT_DIR/.wezterm.lua"     "$HOME/.wezterm.lua";              echo "  -> ~/.wezterm.lua"
+cp "$SCRIPT_DIR/.aerospace.toml"  "$HOME/.aerospace.toml";           echo "  -> ~/.aerospace.toml"
+cp "$SCRIPT_DIR/starship.toml"    "$HOME/.config/starship.toml";     echo "  -> ~/.config/starship.toml"
+cp "$SCRIPT_DIR/ghostty/config"   "$HOME/.config/ghostty/config";    echo "  -> ~/.config/ghostty/config"
+
+# --- Copy bin scripts (make executable) ---
+echo ""
+echo "Installing scripts to ~/.local/bin..."
+for script in theme menu-toggle new-window; do
+    cp "$SCRIPT_DIR/bin/$script" "$HOME/.local/bin/$script"
+    chmod +x "$HOME/.local/bin/$script"
+    echo "  -> ~/.local/bin/$script"
+done
+
+# --- Themes (shared data under common/) ---
+echo ""
+if [ ! -d "$HOME/.config/themes" ]; then
+    echo "Installing theme system to ~/.config/themes..."
+    cp -R "$REPO_ROOT/common/themes" "$HOME/.config/themes"
+    echo "  -> ~/.config/themes"
+else
+    echo "Note: ~/.config/themes already exists — left untouched (manual sync model)."
+    echo "      To refresh, sync it from $REPO_ROOT/common/themes yourself."
 fi
 
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
-    echo "Installing zsh-autosuggestions..."
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+# Default active theme: everforest (only if nothing is selected yet).
+if [ ! -e "$HOME/.config/themes/current.lua" ]; then
+    ln -sfn "$HOME/.config/themes/everforest/theme.lua" "$HOME/.config/themes/current.lua"
+    echo "  -> ~/.config/themes/current.lua (everforest)"
 fi
 
-# --- WezTerm ---
-if ! command -v wezterm >/dev/null 2>&1; then
-    echo "Installing WezTerm..."
-    brew install --cask wezterm
+# --- Secrets bootstrap ---
+echo ""
+if [ ! -f "$HOME/.zshrc.local" ]; then
+    cp "$SCRIPT_DIR/.zshrc.local.example" "$HOME/.zshrc.local"
+    echo "  -> ~/.zshrc.local (from example)"
+    echo ""
+    echo "  ************************************************************"
+    echo "  *  ACTION REQUIRED: edit ~/.zshrc.local and fill in your   *"
+    echo "  *  real secrets (e.g. OPENROUTER_API_KEY). It is NOT       *"
+    echo "  *  tracked by git and the example value is a placeholder.  *"
+    echo "  ************************************************************"
 fi
 
-# --- Tmux ---
-if ! command -v tmux >/dev/null 2>&1; then
-    echo "Installing tmux..."
-    brew install tmux
-fi
-
-# --- TPM (Tmux Plugin Manager) ---
+# --- TPM (tmux plugin manager) ---
+echo ""
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     echo "Installing TPM..."
     git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi
 
-# --- Copy config files ---
+# --- VS Code (reference only, not auto-applied) ---
 echo ""
-echo "Copying config files..."
+echo "Note: mac/vscode/settings.json is a reference copy only. It is NOT"
+echo "      auto-copied (that would clobber your live VS Code settings)."
+echo "      Merge by hand if you want anything from it."
 
-cp "$SCRIPT_DIR/.zshrc" "$HOME/.zshrc"
-echo "  -> ~/.zshrc"
-
-cp "$SCRIPT_DIR/.wezterm.lua" "$HOME/.wezterm.lua"
-echo "  -> ~/.wezterm.lua"
-
-cp "$SCRIPT_DIR/.tmux.conf" "$HOME/.tmux.conf"
-echo "  -> ~/.tmux.conf"
-
-cp "$SCRIPT_DIR/.zprofile" "$HOME/.zprofile"
-echo "  -> ~/.zprofile"
-
-# --- Fonts ---
+# --- Default shell ---
 echo ""
-echo "Installing fonts..."
-brew install --cask font-noto-sans-mono-nerd-font || true
-brew install --cask font-cairo || true
-
-# --- Set default shell to zsh ---
-if [ "$SHELL" != "$(which zsh)" ]; then
-    echo ""
-    echo "Setting zsh as default shell..."
-    chsh -s "$(which zsh)"
+if [ "$(basename "${SHELL:-}")" != "zsh" ]; then
+    echo "Your login shell is not zsh. To switch, run:"
+    echo "    chsh -s \"\$(command -v zsh)\""
 fi
 
+# --- Done ---
 echo ""
 echo "=== Done ==="
-echo "Restart your terminal or run: exec zsh"
+echo "1. Restart your terminal (or run: exec zsh)."
+echo "2. Run 'theme reload' to apply the active theme."
+echo "3. In tmux, press prefix + I to install tmux plugins."

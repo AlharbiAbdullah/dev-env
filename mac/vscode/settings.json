@@ -1,0 +1,25 @@
+{
+    "editor.fontSize": 18,
+    "editor.fontWeight": "bold",
+    "markdown.preview.fontSize": 18,
+    "sqltools.useNodeRuntime": true , 
+
+
+    // "editor.tokenColorCustomizations": {
+    //     "comments": "#f5deb3"
+    // },
+    "workbench.iconTheme": "material-icon-theme",
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "workbench.colorTheme": "Everforest Dark",
+    "docker.extension.enableComposeLanguageServer": false,
+    "claudeCode.preferredLocation": "panel",
+    "claudeCode.selectedModel": "default",
+    "security.workspace.trust.untrustedFiles": "open",
+    "hediet.vscode-drawio.resizeImages": null,
+    "makefile.configureOnOpen": false,
+
+
+    
+}
