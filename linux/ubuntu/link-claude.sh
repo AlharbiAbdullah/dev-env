@@ -8,7 +8,7 @@
 
 set -e
 
-PAI="$HOME/Brain/05_agent_brain/PAI"
+PAI="$HOME/brain/05-agent-brain/PAI"
 CLAUDE="$HOME/.claude"
 
 if [ ! -d "$PAI" ]; then
@@ -22,7 +22,6 @@ mkdir -p "$CLAUDE"
 ln -sfn "$PAI/CLAUDE.md"     "$CLAUDE/CLAUDE.md"
 ln -sfn "$PAI/agents"        "$CLAUDE/agents"
 ln -sfn "$PAI/commands"      "$CLAUDE/commands"
-ln -sfn "$PAI/hooks"         "$CLAUDE/hooks"
 ln -sfn "$PAI/mcp.json"      "$CLAUDE/mcp.json"
 ln -sfn "$PAI/MEMORY"        "$CLAUDE/MEMORY"
 ln -sfn "$PAI/settings.json" "$CLAUDE/settings.json"
