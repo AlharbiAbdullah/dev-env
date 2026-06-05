@@ -11,7 +11,7 @@ config.bidi_direction = "AutoLeftToRight"
 
 -- Font
 config.font = wezterm.font_with_fallback({
-    { family = "NotoSansM Nerd Font", harfbuzz_features = { "liga=0" } },
+    { family = "NotoSansM Nerd Font", weight = "Bold", harfbuzz_features = { "liga=0" } },
     { family = "Cairo", weight = "Bold" },
     "Apple Color Emoji",
 })
