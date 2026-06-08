@@ -1,7 +1,7 @@
 # Minimal two-line prompt, colors driven by the active theme palette.
 # The `theme` script updates the `palette = ...` line below on theme switch.
 
-palette = "everforest"
+palette = "gruvbox"
 
 format = "$directory$git_branch$git_status$cmd_duration$character "
 
