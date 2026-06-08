@@ -44,5 +44,26 @@ Signed-By: /usr/share/keyrings/google-chrome.gpg
 EOF
 fi
 
+# --- 1Password (downloads.1password.com; deb822 .sources + debsig policy, per vendor default) ---
+if [ ! -f /usr/share/keyrings/1password-archive-keyring.gpg ]; then
+    echo "  1Password repo..."
+    curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+        | sudo gpg --yes --dearmor -o /usr/share/keyrings/1password-archive-keyring.gpg
+    sudo tee /etc/apt/sources.list.d/1password.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://downloads.1password.com/linux/debian/amd64
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /usr/share/keyrings/1password-archive-keyring.gpg
+EOF
+    # debsig-verify policy (1Password also signature-checks the .deb at install time)
+    sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22 /usr/share/debsig/keyrings/AC2D62742012EA22
+    curl -fsSL https://downloads.1password.com/linux/debian/debsig/1password.pol \
+        | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol >/dev/null
+    curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+        | sudo gpg --yes --dearmor -o /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+fi
+
 echo "  apt-get update..."
 sudo apt-get update

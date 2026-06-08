@@ -45,11 +45,15 @@ fontconfig
 fonts-noto
 fonts-noto-color-emoji
 
-# --- Terminal (needs the wezterm fury repo from apt-repos.sh) ---
+# --- Terminals (wezterm needs the fury repo from apt-repos.sh; ghostty is in universe) ---
 wezterm
+ghostty
 
 # --- Browser (needs the google-chrome repo from apt-repos.sh) ---
 google-chrome-stable
+
+# --- 1Password (needs the 1password repo from apt-repos.sh) ---
+1password
 
 # --- Python helpers used by the helm automation scripts ---
 python3-bs4
