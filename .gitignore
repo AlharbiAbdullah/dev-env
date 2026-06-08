@@ -5,5 +5,9 @@ common/themes/current.lua
 *.local
 .zshrc.local
 
+# App secrets / downloaded artifacts (never committed)
+.env
+*.deb
+
 # macOS noise
 .DS_Store

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh --version)",
+      "Read(//usr/lib/**)",
+      "Bash(echo \"git exit: $?\")",
+      "Bash(sudo -n true)",
+      "Bash(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest)",
+      "Bash(curl -fsSL \"https://api.github.com/users/AlharbiAbdullah/repos?per_page=100&sort=updated\")",
+      "Read(//etc/sudoers.d/**)",
+      "Bash(sudo -n cat /etc/sudoers.d/ab)",
+      "Bash(sudo apt-get update -qq)",
+      "Bash(sudo apt-get install -y git)",
+      "Bash(git --version)",
+      "Bash(sudo apt *)",
+      "Bash(sudo reboot *)",
+      "Bash(lsb_release -a)",
+      "Bash(apt list *)",
+      "Bash(grep -v '^$')",
+      "Bash(do-release-upgrade -c)"
+    ]
+  }
+}

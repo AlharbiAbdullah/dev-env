@@ -1,0 +1,7 @@
+[Unit]
+Description=Weekly news digest synthesis
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/helm/03-rai/skills/news-digest/scheduled/run-news-ubuntu.sh weekly

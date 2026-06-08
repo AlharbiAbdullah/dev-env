@@ -1,0 +1,4 @@
+# Copy to ~/.bashrc.local and fill in real values.
+# ~/.bashrc.local is gitignored (*.local) — secrets live here, never in the repo.
+# Sourced by ~/.bashrc on startup.
+export OPENROUTER_API_KEY="sk-or-v1-REPLACE_ME"

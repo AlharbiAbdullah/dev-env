@@ -24,10 +24,23 @@ git clone https://github.com/AlharbiAbdullah/dev-env.git
 cd mac && ./setup.sh
 ```
 
-**Ubuntu:**
+**Ubuntu — full one-shot rebuild (fresh machine):**
 
 ```bash
-cd linux/ubuntu && ./setup.sh   # pass --hyprland-ppa for the newer Hyprland PPA
+cd linux/ubuntu && ./bootstrap.sh   # pass --hyprland-ppa for the newer Hyprland PPA
+```
+
+`bootstrap.sh` is idempotent and does everything: NOPASSWD sudoers, clones `~/helm`
+and `~/work/mirsad`, installs packages (`packages/apt.txt` + snaps + Obsidian), copies
+dotfiles (via `setup.sh`), sets up Claude Code, and installs + enables the scheduled
+jobs (`systemd/`). For the machine-to-machine cutover (the single-writer ChromaDB
+handoff), follow **[linux/ubuntu/MIGRATION.md](linux/ubuntu/MIGRATION.md)** and stage
+with `ENABLE_TIMERS=0 ./bootstrap.sh` so the timers don't arm early.
+
+**Ubuntu — dotfiles only (already-set-up machine):**
+
+```bash
+cd linux/ubuntu && ./setup.sh   # configs/fonts/tools only, no system changes
 ```
 
 Then log out and pick **Hyprland** in the GDM session menu.

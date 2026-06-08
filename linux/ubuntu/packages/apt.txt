@@ -1,0 +1,67 @@
+# Manually-chosen apt packages — installed by bootstrap.sh after apt-repos.sh.
+# Curated from `apt-mark showmanual`: base system, kernel, GRUB, locale and
+# auto-pulled input-method packages are omitted (a fresh Ubuntu already ships
+# them). Comments and blank lines are stripped before install.
+#
+# Repo-dependent (apt-repos.sh adds the repos first): wezterm, google-chrome-stable.
+# obsidian is NOT in any apt repo -> installed by bootstrap.sh via a .deb fetch.
+
+# --- Hyprland desktop ---
+hyprland
+hypridle
+hyprlock
+hyprpolkitagent
+waybar
+fuzzel
+swaybg
+mako-notifier
+xdg-desktop-portal-hyprland
+
+# --- Wayland utilities ---
+wl-clipboard
+grim
+slurp
+ddcutil
+
+# --- CLI tools ---
+bat
+btop
+eza
+fastfetch
+fzf
+gh
+git
+jq
+lazygit
+starship
+tmux
+zoxide
+curl
+unzip
+
+# --- Shell / completion / fonts ---
+bash-completion
+fontconfig
+fonts-noto
+fonts-noto-color-emoji
+
+# --- Terminal (needs the wezterm fury repo from apt-repos.sh) ---
+wezterm
+
+# --- Browser (needs the google-chrome repo from apt-repos.sh) ---
+google-chrome-stable
+
+# --- Python helpers used by the helm automation scripts ---
+python3-bs4
+python3-netifaces
+python3-requests
+
+# --- Build toolchain + dev headers ---
+build-essential
+libbz2-dev
+libffi-dev
+liblzma-dev
+libreadline-dev
+libsqlite3-dev
+libssl-dev
+zlib1g-dev
