@@ -9,7 +9,7 @@ Personal dev environment for macOS + Ubuntu, mirrored 1:1.
 | `mac/` | zsh, WezTerm, tmux, AeroSpace, starship, ghostty, theme system, Brewfile, `setup.sh` |
 | `linux/ubuntu/` | Hyprland mirror of the Mac setup for Ubuntu 26.04 LTS (bash shell), `setup.sh` |
 | `linux/Omarchy/` | Arch + Hyprland reference, kept as-is |
-| `common/themes/` | 17 shared theme definitions + per-theme wallpapers, consumed by both platforms |
+| `common/themes/` | 10 shared theme definitions + per-theme wallpapers, consumed by both platforms |
 | `common/wallpaper/` | General wallpaper collection |
 
 ## Usage
