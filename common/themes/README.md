@@ -36,3 +36,26 @@ two axes is the only thing that lands both on top together.
 
 Full rationale, the discarded factors (lightness *gap*, average saturation), and
 the open questions live in the `comfort-score.py` docstring.
+
+## Wallpapers — the standard
+
+Each theme's `wallpapers/` holds **3** hand-picked images. They must satisfy all of:
+
+**Aesthetic**
+- **Art, dark.** Anime / illustration, digital art, minimalist, abstract, geometric, pixel-art. Stylized, not photographic.
+- **No people.** No human figures, character portraits, or anime girls/boys.
+- **No real-world photography.** No nature/forests/mountains, no coffee/food/drinks, no cities/buildings.
+- **Vary composition.** Centered subjects are fine but don't overuse them — mix full-bleed patterns, gradients, stylized landscapes, geometric, the occasional centered piece.
+
+**Color match (hard requirement)**
+- Each wallpaper must closely match its theme's palette. Verify objectively:
+  ```bash
+  python3 common/themes/wallpaper-match.py <theme> <image>...   # score candidates
+  python3 common/themes/wallpaper-match.py <theme>              # score installed wallpapers
+  ```
+  Scores 0–100 by per-pixel nearest-palette distance (CIELAB). The reference "amazing" themes score **nord ~88–99, gruvbox-light ~88–95**. Aim high; treat **<60** as a weak match worth replacing.
+
+**Format**
+- 3 per theme, normalized to **≤3840px wide, JPEG quality 92** (~1–2 MB each) to keep the repo lean.
+
+**Good sources** (tinted/abstract collections color-match best): `AngelJumbo/gruvbox-wallpapers` (warm), `Georgvwt/Everforest-Walls` (green), `dharmx/walls` (abstract/minimal/poly), `orangci/walls-catppuccin-mocha` + `rose-pine/wallpapers` + `tokyo-night/wallpapers` (purple/blue).
