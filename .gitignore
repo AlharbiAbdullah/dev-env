@@ -11,3 +11,7 @@ common/themes/current.lua
 
 # macOS noise
 .DS_Store
+
+# Python cache (from common/themes/comfort-score.py)
+__pycache__/
+*.pyc
