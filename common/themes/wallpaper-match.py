@@ -59,10 +59,11 @@ def hex2lab(h):
 def score(theme, path, pal=None):
     pal = pal or [hex2lab(h) for h in parse_palette(theme)]
     im = Image.open(path).convert("RGB").resize((96, 96))
+    data = im.tobytes()  # RGB triplets, avoids deprecated getdata()
     tot = 0.0
     n = 0
-    for (r, g, b) in im.getdata():
-        ll, aa, bb = rgb2lab(r, g, b)
+    for i in range(0, len(data), 3):
+        ll, aa, bb = rgb2lab(data[i], data[i + 1], data[i + 2])
         d = min(((ll - pl) ** 2 + (aa - pa) ** 2 + (bb - pb) ** 2) ** 0.5 for (pl, pa, pb) in pal)
         tot += max(0.0, 1.0 - d / 40.0)
         n += 1
