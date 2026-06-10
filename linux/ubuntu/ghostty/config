@@ -4,7 +4,8 @@ font-family = NotoSansM Nerd Font
 font-family = Cairo
 font-style = Bold
 font-feature = -liga
-font-size = 16
+# 14 on Ubuntu (16 on the Mac) — different monitor DPI.
+font-size = 14
 
 background-opacity = 1.00
 

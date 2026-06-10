@@ -3,7 +3,7 @@
 # auto-pulled input-method packages are omitted (a fresh Ubuntu already ships
 # them). Comments and blank lines are stripped before install.
 #
-# Repo-dependent (apt-repos.sh adds the repos first): wezterm, google-chrome-stable.
+# Repo-dependent (apt-repos.sh adds the repos first): google-chrome-stable, 1password.
 # obsidian is NOT in any apt repo -> installed by bootstrap.sh via a .deb fetch.
 
 # --- Hyprland desktop ---
@@ -45,8 +45,7 @@ fontconfig
 fonts-noto
 fonts-noto-color-emoji
 
-# --- Terminals (wezterm needs the fury repo from apt-repos.sh; ghostty is in universe) ---
-wezterm
+# --- Terminal (ghostty is in universe) ---
 ghostty
 
 # --- Browser (needs the google-chrome repo from apt-repos.sh) ---

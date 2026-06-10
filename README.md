@@ -6,7 +6,7 @@ Personal dev environment for macOS + Ubuntu, mirrored 1:1.
 
 | Path | Contents |
 |---|---|
-| `mac/` | zsh, WezTerm, tmux, AeroSpace, starship, ghostty, theme system, Brewfile, `setup.sh` |
+| `mac/` | zsh, Ghostty, tmux, AeroSpace, starship, theme system, Brewfile, `setup.sh` |
 | `linux/ubuntu/` | Hyprland mirror of the Mac setup for Ubuntu 26.04 LTS (bash shell), `setup.sh` |
 | `linux/Omarchy/` | Arch + Hyprland reference, kept as-is |
 | `common/themes/` | 10 shared theme definitions + per-theme wallpapers, consumed by both platforms |
@@ -89,7 +89,7 @@ After install, smoke-test the key bindings on the Ubuntu box:
 |---|---|
 | `SUPER 1..0` | Switch to workspace 1..10 |
 | `SUPER ←↑↓→` | Move focus |
-| `SUPER RETURN` | New WezTerm window |
+| `SUPER RETURN` | New Ghostty window |
 | `SUPER D` | App launcher (fuzzel) |
 | `SUPER W` | Close active window |
 | `SUPER F` | Toggle fullscreen |

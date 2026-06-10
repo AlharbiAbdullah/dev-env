@@ -3,7 +3,7 @@
 Inventory of tools I use on macOS. Add new ones as I install them.
 
 ## Terminal & Shell
-- WezTerm
+- Ghostty
 - zsh
 - starship (prompt)
 - zoxide (smart cd)

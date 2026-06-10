@@ -50,14 +50,13 @@ if [ "$HYPRLAND_PPA" -eq 1 ]; then
     sudo apt-get update
 fi
 
-# --- WezTerm apt repo (not in Ubuntu repos) ---
-if [ ! -f /etc/apt/keyrings/wezterm-fury.gpg ]; then
-    echo "Adding WezTerm apt repository..."
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/wezterm-fury.gpg
-    echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list >/dev/null
-    sudo apt-get update
+# --- Remove retired WezTerm (replaced by Ghostty, 2026-06) ---
+if command -v wezterm >/dev/null 2>&1; then
+    echo "Removing WezTerm..."
+    sudo apt-get remove -y wezterm
 fi
+sudo rm -f /etc/apt/sources.list.d/wezterm.list /etc/apt/keyrings/wezterm-fury.gpg
+rm -f "$HOME/.wezterm.lua"
 
 # --- Packages ---
 echo "Installing packages..."
@@ -68,10 +67,10 @@ sudo apt-get install -y \
     eza zoxide fzf bat btop fastfetch gh starship lazygit jq \
     git curl unzip fontconfig bash-completion \
     fonts-noto fonts-noto-color-emoji \
-    wezterm tmux \
+    ghostty tmux \
     build-essential
 
-# --- Nerd Font (matches WezTerm font family: NotoSansM Nerd Font) ---
+# --- Nerd Font (matches Ghostty font family: NotoSansM Nerd Font) ---
 if ! fc-list | grep -qi "NotoSansM Nerd Font"; then
     echo "Installing NotoSansM Nerd Font..."
     font_tmp="$(mktemp -d)"
@@ -122,6 +121,7 @@ fi
 mkdir -p \
     "$HOME/.config/hypr" \
     "$HOME/.config/waybar" \
+    "$HOME/.config/ghostty" \
     "$HOME/.local/bin" \
     "$HOME/.cache/theme" \
     "$HOME/Pictures"
@@ -131,7 +131,7 @@ echo ""
 echo "Copying configs..."
 
 cp "$SCRIPT_DIR/.bashrc"       "$HOME/.bashrc";                      echo "  -> ~/.bashrc"
-cp "$SCRIPT_DIR/.wezterm.lua"  "$HOME/.wezterm.lua";                 echo "  -> ~/.wezterm.lua"
+cp "$SCRIPT_DIR/ghostty/config" "$HOME/.config/ghostty/config";      echo "  -> ~/.config/ghostty/config"
 cp "$SCRIPT_DIR/.tmux.conf"    "$HOME/.tmux.conf";                   echo "  -> ~/.tmux.conf"
 cp "$SCRIPT_DIR/starship.toml" "$HOME/.config/starship.toml";        echo "  -> ~/.config/starship.toml"
 
@@ -155,6 +155,10 @@ if [ ! -e "$HOME/.config/themes/current.lua" ]; then
     ln -sfn "$HOME/.config/themes/everforest/theme.lua" "$HOME/.config/themes/current.lua"
     echo "  -> default theme: everforest"
 fi
+if [ ! -e "$HOME/.config/ghostty/theme-current" ]; then
+    ln -sfn "$HOME/.config/themes/everforest/ghostty.conf" "$HOME/.config/ghostty/theme-current"
+    echo "  -> ~/.config/ghostty/theme-current (everforest)"
+fi
 
 # --- Default shell: bash (Ubuntu default — mac uses zsh, linux stays bash) ---
 
@@ -167,7 +171,7 @@ cat <<EOF
      echo 'export OPENROUTER_API_KEY="sk-or-..."' > ~/.bashrc.local
 3. Install Claude Code:
      "$SCRIPT_DIR/install-claude.sh"
-4. In WezTerm, run tmux, then press prefix + I to install tmux plugins.
+4. In Ghostty, run tmux, then press prefix + I to install tmux plugins.
 
 Theme / wallpaper keybindings (inside Hyprland):
   SUPER CTRL T   cycle theme

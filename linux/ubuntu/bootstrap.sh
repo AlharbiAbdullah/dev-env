@@ -160,6 +160,6 @@ Next:
   1. Log out, pick "Hyprland" in GDM, log back in.
   2. Secrets:  cp "$HERE/.bashrc.local.example" ~/.bashrc.local   # then fill in real keys
   3. Run 'claude' once to authenticate.
-  4. In WezTerm: run tmux, press prefix + I to install tmux plugins.
+  4. In Ghostty: run tmux, press prefix + I to install tmux plugins.
   5. Machine-to-machine cutover (timers + ChromaDB single-writer): see "$HERE/MIGRATION.md"
 EOF

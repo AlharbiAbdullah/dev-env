@@ -47,7 +47,6 @@ echo "Copying config files..."
 cp "$SCRIPT_DIR/.zshrc"           "$HOME/.zshrc";                    echo "  -> ~/.zshrc"
 cp "$SCRIPT_DIR/.zprofile"        "$HOME/.zprofile";                 echo "  -> ~/.zprofile"
 cp "$SCRIPT_DIR/.tmux.conf"       "$HOME/.tmux.conf";                echo "  -> ~/.tmux.conf"
-cp "$SCRIPT_DIR/.wezterm.lua"     "$HOME/.wezterm.lua";              echo "  -> ~/.wezterm.lua"
 cp "$SCRIPT_DIR/.aerospace.toml"  "$HOME/.aerospace.toml";           echo "  -> ~/.aerospace.toml"
 cp "$SCRIPT_DIR/starship.toml"    "$HOME/.config/starship.toml";     echo "  -> ~/.config/starship.toml"
 cp "$SCRIPT_DIR/ghostty/config"   "$HOME/.config/ghostty/config";    echo "  -> ~/.config/ghostty/config"
@@ -76,6 +75,10 @@ fi
 if [ ! -e "$HOME/.config/themes/current.lua" ]; then
     ln -sfn "$HOME/.config/themes/everforest/theme.lua" "$HOME/.config/themes/current.lua"
     echo "  -> ~/.config/themes/current.lua (everforest)"
+fi
+if [ ! -e "$HOME/.config/ghostty/theme-current" ]; then
+    ln -sfn "$HOME/.config/themes/everforest/ghostty.conf" "$HOME/.config/ghostty/theme-current"
+    echo "  -> ~/.config/ghostty/theme-current (everforest)"
 fi
 
 # --- Secrets bootstrap ---

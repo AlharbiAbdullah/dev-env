@@ -96,7 +96,7 @@ cmd-down = 'focus down'
 # -----------------------------------------------------------------------------
 # Launch Apps / New Window
 # -----------------------------------------------------------------------------
-cmd-enter = 'exec-and-forget open -na WezTerm'
+cmd-enter = 'exec-and-forget open -na Ghostty'
 cmd-n = 'exec-and-forget /Users/abdullahalharbi/.local/bin/new-window'
 cmd-b = 'exec-and-forget open -na "Google Chrome"'
 cmd-o = 'exec-and-forget open -na Obsidian'
