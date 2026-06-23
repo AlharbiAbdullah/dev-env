@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unified theme switcher: Ghostty, JankyBorders, VS Code, Cursor,
+# Unified theme switcher: WezTerm, JankyBorders, VS Code, Cursor,
 # Starship prompt, macOS appearance, desktop wallpaper.
 #
 # Usage:
@@ -126,9 +126,8 @@ apply_theme() {
     width="$BORDER_WIDTH" \
     >/tmp/borders.log 2>&1 & disown
 
-  # Ghostty (flip the theme include, then signal a live config reload)
-  ln -sfn "$theme_dir/ghostty.conf" "$HOME/.config/ghostty/theme-current"
-  pkill -USR2 -x ghostty 2>/dev/null || true
+  # WezTerm (watches ~/.wezterm.lua; nudge it)
+  touch "$HOME/.wezterm.lua"
 
   # Starship palette
   update_starship_palette "$name"

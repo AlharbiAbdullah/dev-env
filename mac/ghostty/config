@@ -1,18 +1,1 @@
-# Bold Noto for UI text, Cairo for Arabic glyphs.
-# (No BiDi option: Ghostty has no RTL support yet — upstream WIP.)
-font-family = NotoSansM Nerd Font
-font-family = Cairo
-font-style = Bold
-font-feature = -liga
-font-size = 16
-
 background-opacity = 1.00
-
-# Active theme colors. The `theme` script flips this symlink and sends
-# SIGUSR2 to Ghostty for a live reload.
-config-file = ?theme-current
-
-# Shift+Enter inserts a newline (multiline input in Claude Code etc.)
-keybind = shift+enter=text:\n
-
-confirm-close-surface = false
