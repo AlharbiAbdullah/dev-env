@@ -88,6 +88,16 @@ if [ ! -e "$HOME/.config/themes/current.lua" ]; then
     echo "  -> ~/.config/themes/current.lua (everforest)"
 fi
 
+# Default everforest wallpaper on this Mac: scifi-domes (crisp 2880x1440; Ubuntu
+# prefers mojave-dunes). Seed the switcher cache only if unset, so a fresh install
+# lands here without clobbering a later 'theme wallpaper next/prev' choice.
+ef_wp_cache="$HOME/.cache/theme/everforest.wallpaper"
+ef_wp="$HOME/.config/themes/everforest/wallpapers/everforest-scifi-domes.jpg"
+if [ ! -f "$ef_wp_cache" ] && [ -f "$ef_wp" ]; then
+    echo "$ef_wp" > "$ef_wp_cache"
+    echo "  -> default wallpaper: everforest = scifi-domes"
+fi
+
 # --- Secrets bootstrap ---
 echo ""
 if [ ! -f "$HOME/.zshrc.local" ]; then
