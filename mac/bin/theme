@@ -29,7 +29,8 @@ HS_BIN="/opt/homebrew/bin/hs"
 hud() {
   local msg="$1" duration="${2:-2}"
   [[ -x "$HS_BIN" ]] || return 0
-  "$HS_BIN" -c "hs.alert.show(\"$msg\", $duration)" >/dev/null 2>&1 || true
+  # fire-and-forget: a slow/blocked Hammerspoon IPC must never stall the switcher
+  ( "$HS_BIN" -c "hs.alert.show(\"$msg\", $duration)" >/dev/null 2>&1 & )
 }
 
 # -----------------------------------------------------------------------------
@@ -62,7 +63,11 @@ set_wallpaper_on_disk() {
   local wp="$1" theme="$2"
   [[ -z "$wp" || ! -f "$wp" ]] && return 0
   echo "$wp" > "$CACHE_DIR/$theme.wallpaper"
-  osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$wp\"" 2>/dev/null || true
+  # macOS Tahoe: legacy System Events 'set picture' sets a path but no longer repaints
+  # the live desktop. Render via the compiled NSWorkspace helper (bin/set-wallpaper.swift).
+  if [[ -x "$HOME/.local/bin/set-wallpaper" ]]; then
+    "$HOME/.local/bin/set-wallpaper" "$wp" 2>/dev/null || true
+  fi
 }
 
 update_starship_palette() {

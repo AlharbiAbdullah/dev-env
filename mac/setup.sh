@@ -61,6 +61,16 @@ for script in theme menu-toggle new-window; do
     echo "  -> ~/.local/bin/$script"
 done
 
+# --- Wallpaper helper: NSWorkspace setter (macOS Sonoma+/Tahoe no longer renders
+#     wallpapers via the legacy System Events 'set picture'; the theme switcher calls this) ---
+if command -v swiftc >/dev/null 2>&1; then
+    swiftc -O -o "$HOME/.local/bin/set-wallpaper" "$SCRIPT_DIR/bin/set-wallpaper.swift" \
+        && codesign -s - -f "$HOME/.local/bin/set-wallpaper" >/dev/null 2>&1 \
+        && echo "  -> ~/.local/bin/set-wallpaper (compiled)"
+else
+    echo "  !! swiftc not found (install Xcode Command Line Tools) — wallpaper switching will no-op"
+fi
+
 # --- Themes (shared data under common/) ---
 echo ""
 if [ ! -d "$HOME/.config/themes" ]; then
