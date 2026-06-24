@@ -43,7 +43,7 @@ Each theme's `wallpapers/` holds **3** hand-picked images. They must satisfy all
 
 **Aesthetic**
 - **Art, dark.** Anime / illustration, digital art, minimalist, abstract, geometric, pixel-art. Stylized, not photographic.
-- **No people.** No human figures, character portraits, or anime girls/boys.
+- **No women or girls.** No female figures or characters. Other figures — including anime (male/neutral) — are fine.
 - **No real-world photography.** No nature/forests/mountains, no coffee/food/drinks, no cities/buildings.
 - **Vary composition.** Centered subjects are fine but don't overuse them — mix full-bleed patterns, gradients, stylized landscapes, geometric, the occasional centered piece.
 
@@ -55,7 +55,9 @@ Each theme's `wallpapers/` holds **3** hand-picked images. They must satisfy all
   ```
   Scores 0–100 by per-pixel nearest-palette distance (CIELAB). The reference "amazing" themes score **nord ~88–99, gruvbox-light ~88–95**. Aim high; treat **<60** as a weak match worth replacing.
 
-**Format**
-- 3 per theme, normalized to **≤3840px wide, JPEG quality 92** (~1–2 MB each) to keep the repo lean.
+**Format & fit**
+- 3 per theme, **16:9 aspect** (both displays are 16:9 — Linux QHD 2560×1440, Mac FHD 1920×1080), so swaybg/`-m fill` shows the whole image with no cropping.
+- **Native ≥1920×1080 minimum, ≥2560×1440 preferred** so the QHD monitor isn't upscaled (square/portrait/sub-1080 art is rejected even if it color-matches).
+- Normalized on install: center-crop to exactly 16:9, scale to ≤3840px wide (1920-wide art upscaled to 2560 via Lanczos), **JPEG quality 92** (~1–2 MB each) to keep the repo lean.
 
-**Good sources** (tinted/abstract collections color-match best): `AngelJumbo/gruvbox-wallpapers` (warm), `Georgvwt/Everforest-Walls` (green), `dharmx/walls` (abstract/minimal/poly), `orangci/walls-catppuccin-mocha` + `rose-pine/wallpapers` + `tokyo-night/wallpapers` (purple/blue).
+**Source** — the **only** sanctioned repo: `dharmx/walls` (https://github.com/dharmx/walls). Abstract / minimal / poly / geometric, plus an `anime` set. All wallpapers are sourced from here; no other repos.
