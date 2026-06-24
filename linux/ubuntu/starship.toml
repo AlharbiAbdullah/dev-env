@@ -137,3 +137,17 @@ yellow = "#c4b28a"
 red = "#c4746e"
 blue = "#8ba4b0"
 green = "#87a987"
+
+[palettes.dark-pro]
+accent = "#58a6ff"
+yellow = "#d29922"
+red = "#ff7b72"
+blue = "#58a6ff"
+green = "#3fb950"
+
+[palettes.light-pro]
+accent = "#0969da"
+yellow = "#9a6700"
+red = "#cf222e"
+blue = "#0969da"
+green = "#116329"
