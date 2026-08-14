@@ -279,15 +279,34 @@ profile = {
     "Name": "rai",
     "Dynamic Profile Rewritable": True,
     "Normal Font": "NotoSansMNF-Bold 16",
+    # Arabic: leave this False. Noto Sans Mono has no Arabic coverage, so
+    # non-ASCII falls back through CoreText to the system Arabic font, which
+    # shapes and joins correctly. Forcing Cairo here was tried 2026-08-14 and
+    # made Arabic much worse (letters stopped joining). Do not reopen.
     "Use Non-ASCII Font": False,
     "ASCII Ligatures": False,
+    # Readability floor. Every dark theme sets ansi[0] near the background
+    # (nord: #3b4252 on #2e3440, ~1.2:1), so anything an app prints in black or
+    # faint text becomes unreadable. WezTerm brightened bold ANSI by default;
+    # iTerm2 does not, hence the regression after the move.
+    #   Minimum Contrast  lifts any fg too close to bg (0 = off, 1 = harsh)
+    #   Use Bright Bold   bold+black -> bright black, WezTerm's old behavior
+    #   Faint Text Alpha  SGR-2 dim text blend toward bg (iTerm2 default 0.5)
+    "Minimum Contrast": 0.5,
+    "Use Bright Bold": True,
+    "Faint Text Alpha": 0.7,
     "Use Separate Colors for Light and Dark Mode": False,
     "Scrollback Lines": 10000,
     "Unlimited Scrollback": False,
     "Cursor Type": 2,
     "Blinking Cursor": False,
     "Prompt Before Closing 2": 0,
+    # No notifications of any kind: no audible bell, no visual flash, no
+    # Notification Center alerts.
     "Silence Bell": True,
+    "Visual Bell": False,
+    "Flashing Bell": False,
+    "BM Growl": False,
     "Custom Directory": "No",
     "Keyboard Map": {
         # Shift+Insert paste / Ctrl+Insert copy (PC keyboards send Insert as
