@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unified theme switcher: WezTerm, JankyBorders, VS Code, Cursor,
+# Unified theme switcher: iTerm2, JankyBorders, VS Code, Cursor,
 # Starship prompt, macOS appearance, desktop wallpaper.
 #
 # Usage:
@@ -20,6 +20,10 @@ BORDERS_BIN="/opt/homebrew/opt/borders/bin/borders"
 BORDER_WIDTH=15.0
 VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
 CURSOR_SETTINGS="$HOME/Library/Application Support/Cursor/User/settings.json"
+OPENCODE_TUI_CONFIG="$HOME/.config/opencode/tui.json"
+OPENCODE_THEMES_DIR="$HOME/.config/opencode/themes"
+OPENCODE_KV_STATE="$HOME/.local/state/opencode/kv.json"
+ITERM2_PROFILE="$HOME/Library/Application Support/iTerm2/DynamicProfiles/rai-theme.json"
 
 mkdir -p "$CACHE_DIR"
 
@@ -95,6 +99,210 @@ open(path, 'w').write(c)
 PY
 }
 
+update_opencode_theme() {
+  local src="$1" name="$2"
+  mkdir -p "$(dirname "$OPENCODE_TUI_CONFIG")" "$OPENCODE_THEMES_DIR" "$(dirname "$OPENCODE_KV_STATE")"
+  python3 - "$OPENCODE_TUI_CONFIG" "$OPENCODE_THEMES_DIR" "$OPENCODE_KV_STATE" "$src" "$name" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+tui_path = Path(sys.argv[1])
+themes_dir = Path(sys.argv[2])
+kv_path = Path(sys.argv[3])
+src_path = Path(sys.argv[4])
+theme_name = sys.argv[5]
+
+def load_json(path):
+    try:
+        return json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+lua = src_path.read_text()
+
+def field(key, default=""):
+    match = re.search(rf'{key}\s*=\s*"([^"]+)"', lua)
+    return match.group(1) if match else default
+
+def color(key):
+    value = field(key)
+    if not value:
+        return "#000000"
+    return "#" + value[-6:] if value.startswith("0xff") else value
+
+def color_list(key):
+    match = re.search(rf'{key}\s*=\s*\{{([^}}]+)\}}', lua, re.S)
+    if not match:
+        return []
+    return re.findall(r'"(#[0-9a-fA-F]{6})"', match.group(1))
+
+def mix(c1, c2, t):
+    a = tuple(int(c1.lstrip("#")[i:i+2], 16) for i in (0, 2, 4))
+    b = tuple(int(c2.lstrip("#")[i:i+2], 16) for i in (0, 2, 4))
+    return "#%02x%02x%02x" % tuple(
+        max(0, min(255, round(a[i] + (b[i] - a[i]) * t))) for i in range(3)
+    )
+
+ansi = color_list("ansi")
+bg = color("background")
+fg = color("foreground")
+red = ansi[1] if len(ansi) > 1 else fg
+green = ansi[2] if len(ansi) > 2 else fg
+yellow = ansi[3] if len(ansi) > 3 else fg
+blue = ansi[4] if len(ansi) > 4 else fg
+magenta = ansi[5] if len(ansi) > 5 else fg
+cyan = ansi[6] if len(ansi) > 6 else fg
+
+# Omarchy signature colors (bg/fg/ansi accents) stay EXACT. OpenCode also needs
+# neutral chrome elevations the 16-color palette doesn't define; derive them by
+# blending background -> foreground: dark themes (light fg) step lighter, light
+# themes (dark fg) step darker. The loud selection/accent color is reserved for
+# the ACTIVE border only -- painting it as a fill was the garish-block bug.
+accent = color("border") or blue
+panel = mix(bg, fg, 0.06)          # backgroundPanel
+element = mix(bg, fg, 0.12)        # backgroundElement: input box, selected rows
+border_subtle = mix(bg, fg, 0.14)
+border = mix(bg, fg, 0.24)         # default/inactive border (quiet)
+muted = mix(bg, fg, 0.55)          # dimmed-but-readable text
+diff_add_bg = mix(bg, green, 0.16)
+diff_rem_bg = mix(bg, red, 0.16)
+
+theme = {
+    "$schema": "https://opencode.ai/theme.json",
+    "theme": {
+        "primary": accent,
+        "secondary": magenta,
+        "accent": cyan,
+        "error": red,
+        "warning": yellow,
+        "success": green,
+        "info": blue,
+        "text": fg,
+        "textMuted": muted,
+        "background": bg,
+        "backgroundPanel": panel,
+        "backgroundElement": element,
+        "border": border,
+        "borderActive": accent,
+        "borderSubtle": border_subtle,
+        "diffAdded": green,
+        "diffRemoved": red,
+        "diffContext": muted,
+        "diffHunkHeader": blue,
+        "diffHighlightAdded": green,
+        "diffHighlightRemoved": red,
+        "diffAddedBg": diff_add_bg,
+        "diffRemovedBg": diff_rem_bg,
+        "diffContextBg": panel,
+        "diffLineNumber": muted,
+        "diffAddedLineNumberBg": diff_add_bg,
+        "diffRemovedLineNumberBg": diff_rem_bg,
+        "markdownText": fg,
+        "markdownHeading": accent,
+        "markdownLink": blue,
+        "markdownLinkText": cyan,
+        "markdownCode": green,
+        "markdownBlockQuote": muted,
+        "markdownEmph": yellow,
+        "markdownStrong": accent,
+        "markdownHorizontalRule": muted,
+        "markdownListItem": accent,
+        "markdownListEnumeration": cyan,
+        "markdownImage": magenta,
+        "markdownImageText": cyan,
+        "markdownCodeBlock": fg,
+        "syntaxComment": muted,
+        "syntaxKeyword": magenta,
+        "syntaxFunction": blue,
+        "syntaxVariable": cyan,
+        "syntaxString": green,
+        "syntaxNumber": yellow,
+        "syntaxType": cyan,
+        "syntaxOperator": magenta,
+        "syntaxPunctuation": fg,
+    },
+}
+(themes_dir / f"{theme_name}.json").write_text(json.dumps(theme, indent=2) + "\n")
+
+tui = load_json(tui_path)
+tui.setdefault("$schema", "https://opencode.ai/tui.json")
+tui["theme"] = theme_name
+tui_path.write_text(json.dumps(tui, indent=2) + "\n")
+
+kv = load_json(kv_path)
+kv["theme"] = theme_name
+kv_path.write_text(json.dumps(kv, separators=(",", ":")) + "\n")
+PY
+}
+
+update_iterm2_profile() {
+  local src="$1"
+  mkdir -p "$(dirname "$ITERM2_PROFILE")"
+  python3 - "$src" "$ITERM2_PROFILE" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+src, dest = Path(sys.argv[1]), Path(sys.argv[2])
+lua = src.read_text()
+
+def field(key, default=""):
+    m = re.search(rf'{key}\s*=\s*"([^"]+)"', lua)
+    return m.group(1) if m else default
+
+def color_list(key):
+    m = re.search(rf'{key}\s*=\s*\{{([^}}]+)\}}', lua, re.S)
+    return re.findall(r'"(#[0-9a-fA-F]{6})"', m.group(1)) if m else []
+
+def comp(hexstr):
+    h = hexstr.lstrip("#")
+    r, g, b = (int(h[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+    return {"Red Component": r, "Green Component": g, "Blue Component": b,
+            "Alpha Component": 1, "Color Space": "sRGB"}
+
+colors = {
+    "Foreground Color": comp(field("foreground")),
+    "Background Color": comp(field("background")),
+    "Cursor Color": comp(field("cursor_bg")),
+    "Cursor Text Color": comp(field("cursor_fg")),
+    "Selection Color": comp(field("selection_bg")),
+    "Selected Text Color": comp(field("selection_fg")),
+}
+for i, c in enumerate(color_list("ansi")[:8]):
+    colors[f"Ansi {i} Color"] = comp(c)
+for i, c in enumerate(color_list("brights")[:8]):
+    colors[f"Ansi {i + 8} Color"] = comp(c)
+
+profile = {
+    "Guid": "rai-theme",
+    "Name": "rai",
+    "Dynamic Profile Rewritable": True,
+    "Normal Font": "NotoSansMNF-Bold 16",
+    "Use Non-ASCII Font": False,
+    "ASCII Ligatures": False,
+    "Use Separate Colors for Light and Dark Mode": False,
+    "Scrollback Lines": 10000,
+    "Unlimited Scrollback": False,
+    "Cursor Type": 2,
+    "Blinking Cursor": False,
+    "Prompt Before Closing 2": 0,
+    "Silence Bell": True,
+    "Custom Directory": "No",
+    "Keyboard Map": {
+        # Shift+Insert paste / Ctrl+Insert copy (PC keyboards send Insert as
+        # 0xf727 or Help 0xf746 depending on the keyboard).
+        "0xf727-0x20000": {"Action": 25, "Text": "Paste"},
+        "0xf746-0x20000": {"Action": 25, "Text": "Paste"},
+        "0xf727-0x40000": {"Action": 25, "Text": "Copy"},
+        "0xf746-0x40000": {"Action": 25, "Text": "Copy"},
+    },
+}
+profile.update(colors)
+dest.write_text(json.dumps({"Profiles": [profile]}, indent=2) + "\n")
+PY
+}
+
 # -----------------------------------------------------------------------------
 # apply a theme end-to-end
 # -----------------------------------------------------------------------------
@@ -131,11 +339,14 @@ apply_theme() {
     width="$BORDER_WIDTH" \
     >/tmp/borders.log 2>&1 & disown
 
-  # WezTerm (watches ~/.wezterm.lua; nudge it)
-  touch "$HOME/.wezterm.lua"
+  # iTerm2 watches DynamicProfiles/ and hot-reloads attached sessions.
+  update_iterm2_profile "$src"
 
   # Starship palette
   update_starship_palette "$name"
+
+  # OpenCode: write a matching custom TUI theme from this palette.
+  update_opencode_theme "$src" "$name"
 
   # VS Code + Cursor
   update_vscode_settings "$VSCODE_SETTINGS" "$vscode_theme"
@@ -188,6 +399,17 @@ case "$cmd" in
     name=$(current_theme || true)
     [[ -z "$name" ]] && { echo "no current theme" >&2; exit 1; }
     apply_theme "$name"
+    ;;
+  regen)
+    # Rebuild every OpenCode theme JSON from theme.lua (run after editing the
+    # generator). Does NOT switch theme, restart borders, or change wallpaper.
+    current=$(current_theme || true)
+    while IFS= read -r t; do
+      update_opencode_theme "$THEMES_DIR/$t/theme.lua" "$t"
+    done < <(list_themes)
+    # the loop left tui.json/kv.json on the last theme — restore the active one
+    [[ -n "$current" ]] && update_opencode_theme "$THEMES_DIR/$current/theme.lua" "$current"
+    echo "regenerated OpenCode themes; active: ${current:-(none)}"
     ;;
   cycle)
     current=$(current_theme || true)
