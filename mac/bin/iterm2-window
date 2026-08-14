@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Opens a new iTerm2 window in the *existing* instance (single instance, no
+# dock flood). If iTerm2 isn't running, plain launch already opens one window.
+set -euo pipefail
+
+if pgrep -xq iTerm2; then
+  osascript -e 'tell application "iTerm"
+    create window with default profile
+    activate
+  end tell' >/dev/null
+else
+  open -a iTerm
+fi
