@@ -15,6 +15,8 @@ case "$bundle" in
     osascript -e 'tell application "Finder" to make new Finder window' ;;
   com.microsoft.VSCode|com.todesktop.230313mzl4w4u92|com.exafunction.windsurf)
     open -na "$name" ;;
+  com.googlecode.iterm2)
+    /Users/abdullahalharbi/.local/bin/iterm2-window ;;
   *)
     open -na "$name" 2>/dev/null \
       || osascript -e "tell application \"$name\" to make new window" ;;

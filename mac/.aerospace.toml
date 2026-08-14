@@ -96,7 +96,7 @@ cmd-down = 'focus down'
 # -----------------------------------------------------------------------------
 # Launch Apps / New Window
 # -----------------------------------------------------------------------------
-cmd-enter = 'exec-and-forget open -na WezTerm'
+cmd-enter = 'exec-and-forget /Users/abdullahalharbi/.local/bin/iterm2-window'
 cmd-n = 'exec-and-forget /Users/abdullahalharbi/.local/bin/new-window'
 cmd-b = 'exec-and-forget open -na "Google Chrome"'
 cmd-o = 'exec-and-forget open -na Obsidian'
@@ -121,6 +121,8 @@ aerospace workspace "$current_workspace"'''
 alt-slash = 'layout tiles horizontal vertical'
 alt-comma = 'layout accordion horizontal vertical'
 cmd-f = 'fullscreen'
+# Toggle the focused window between floating and tiling (un-float stragglers)
+alt-shift-space = 'layout floating tiling'
 
 # -----------------------------------------------------------------------------
 # Resize
@@ -140,4 +142,5 @@ cmd-shift-down = 'move down'
 # FORCE ALL WINDOWS TO TILE
 # =============================================================================
 [[on-window-detected]]
+if = 'true'
 run = 'layout tiling'
