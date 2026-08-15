@@ -54,6 +54,53 @@ local function swatch(name)
   return image
 end
 
+-- Wallpaper picker for the CURRENT theme: one row per image with a real
+-- thumbnail, Enter applies via `theme wallpaper set <path>`.
+function wallpaperChooser()
+  local current = currentTheme()
+  if not current then return end
+
+  local dir = THEMES_DIR .. "/" .. current .. "/wallpapers"
+  if hs.fs.attributes(dir, "mode") ~= "directory" then return end
+
+  local activePath = hs.execute(
+    "cat " .. os.getenv("HOME") .. "/.cache/theme/" .. current .. ".wallpaper 2>/dev/null"
+  ):gsub("%s+$", "")
+
+  local files = {}
+  for entry in hs.fs.dir(dir) do
+    if entry:match("%.png$") or entry:match("%.jpe?g$") then
+      files[#files + 1] = entry
+    end
+  end
+  table.sort(files)
+
+  local choices = {}
+  for _, entry in ipairs(files) do
+    local path = dir .. "/" .. entry
+    local thumb = hs.image.imageFromPath(path)
+    if thumb then thumb = thumb:setSize({ w = 64, h = 36 }) end
+    choices[#choices + 1] = {
+      text = entry:gsub("%.%w+$", ""),
+      subText = path == activePath and "current" or nil,
+      image = thumb,
+      path = path,
+    }
+  end
+  if #choices == 0 then return end
+
+  local chooser = hs.chooser.new(function(choice)
+    if choice then
+      hs.task.new(SWITCHER, nil, { "wallpaper", "set", choice.path }):start()
+    end
+  end)
+  chooser:choices(choices)
+  chooser:rows(math.min(#choices, 10))
+  chooser:placeholderText("wallpaper (" .. current .. ")")
+  chooser:searchSubText(false)
+  chooser:show()
+end
+
 function themeChooser()
   local current = currentTheme()
   local choices = {}

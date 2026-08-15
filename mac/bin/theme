@@ -575,7 +575,19 @@ case "$cmd" in
       next)   new_idx=$(( (idx + 1) % ${#wps[@]} )) ;;
       prev)   new_idx=$(( (idx - 1 + ${#wps[@]}) % ${#wps[@]} )) ;;
       random) new_idx=$(( RANDOM % ${#wps[@]} )) ;;
-      *) echo "usage: theme wallpaper [next|prev|random]" >&2; exit 1 ;;
+      set)
+        # apply a specific wallpaper by path (used by the Hammerspoon picker)
+        target="${3:-}"
+        new_idx=-1
+        for i in "${!wps[@]}"; do
+          [[ "${wps[$i]}" == "$target" ]] && { new_idx=$i; break; }
+        done
+        if [[ $new_idx -lt 0 ]]; then
+          echo "not a wallpaper of theme $current: $target" >&2
+          exit 1
+        fi
+        ;;
+      *) echo "usage: theme wallpaper [next|prev|random|set <path>]" >&2; exit 1 ;;
     esac
 
     new_wp="${wps[$new_idx]}"

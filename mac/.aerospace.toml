@@ -106,7 +106,8 @@ cmd-o = 'exec-and-forget open -na Obsidian'
 # -----------------------------------------------------------------------------
 cmd-ctrl-t = 'exec-and-forget /opt/homebrew/bin/hs -c "themeChooser()"'
 cmd-ctrl-shift-t = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme cycle'
-cmd-ctrl-w = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme wallpaper next'
+cmd-ctrl-w = 'exec-and-forget /opt/homebrew/bin/hs -c "wallpaperChooser()"'
+cmd-ctrl-shift-w = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme wallpaper next'
 cmd-h = 'exec-and-forget /Users/abdullahalharbi/.local/bin/menu-toggle'
 
 # -----------------------------------------------------------------------------
