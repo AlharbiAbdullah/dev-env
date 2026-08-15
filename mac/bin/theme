@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Unified theme switcher: iTerm2, JankyBorders, VS Code, Cursor,
-# Starship prompt, macOS appearance, desktop wallpaper.
+# Unified theme switcher: iTerm2, JankyBorders, Cursor, Antigravity,
+# Chrome tab bar, Starship prompt, macOS appearance, desktop wallpaper.
 #
 # Usage:
 #   theme                         list available themes + current
@@ -18,8 +18,8 @@ CACHE_DIR="$HOME/.cache/theme"
 STARSHIP_CONFIG="$HOME/.config/starship.toml"
 BORDERS_BIN="/opt/homebrew/opt/borders/bin/borders"
 BORDER_WIDTH=15.0
-VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
 CURSOR_SETTINGS="$HOME/Library/Application Support/Cursor/User/settings.json"
+ANTIGRAVITY_SETTINGS="$HOME/Library/Application Support/Antigravity IDE/User/settings.json"
 OPENCODE_TUI_CONFIG="$HOME/.config/opencode/tui.json"
 OPENCODE_THEMES_DIR="$HOME/.config/opencode/themes"
 OPENCODE_KV_STATE="$HOME/.local/state/opencode/kv.json"
@@ -92,10 +92,52 @@ path, theme = sys.argv[1], sys.argv[2]
 c = open(path).read()
 pat = r'("workbench\.colorTheme"\s*:\s*)"[^"]*"'
 if re.search(pat, c):
-    c = re.sub(pat, r'\1"' + theme + '"', c, count=1)
+    c = re.sub(pat, lambda m: m.group(1) + '"' + theme + '"', c, count=1)
 else:
-    c = re.sub(r'\{', '{\n  "workbench.colorTheme": "' + theme + '",', c, count=1)
+    c = re.sub(r'\{', lambda m: '{\n  "workbench.colorTheme": "' + theme + '",', c, count=1)
 open(path, 'w').write(c)
+PY
+}
+
+# Rebuild every editor theme from theme.lua and reinstall the one extension that
+# carries them. Slow (packs a vsix, restarts nothing), so it belongs in `regen`,
+# not on the switch path.
+rebuild_editor_themes() {
+  python3 "$THEMES_DIR/build-editor-themes.py"
+}
+
+# Rewrite every [palettes.*] section in starship.toml from theme.lua. Starship
+# used to hold a hand-maintained second copy of the colours, which is exactly the
+# duplicate-source bug that let gruvbox run the ORIGINAL palette (#fb4934) in the
+# prompt while theme.lua ran the material one (#ea6962). Generated now, so there
+# is one source of colour for every tool.
+rebuild_starship_palettes() {
+  [[ -f "$STARSHIP_CONFIG" ]] || return 0
+  python3 - "$STARSHIP_CONFIG" "$THEMES_DIR" <<'PY'
+import os, re, sys
+cfg, themes_dir = sys.argv[1], sys.argv[2]
+MARK = "# palettes (one per theme; keys must match theme folder names)"
+
+names = sorted(d for d in os.listdir(themes_dir)
+               if not d.startswith(("_", ".")) and os.path.isfile(f"{themes_dir}/{d}/theme.lua"))
+
+blocks = []
+for n in names:
+    src = open(f"{themes_dir}/{n}/theme.lua").read()
+    m = re.search(r"ansi\s*=\s*\{(.*?)\}", src, re.S)
+    ansi = re.findall(r'"(#[0-9a-fA-F]{6})"', m.group(1)) if m else []
+    if len(ansi) < 5:
+        continue
+    b = re.search(r'border\s*=\s*"(0x[0-9a-fA-F]{8}|#[0-9a-fA-F]{6})"', src)
+    accent = ("#" + b.group(1)[-6:]) if b else ansi[4]
+    blocks.append(f"[palettes.{n}]\naccent = \"{accent}\"\nyellow = \"{ansi[3]}\"\n"
+                  f"red = \"{ansi[1]}\"\nblue = \"{ansi[4]}\"\ngreen = \"{ansi[2]}\"\n")
+
+c = open(cfg).read()
+head = c.split(MARK)[0]
+sep = "# " + "-" * 77 + "\n"
+open(cfg, "w").write(head + MARK + "\n" + sep + "\n" + "\n".join(blocks))
+print(f"  starship     {len(blocks)} palettes")
 PY
 }
 
@@ -322,6 +364,28 @@ dest.write_text(json.dumps({"Profiles": [profile]}, indent=2) + "\n")
 PY
 }
 
+# Chrome tab bar via the BrowserThemeColor enterprise policy (Omarchy's route,
+# upstreamed in Chrome 142). Chrome only honors it from the MANDATORY tier,
+# which on macOS is /Library/Managed Preferences (root-only); user-level
+# `defaults write com.google.Chrome` is ignored. The root-owned helper
+# /usr/local/bin/chrome-theme-color writes the plist under a NOPASSWD sudoers
+# rule scoped to that one script.
+#
+# APPLIES ON NEXT CHROME LAUNCH, not live. macOS feeds platform policies to
+# running apps through cfprefsd's cache; neither --refresh-platform-policy nor
+# the chrome://policy reload button re-reads a hand-edited managed plist
+# (verified 2026-08-15: file said one color, chrome://policy kept the old one).
+# Omarchy gets live switching on Linux because Chrome watches those policy
+# files directly there. No mac equivalent short of restarting Chrome.
+#
+# Side effect: Chrome shows "Managed by your organization" and locks its own
+# color picker; the switcher owns the color.
+update_chrome_theme() {
+  local bg="$1"
+  [[ -z "$bg" ]] && return 0
+  sudo -n /usr/local/bin/chrome-theme-color "$bg" 2>/dev/null || return 0
+}
+
 # -----------------------------------------------------------------------------
 # apply a theme end-to-end
 # -----------------------------------------------------------------------------
@@ -340,10 +404,13 @@ apply_theme() {
     grep -E "^[[:space:]]*$1[[:space:]]*=" "$src" | head -1 | sed -E 's/.*"([^"]*)".*/\1/'
   }
 
-  local border macos vscode_theme cursor_theme
+  local border macos cursor_theme chrome_color
   border=$(get_field border)
   macos=$(get_field macos)
-  vscode_theme=$(get_field vscode)
+  # Chrome seed: optional `chrome` field, else the theme background
+  chrome_color=$(get_field chrome || true)
+  [[ -z "$chrome_color" ]] && chrome_color=$(get_field background || true)
+  # theme.lua still carries a `vscode` field; VS Code is gone, both forks read `cursor`.
   cursor_theme=$(get_field cursor)
 
   ln -sfn "$src" "$THEMES_DIR/current.lua"
@@ -367,9 +434,12 @@ apply_theme() {
   # OpenCode: write a matching custom TUI theme from this palette.
   update_opencode_theme "$src" "$name"
 
-  # VS Code + Cursor
-  update_vscode_settings "$VSCODE_SETTINGS" "$vscode_theme"
+  # Cursor + Antigravity (both VS Code forks, same theme extension IDs)
   update_vscode_settings "$CURSOR_SETTINGS" "$cursor_theme"
+  update_vscode_settings "$ANTIGRAVITY_SETTINGS" "$cursor_theme"
+
+  # Chrome tab bar (live, policy-based)
+  update_chrome_theme "$chrome_color"
 
   # macOS dark/light
   if [[ "$macos" == "dark" ]]; then
@@ -395,8 +465,9 @@ apply_theme() {
 
   echo "theme: $name"
   echo "  border:    $border"
-  echo "  vscode:    ${vscode_theme:-(skipped)}"
   echo "  cursor:    ${cursor_theme:-(skipped)}"
+  echo "  antigrav:  ${cursor_theme:-(skipped)}"
+  echo "  chrome:    ${chrome_color:-(skipped)}"
   echo "  macos:     ${macos:-(unchanged)}"
   echo "  wallpaper: ${wp:-(none)}"
 }
@@ -429,6 +500,10 @@ case "$cmd" in
     # the loop left tui.json/kv.json on the last theme — restore the active one
     [[ -n "$current" ]] && update_opencode_theme "$THEMES_DIR/$current/theme.lua" "$current"
     echo "regenerated OpenCode themes; active: ${current:-(none)}"
+    rebuild_starship_palettes
+    rebuild_editor_themes
+    # the palettes block was rewritten; re-point the active palette line
+    [[ -n "$current" ]] && update_starship_palette "$current"
     ;;
   cycle)
     current=$(current_theme || true)

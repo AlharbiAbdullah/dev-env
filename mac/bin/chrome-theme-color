@@ -1,0 +1,26 @@
+#!/bin/bash
+# Writes Chrome's BrowserThemeColor managed policy. Installed root-owned in
+# /usr/local/bin with a NOPASSWD sudoers rule so the theme switcher can call
+# it per switch. Validates the arg so the rule grants nothing beyond one color.
+set -euo pipefail
+
+color="${1:-}"
+if [[ ! "$color" =~ ^#[0-9a-fA-F]{6}$ ]]; then
+  echo "usage: chrome-theme-color '#rrggbb'" >&2
+  exit 1
+fi
+
+mkdir -p "/Library/Managed Preferences"
+cat > "/Library/Managed Preferences/com.google.Chrome.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BrowserThemeColor</key>
+	<string>$color</string>
+</dict>
+</plist>
+EOF
+chmod 644 "/Library/Managed Preferences/com.google.Chrome.plist"
+# cfprefsd caches managed prefs; without this Chrome keeps seeing the old value
+killall cfprefsd 2>/dev/null || true
