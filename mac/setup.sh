@@ -48,6 +48,8 @@ cp "$SCRIPT_DIR/.zprofile"        "$HOME/.zprofile";                 echo "  -> 
 cp "$SCRIPT_DIR/.tmux.conf"       "$HOME/.tmux.conf";                echo "  -> ~/.tmux.conf"
 cp "$SCRIPT_DIR/.aerospace.toml"  "$HOME/.aerospace.toml";           echo "  -> ~/.aerospace.toml"
 cp "$SCRIPT_DIR/starship.toml"    "$HOME/.config/starship.toml";     echo "  -> ~/.config/starship.toml"
+mkdir -p "$HOME/.hammerspoon"
+cp "$SCRIPT_DIR"/hammerspoon/*.lua "$HOME/.hammerspoon/";             echo "  -> ~/.hammerspoon/"
 
 # --- Copy bin scripts (make executable) ---
 echo ""
