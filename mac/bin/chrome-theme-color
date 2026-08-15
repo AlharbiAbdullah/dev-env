@@ -10,8 +10,16 @@ if [[ ! "$color" =~ ^#[0-9a-fA-F]{6}$ ]]; then
   exit 1
 fi
 
+plist="/Library/Managed Preferences/com.google.Chrome.plist"
+
+# No-op when the color is already set: skips the write AND the cfprefsd
+# restart below, so `theme reload` / re-applying the same theme costs nothing.
+if [[ -f "$plist" ]] && grep -q "<string>$color</string>" "$plist"; then
+  exit 0
+fi
+
 mkdir -p "/Library/Managed Preferences"
-cat > "/Library/Managed Preferences/com.google.Chrome.plist" <<EOF
+cat > "$plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -21,6 +29,11 @@ cat > "/Library/Managed Preferences/com.google.Chrome.plist" <<EOF
 </dict>
 </plist>
 EOF
-chmod 644 "/Library/Managed Preferences/com.google.Chrome.plist"
-# cfprefsd caches managed prefs; without this Chrome keeps seeing the old value
-killall cfprefsd 2>/dev/null || true
+chmod 644 "$plist"
+
+# cfprefsd caches managed prefs; without a restart Chrome keeps seeing the old
+# value at next launch. Restart ONLY the root daemon (it serves /Library/
+# Managed Preferences). A bare `killall cfprefsd` as root also killed the
+# per-user agent that System Events, Dock, and WallpaperAgent sit on, which
+# stalled the theme switcher for seconds to minutes (diagnosed 2026-08-15).
+killall -u root cfprefsd 2>/dev/null || true

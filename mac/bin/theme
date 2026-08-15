@@ -67,10 +67,25 @@ set_wallpaper_on_disk() {
   local wp="$1" theme="$2"
   [[ -z "$wp" || ! -f "$wp" ]] && return 0
   echo "$wp" > "$CACHE_DIR/$theme.wallpaper"
+  # Skip the WallpaperAgent XPC round-trip when this exact image is already up.
+  # setDesktopImageURL blocks synchronously and can stall for minutes if the
+  # agent is resyncing (2026-08-15 lag investigation).
+  local last="$CACHE_DIR/last-applied.wallpaper"
+  [[ -f "$last" && "$(cat "$last")" == "$wp" ]] && return 0
   # macOS Tahoe: legacy System Events 'set picture' sets a path but no longer repaints
   # the live desktop. Render via the compiled NSWorkspace helper (bin/set-wallpaper.swift).
+  #
+  # Apply in the BACKGROUND: WallpaperAgent throttles rapid successive changes
+  # (2nd change within ~10s blocks 8-10s in setDesktopImageURL), which made
+  # cycling themes lag. Kill any still-pending apply first so an old image
+  # can't finish late and overwrite the new one; the marker is written only on
+  # success, so a killed apply just retries on the next switch.
   if [[ -x "$HOME/.local/bin/set-wallpaper" ]]; then
-    "$HOME/.local/bin/set-wallpaper" "$wp" 2>/dev/null || true
+    pkill -f "$HOME/.local/bin/set-wallpaper" 2>/dev/null || true
+    # nohup + disown like the borders restart: a throttled apply can outlive
+    # the switcher and its terminal, and must not die with them.
+    nohup bash -c "\"$HOME/.local/bin/set-wallpaper\" \"$wp\" \
+        && echo \"$wp\" > \"$last\"" >/dev/null 2>&1 & disown
   fi
 }
 
@@ -438,13 +453,13 @@ apply_theme() {
   update_vscode_settings "$CURSOR_SETTINGS" "$cursor_theme"
   update_vscode_settings "$ANTIGRAVITY_SETTINGS" "$cursor_theme"
 
-  # Chrome tab bar (live, policy-based)
-  update_chrome_theme "$chrome_color"
-
-  # macOS dark/light
-  if [[ "$macos" == "dark" ]]; then
+  # macOS dark/light. Skip when the appearance already matches: the System
+  # Events call costs 0.3-9s even as a no-op, the defaults read costs ~15ms.
+  local current_style
+  current_style=$(defaults read -g AppleInterfaceStyle 2>/dev/null || echo "Light")
+  if [[ "$macos" == "dark" && "$current_style" != "Dark" ]]; then
     osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to true' 2>/dev/null || true
-  elif [[ "$macos" == "light" ]]; then
+  elif [[ "$macos" == "light" && "$current_style" == "Dark" ]]; then
     osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to false' 2>/dev/null || true
   fi
 
@@ -460,6 +475,12 @@ apply_theme() {
     wp=$(theme_wallpapers "$name" | head -1)
   fi
   set_wallpaper_on_disk "$wp" "$name"
+
+  # Chrome tab bar (policy-based, applies on next Chrome launch). LAST on
+  # purpose: the helper restarts cfprefsd, and the System Events + wallpaper
+  # calls above stall for seconds to minutes when their prefs daemon is shot
+  # out from under them (2026-08-15 lag investigation).
+  update_chrome_theme "$chrome_color"
 
   hud "$name"
 
