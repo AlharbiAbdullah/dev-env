@@ -13,17 +13,9 @@ After=hyprland-session.target
 
 [Service]
 Type=simple
-# `sg input` supplies the input group needed for /dev/uinput and /dev/input/event*.
-# systemd user units cannot set SupplementaryGroups=, and the group added to
-# /etc/passwd on 2026-08-01 only reaches the user manager after a fresh login —
-# sg makes this work in the current session too. It stays a harmless no-op once
-# the group is inherited natively.
-#
-# The default KillMode=control-group signals every process in the cgroup, so
-# `systemctl --user stop xremap` reaches xremap itself, not just the sg wrapper.
-# That matters: stopping the unit is the escape hatch that releases the keyboard
-# grab, and it must work over SSH from the Mac.
-ExecStart=/usr/bin/sg input -c "/home/abdullah/.local/bin/xremap /home/abdullah/.config/xremap/config.yml"
+# No `sg input` wrapper on Omarchy: `sg` is not shipped on Arch, and the user is
+# in the input group natively (udev 99-xremap.rules grants /dev/uinput to it).
+ExecStart=/usr/bin/xremap /home/abdullah/.config/xremap/config.yml
 Restart=on-failure
 RestartSec=2
 
