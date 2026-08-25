@@ -16,6 +16,15 @@ $R --exclude '.config/google-chrome' --exclude '.local/share/opencode/auth.json'
 $R --exclude 'Default/Cookies*' --exclude 'Default/Login Data*' --exclude 'Default/Web Data*' \
    "$SRC_HOST:$SRC/home/.config/google-chrome/" "$HOME/.config/google-chrome/"
 
+# The home rsync brings back Ubuntu-era versions of the files install.sh manages
+# (theme wrapper, ghostty/fastfetch configs, .bashrc); re-apply the Omarchy layer on top.
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+log "re-apply Omarchy layer over restored dotfiles"
+cp "$HERE/.bashrc" "$HOME/.bashrc"; cp "$HERE/.tmux.conf" "$HOME/.tmux.conf"; cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
+cp -R "$HERE/config/." "$HOME/.config/"; chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set"
+cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode}
+
 log "repos + work dirs"
 for d in helm projects dev-env playground work staging; do
   $R "$SRC_HOST:$SRC/repos/$d/" "$HOME/$d/"
