@@ -3,7 +3,8 @@ return {
   border = "0xffc4a7e7",
   macos = "dark",
   vscode = "Duskfox",
-  cursor = "Duskfox",
+  vscode_ext = "keifererikson.nightfox",
+  cursor = "Duskfox (generated)",
   colors = {
     background = "#343150",
     foreground = "#e6d2b2",

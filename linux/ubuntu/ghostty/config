@@ -1,19 +1,63 @@
-# Bold Noto for UI text, Cairo for Arabic glyphs.
-# (No BiDi option: Ghostty has no RTL support yet — upstream WIP.)
+# Ghostty config — ported from ~/.wezterm.lua on 2026-06-08 (WezTerm → Ghostty).
+# Edit this file, then reload with Ctrl+Shift+, (or `pkill -USR2 ghostty`).
+#
+# NOTE on Arabic: WezTerm's bidi_enabled has NO equivalent here. Ghostty 1.3.0
+# is left-to-right only (BiDi/RTL is still in development upstream), so Arabic
+# renders unshaped/LTR. This was a known trade-off of the migration.
+
+# --- Font (was: NotoSansM Nerd Font Bold → Cairo Bold → Noto Color Emoji) ---
+# Multiple font-family lines form the fallback chain, in order.
 font-family = NotoSansM Nerd Font
 font-family = Cairo
+font-family = Noto Color Emoji
+# WezTerm used weight = "Bold" for the whole stack; use the Bold face as regular.
 font-style = Bold
-font-feature = -liga
-# 14 on Ubuntu (16 on the Mac) — different monitor DPI.
 font-size = 14
 
-background-opacity = 1.00
+# Disable ligatures (was: harfbuzz_features = { "liga=0" }).
+font-feature = -liga
 
-# Active theme colors. The `theme` script flips this symlink and sends
-# SIGUSR2 to Ghostty for a live reload.
-config-file = ?theme-current
+# --- Behaviour ---
+# was: window_close_confirmation = "NeverPrompt"
+confirm-close-surface = false
 
-# Shift+Enter inserts a newline (multiline input in Claude Code etc.)
+# Highlighting text must NOT copy it. Ghostty defaults copy-on-select to true,
+# which pushes every selection into the PRIMARY clipboard. macOS has no primary
+# selection and selecting never copies — match that. Copy stays explicit:
+# Super+C. (2026-08-01)
+copy-on-select = false
+
+# Every freshly-launched terminal opens in the helm vault (default was `inherit`,
+# i.e. the launching process's cwd — usually $HOME). New tabs/splits still inherit
+# the current surface's cwd (window-inherit-working-directory defaults to true).
+working-directory = /home/abdullah/helm
+
+# --- SSH: let remote hosts understand Ghostty's terminal ---
+# Ghostty exports TERM=xterm-ghostty, which remote hosts (Mac, droplet) don't have
+# in their terminfo DB — that garbles keys over ssh (leaked escape codes like ;5D,
+# doubled chars). ssh-terminfo auto-installs the terminfo on the remote on first
+# connect; ssh-env propagates TERM and falls back to xterm-256color. (2026-06-13)
+# (Default set was cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path.)
+shell-integration-features = cursor,no-sudo,title,ssh-env,ssh-terminfo,path
+
+# was: { key = "Enter", mods = "SHIFT", action = SendString("\n") }
 keybind = shift+enter=text:\n
 
-confirm-close-surface = false
+# --- Mac-style copy / paste / select-all (Cmd→Super muscle memory) ---
+# Ghostty grabs these before the running app (incl. Claude Code), so Ctrl+C
+# stays as interrupt in the shell. Default Ctrl+Shift+C/V/A still work too.
+# `performable:` makes Ghostty run the action only when it CAN — with no Ghostty
+# selection there is nothing to copy, so the key falls through to the running app
+# instead of being swallowed. That is what lets Super+C reach Claude Code, which
+# draws its own mouse selection (Ghostty never sees one) and binds cmd+c to
+# selection:copy. Without this prefix Ghostty ate the key and copying a highlight
+# inside Claude Code was impossible. (2026-08-01)
+keybind = performable:super+c=copy_to_clipboard
+keybind = super+v=paste_from_clipboard
+keybind = super+a=select_all
+
+# --- Colors ---
+# Generated per-theme by ~/.local/bin/theme from ~/.config/themes/current.lua.
+# (WezTerm read the theme's Lua directly; Ghostty can't, so the switcher writes
+# this file and signals a live reload.)
+config-file = theme.conf

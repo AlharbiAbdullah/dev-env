@@ -1,0 +1,22 @@
+# Notifications fully disabled (2026-06-09).
+# mako stays running so D-Bus senders (notify-send, apps) don't error,
+# but every notification is invisible — nothing is ever displayed.
+# NOTE: do NOT use max-visible=0 — it crashes mako with a Wayland
+# protocol error (zero-width surface) on every notification.
+# To re-enable: delete this file and run `makoctl reload`.
+
+# No overflow cutoff -> the "(N more)" placeholder can never appear.
+max-visible=-1
+
+# Expire the invisible notifications after 1s so they don't pile up
+# in `makoctl list` forever (they display nothing either way).
+default-timeout=1000
+ignore-timeout=1
+
+# Every notification is either actionable or not, so these two
+# criteria together match all of them.
+[actionable=true]
+invisible=1
+
+[actionable=false]
+invisible=1

@@ -143,22 +143,31 @@ cp -R "$SCRIPT_DIR/waybar/." "$HOME/.config/waybar/";                echo "  -> 
 
 cp "$SCRIPT_DIR/theme"      "$HOME/.local/bin/theme"
 cp "$SCRIPT_DIR/new-window" "$HOME/.local/bin/new-window"
-chmod +x "$HOME/.local/bin/theme" "$HOME/.local/bin/new-window"
-echo "  -> ~/.local/bin/{theme,new-window} (chmod +x)"
+cp "$SCRIPT_DIR/focus-mode" "$HOME/.local/bin/focus-mode"
+chmod +x "$HOME/.local/bin/theme" "$HOME/.local/bin/new-window" "$HOME/.local/bin/focus-mode"
+echo "  -> ~/.local/bin/{theme,new-window,focus-mode} (chmod +x)"
+
+# --- Extra configs captured from the live box (2026-08-25 back-sync) ---
+for d in rofi mako xremap micro fastfetch glow git; do
+    mkdir -p "$HOME/.config/$d"
+    cp -R "$SCRIPT_DIR/config/$d/." "$HOME/.config/$d/"; echo "  -> ~/.config/$d/"
+done
+cp "$SCRIPT_DIR/config/mimeapps.list" "$HOME/.config/mimeapps.list"; echo "  -> ~/.config/mimeapps.list"
+mkdir -p "$HOME/.config/opencode"
+cp -R "$SCRIPT_DIR/config/opencode/." "$HOME/.config/opencode/"; echo "  -> ~/.config/opencode/ (run 'npm i' there once)"
+mkdir -p "$HOME/.claude/themes"
+cp "$SCRIPT_DIR/claude/keybindings.json" "$HOME/.claude/keybindings.json"
+cp "$SCRIPT_DIR/claude/themes/dim-select.json" "$HOME/.claude/themes/"; echo "  -> ~/.claude/{keybindings.json,themes/dim-select.json}"
 
 # --- Themes (shared data) ---
-if [ ! -d "$HOME/.config/themes" ]; then
-    echo "Copying theme collection..."
-    cp -R "$REPO_ROOT/common/themes" "$HOME/.config/themes"
-fi
+echo "Syncing theme collection (repo -> ~/.config/themes, live-only extras kept)..."
+mkdir -p "$HOME/.config/themes"
+cp -R "$REPO_ROOT/common/themes/." "$HOME/.config/themes/"
 if [ ! -e "$HOME/.config/themes/current.lua" ]; then
     ln -sfn "$HOME/.config/themes/everforest/theme.lua" "$HOME/.config/themes/current.lua"
     echo "  -> default theme: everforest"
 fi
-if [ ! -e "$HOME/.config/ghostty/theme-current" ]; then
-    ln -sfn "$HOME/.config/themes/everforest/ghostty.conf" "$HOME/.config/ghostty/theme-current"
-    echo "  -> ~/.config/ghostty/theme-current (everforest)"
-fi
+"$HOME/.local/bin/theme" reload >/dev/null 2>&1 || true   # generates ~/.config/ghostty/theme.conf + tmux theme
 
 # --- Default shell: bash (Ubuntu default — mac uses zsh, linux stays bash) ---
 

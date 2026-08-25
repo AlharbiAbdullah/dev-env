@@ -3,7 +3,8 @@ return {
   border = "0xff88c0d0",
   macos = "dark",
   vscode = "Nord",
-  cursor = "Nord",
+  vscode_ext = "arcticicestudio.nord-visual-studio-code",
+  cursor = "Nord (generated)",
   colors = {
     background = "#2e3440",
     foreground = "#c6ccd5",

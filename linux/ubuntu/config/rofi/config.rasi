@@ -1,0 +1,14 @@
+configuration {
+    modi:                "drun,run";
+    show-icons:          true;
+    icon-theme:          "Yaru";
+    drun-display-format: "{name}";
+    display-drun:        "Apps";
+    drun-match-fields:   "name,generic,exec,categories,keywords";
+    terminal:            "ghostty";
+    hover-select:        true;
+    me-select-entry:     "";
+    me-accept-entry:     "MousePrimary";
+}
+
+@theme "spotlight"

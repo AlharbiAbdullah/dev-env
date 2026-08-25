@@ -2,8 +2,9 @@ return {
   name = "forestbones-dark",
   border = "0xffddbd7f",
   macos = "dark",
-  vscode = "Everforest Dark",
-  cursor = "Everforest Dark",
+  vscode = "Zenbones Forestbones Dark",
+  vscode_ext = "rpbritton.zenbones",
+  cursor = "Forestbones Dark (generated)",
   colors = {
     background = "#2c343a",
     foreground = "#e7dcc4",

@@ -134,20 +134,29 @@ fi
 # ---------------------------------------------------------------------------
 echo ""; echo "[6/6] scheduled jobs (systemd user timers)"
 UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
-for u in news-daily news-weekly rai-maintenance; do
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio"
+for u in $TIMERS; do
     install -m 0644 "$HERE/systemd/$u.service" "$UNIT_DST/$u.service"
     install -m 0644 "$HERE/systemd/$u.timer"   "$UNIT_DST/$u.timer"
 done
+install -m 0644 "$HERE/systemd/xremap.service" "$UNIT_DST/xremap.service"   # started by Hyprland exec-once
+install -m 0644 "$HERE/systemd/xvfb.service"   "$UNIT_DST/xvfb.service"     # :20 for GUI-over-SSH (optional)
+sudo install -m 0644 "$HERE/etc/udev/rules.d/99-xremap.rules" /etc/udev/rules.d/99-xremap.rules
+sudo install -m 0644 "$HERE/etc/polkit-1/rules.d/99-1password-unlock.rules" /etc/polkit-1/rules.d/99-1password-unlock.rules
+sudo install -m 0644 "$HERE/etc/modprobe.d/cfg80211.conf" /etc/modprobe.d/cfg80211.conf   # regdom SA (5 GHz); rebuild initramfs after
+sudo mkdir -p /etc/opt/chrome/policies/managed && sudo chmod a+rw /etc/opt/chrome/policies/managed   # theme writes BrowserThemeColor
+id -nG "$USER" | grep -qw input || sudo usermod -aG input "$USER"   # xremap
 systemctl --user daemon-reload
+systemctl --user enable xvfb.service >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
-    systemctl --user enable --now news-daily.timer news-weekly.timer rai-maintenance.timer
+    systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)
     loginctl enable-linger "$USER" >/dev/null 2>&1 || true
     echo "  timers enabled + lingering on:"
     systemctl --user list-timers --all | grep -E 'news|rai' || true
 else
     echo "  ENABLE_TIMERS=0 — units installed but NOT enabled (cutover staging)."
     echo "  Arm later (after disabling the OLD machine's timers — see MIGRATION.md):"
-    echo "    systemctl --user enable --now news-daily.timer news-weekly.timer rai-maintenance.timer"
+    echo "    systemctl --user enable --now news-daily.timer news-weekly.timer news-x-collect.timer rai-maintenance.timer paper-portfolio.timer"
     echo "    loginctl enable-linger $USER"
 fi
 

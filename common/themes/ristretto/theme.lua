@@ -3,7 +3,8 @@ return {
   border = "0xfff38d70",
   macos = "dark",
   vscode = "Monokai Pro (Filter Ristretto)",
-  cursor = "Monokai Pro (Filter Ristretto)",
+  vscode_ext = "monokai.theme-monokai-pro-vscode",
+  cursor = "Ristretto (generated)",
   colors = {
     background = "#3c3130",
     foreground = "#e6d3b6",

@@ -1,0 +1,14 @@
+[Unit]
+Description=Virtual X display :20 for headless browser automation
+Documentation=file:///home/abdullah/helm/03-rai/harness/linux/detect-display.sh
+# Replaces the X server Chrome Remote Desktop used to provide on :20. Scheduled
+# jobs (news-digest) need a live X display when the box sits logged out at GDM.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/Xvfb :20 -screen 0 1920x1080x24 -nolisten tcp -noreset
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

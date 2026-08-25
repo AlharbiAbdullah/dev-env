@@ -1,0 +1,10 @@
+[Unit]
+Description=Run paper-portfolio daily mark at 17:00 Asia/Riyadh
+
+[Timer]
+OnCalendar=*-*-* 17:00:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

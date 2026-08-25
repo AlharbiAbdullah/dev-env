@@ -3,7 +3,8 @@ return {
   border = "0xffd8a657",
   macos = "dark",
   vscode = "Gruvbox Material Dark",
-  cursor = "Gruvbox Material Dark",
+  vscode_ext = "sainnhe.gruvbox-material",
+  cursor = "Gruvbox Material Soft (generated)",
   colors = {
     background = "#32302f",
     foreground = "#d4be98",

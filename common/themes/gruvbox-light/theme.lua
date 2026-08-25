@@ -2,8 +2,9 @@ return {
   name = "gruvbox-light",
   border = "0xffcc241d",
   macos = "light",
-  vscode = "Gruvbox Light (Medium)",
-  cursor = "Gruvbox Light Medium",
+  vscode = "Gruvbox Light Medium",
+  vscode_ext = "jdinhlife.gruvbox",
+  cursor = "Gruvbox Light (generated)",
   colors = {
     background = "#f2e5bc",
     foreground = "#3c3836",

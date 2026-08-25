@@ -3,7 +3,8 @@ return {
   border = "0xff81af58",
   macos = "dark",
   vscode = "bamboo",
-  cursor = "bamboo",
+  vscode_ext = "rileybruins.bamboo-nvim",
+  cursor = "Bamboo (generated)",
   colors = {
     background = "#2f382f",
     foreground = "#eee0b8",

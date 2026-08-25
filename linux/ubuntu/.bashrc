@@ -1,4 +1,11 @@
 # =============================================================================
+# ble.sh — fish-style autosuggestions + syntax highlighting (must load first)
+# Attaches at the very bottom of this file via `ble-attach` so it doesn't
+# fight starship/fzf init. Remove these two lines to fully disable.
+# =============================================================================
+[[ $- == *i* ]] && source "$HOME/.local/share/blesh/ble.sh" --noattach
+
+# =============================================================================
 # PATH
 # =============================================================================
 export PATH="$HOME/.local/bin:$PATH"
@@ -73,3 +80,40 @@ alias c='clear'
 
 # Machine-local secrets and overrides (gitignored, never committed)
 [ -r "$HOME/.bashrc.local" ] && source "$HOME/.bashrc.local"
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/abdullah/.local/bin:$PATH"
+
+# =============================================================================
+# ble.sh — attach (keep LAST; lets all init above run before ble takes over)
+# =============================================================================
+[[ ${BLE_VERSION-} ]] && ble-attach
+
+# zsh-syntax-highlighting style: valid commands in green (default ble is cyan)
+if [[ ${BLE_VERSION-} ]]; then
+  ble-face -s command_builtin  fg=green
+  ble-face -s command_file     fg=green
+  ble-face -s command_function fg=green
+  ble-face -s command_alias    fg=green
+fi
+
+# opencode
+export PATH=/home/abdullah/.opencode/bin:$PATH
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+source "$HOME/google-cloud-sdk/path.bash.inc"
+
+# =============================================================================
+# DISPLAY autodetect — this box is headless (no monitor). SSH/TTY sessions get no
+# DISPLAY, so browsers and any GUI tool fail to start. Chrome Remote Desktop runs a
+# virtual X server (usually :20) that needs no monitor; point at whatever is live.
+# Set RAI_NO_DISPLAY_AUTODETECT=1 to skip. ~110ms, only when DISPLAY is unset.
+# =============================================================================
+if [ -z "${DISPLAY:-}" ] && [ -z "${RAI_NO_DISPLAY_AUTODETECT:-}" ]; then
+  _rai_display="$("$HOME/helm/03-rai/harness/linux/detect-display.sh" 2>/dev/null)" \
+    && export DISPLAY="$_rai_display"
+  unset _rai_display
+fi

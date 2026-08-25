@@ -52,12 +52,25 @@ window#waybar {
   padding: 0 12px;
 }
 
+#custom-gpu,
+#memory,
+#cpu,
 #network,
 #pulseaudio,
 #battery,
 #tray {
   padding: 0 10px;
   color: @foreground;
+}
+
+#cpu.warning,
+#memory.warning {
+  color: @yellow;
+}
+
+#cpu.critical,
+#memory.critical {
+  color: @red;
 }
 
 #battery.warning {

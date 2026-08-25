@@ -1,0 +1,7 @@
+[Unit]
+Description=X pre-pass collector for daily news digest (gentle accumulating pass)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/helm/03-rai/skills/news-digest/scheduled/collect-x-pass.sh

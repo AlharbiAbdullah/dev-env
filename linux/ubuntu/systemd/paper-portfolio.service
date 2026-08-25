@@ -1,0 +1,13 @@
+[Unit]
+Description=Paper-portfolio daily mark (Sharia buy-and-hold paper books)
+Documentation=file:///home/abdullah/helm/02-ana/financial/investment/paper-portfolio/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/abdullah/helm/02-ana/financial/investment/paper-portfolio
+ExecStart=/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/.venv/bin/python /home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.py
+StandardOutput=append:/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.log
+StandardError=append:/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.log
+TimeoutStartSec=300

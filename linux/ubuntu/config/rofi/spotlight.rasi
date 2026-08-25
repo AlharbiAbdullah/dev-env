@@ -1,0 +1,84 @@
+/* Spotlight-style rofi theme — centered, rounded, translucent.
+   Hyprland's `layerrule = blur, rofi` frosts the background behind it. */
+
+@import "colors.rasi"
+
+* {
+    font:             "NotoSansM Nerd Font 14";
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    location:         center;
+    anchor:           center;
+    y-offset:         -160px;          /* sit in the upper-middle, Spotlight-style */
+    width:            760px;
+    border-radius:    20px;
+    background-color: @window-bg;
+    border:           2px;
+    border-color:     @accent;
+    padding:          0;
+}
+
+mainbox {
+    padding:  16px;
+    spacing:  12px;
+    children: [ inputbar, listview ];
+}
+
+inputbar {
+    padding:          15px 18px;
+    spacing:          14px;
+    border-radius:    14px;
+    background-color: @surface;
+    font:             "NotoSansM Nerd Font 16";
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    enabled:        true;
+    str:            "";                 /* nerd-font magnifier */
+    text-color:     @accent;
+    font:           "NotoSansM Nerd Font 17";
+    vertical-align: 0.5;
+}
+
+entry {
+    placeholder:       "Search";
+    placeholder-color: @fg-dim;
+    text-color:        @fg;
+    cursor:            text;
+    vertical-align:    0.5;
+}
+
+listview {
+    lines:         8;
+    columns:       1;
+    fixed-height:  false;
+    scrollbar:     false;
+    spacing:       4px;
+    padding:       6px 0px 0px 0px;
+}
+
+element {
+    padding:       11px 12px;
+    spacing:       14px;
+    border-radius: 12px;
+    text-color:    @fg;
+}
+
+element selected {
+    background-color: @accent;
+    text-color:       @accent-fg;
+}
+
+element-icon {
+    size:           30px;
+    vertical-align: 0.5;
+}
+
+element-text {
+    vertical-align: 0.5;
+    text-color:     inherit;
+}

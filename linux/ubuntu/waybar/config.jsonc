@@ -9,7 +9,7 @@
 
   "modules-left": ["hyprland/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["network", "pulseaudio", "battery", "tray"],
+  "modules-right": ["custom/gpu", "memory", "cpu", "network", "pulseaudio", "battery", "tray"],
 
   "hyprland/workspaces": {
     "format": "{name}",
@@ -17,7 +17,7 @@
   },
 
   "clock": {
-    "format": "{:%a %H:%M}",
+    "format": "{:%a %b %d   %I:%M %p}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     "calendar": {
       "mode": "month",
@@ -25,6 +25,32 @@
       "format": {
         "today": "<b>{}</b>"
       }
+    }
+  },
+
+  "custom/gpu": {
+    "format": "GPU {}%",
+    "interval": 5,
+    "exec": "cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -n1",
+    "tooltip": false
+  },
+
+  "memory": {
+    "format": "RAM {percentage}%",
+    "interval": 5,
+    "tooltip-format": "{used:0.1f} / {total:0.1f} GiB",
+    "states": {
+      "warning": 75,
+      "critical": 90
+    }
+  },
+
+  "cpu": {
+    "format": "CPU {usage}%",
+    "interval": 2,
+    "states": {
+      "warning": 70,
+      "critical": 90
     }
   },
 

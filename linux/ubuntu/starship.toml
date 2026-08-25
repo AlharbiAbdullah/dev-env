@@ -1,9 +1,9 @@
 # Minimal two-line prompt, colors driven by the active theme palette.
 # The `theme` script updates the `palette = ...` line below on theme switch.
 
-palette = "gruvbox"
+palette = "everbloom"
 
-format = "$directory$git_branch$git_status$cmd_duration$character "
+format = "$hostname$directory$git_branch$git_status$cmd_duration$character "
 
 add_newline = true
 
@@ -14,6 +14,13 @@ command_timeout = 2000
 [character]
 success_symbol = "[\u279c](bold fg:accent)"
 error_symbol = "[\u2717](bold fg:red)"
+
+# Remote-session OS icon: one quiet glyph, shown ONLY over SSH (ssh_only keys
+# off $SSH_CONNECTION/$SSH_TTY). This config runs on Linux, so it shows the Tux
+# glyph; the Mac's own starship.toml uses the Apple glyph (\uf179). Local = none.
+[hostname]
+ssh_only = true
+format = "[\uf17c](fg:accent) "
 
 [directory]
 style = "bold fg:accent"
@@ -137,6 +144,34 @@ yellow = "#c4b28a"
 red = "#c4746e"
 blue = "#8ba4b0"
 green = "#87a987"
+
+[palettes.forestbones-dark]
+accent = "#d69ab7"
+yellow = "#ddbd7f"
+red = "#e67c7f"
+blue = "#7fbcb4"
+green = "#a9c181"
+
+[palettes.duskfox]
+accent = "#c4a7e7"
+yellow = "#f6c177"
+red = "#eb6f92"
+blue = "#569fba"
+green = "#a3be8c"
+
+[palettes.zenburned]
+accent = "#b279a7"
+yellow = "#b77e64"
+red = "#e3716e"
+blue = "#6099c0"
+green = "#819b69"
+
+[palettes.gruvbox-material-soft]
+accent = "#d3869b"
+yellow = "#d8a657"
+red = "#ea6962"
+blue = "#7daea3"
+green = "#a9b665"
 
 [palettes.dark-pro]
 accent = "#58a6ff"

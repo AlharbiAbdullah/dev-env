@@ -2,8 +2,9 @@ return {
   name = "zenburned",
   border = "0xffb77e64",
   macos = "dark",
-  vscode = "Zenburn",
-  cursor = "Zenburn",
+  vscode = "Zenbones Zenburned Dark",
+  vscode_ext = "rpbritton.zenbones",
+  cursor = "Zenburned (generated)",
   colors = {
     background = "#404040",
     foreground = "#f0e4cf",
