@@ -69,7 +69,7 @@ sudo tar czf - /etc/sudoers.d/ab /etc/polkit-1/rules.d /etc/udev/rules.d /etc/mo
 
 # ---- P4 heavy: docker volumes, ollama models, multipass -------------------
 log "P4 heavy: docker volumes"
-for v in $(docker volume ls -q 2>/dev/null); do
+for v in $(docker volume ls -q 2>/dev/null | grep -v "^buildx_"); do   # buildx caches are junk (56 GB)
   log "  volume $v"
   docker run --rm -v "$v":/v alpine tar cf - -C /v . | ssh "$DEST_HOST" "cat > ~/$DEST/heavy/docker-volume-$v.tar"
 done
