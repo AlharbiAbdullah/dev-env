@@ -2,7 +2,8 @@
 # backup-ubuntu.sh — pre-wipe backup of the Ubuntu box to the Mac (over Tailscale SSH).
 # Re-runnable: rsync parts are incremental, tar parts are overwritten.
 #   ./backup-ubuntu.sh            # everything
-#   ./backup-ubuntu.sh --light    # skip the heavy phase (docker volumes, multipass, ollama models)
+#   ./backup-ubuntu.sh --light    # skip the heavy phase (ollama models)
+# Docker images/containers/volumes and multipass VMs are OUT OF SCOPE (Abdullah, 2026-08-25).
 # Destination: mac:~/backups/linux-<date>/
 set -uo pipefail
 DEST_HOST="${DEST_HOST:-mac}"
@@ -25,8 +26,7 @@ id > "$M/id.txt"; lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT,UUID > "$M/lsblk.txt"; ip
 hyprctl monitors > "$M/hyprctl-monitors.txt" 2>/dev/null; iw reg get > "$M/iw-reg.txt" 2>/dev/null
 code --list-extensions > "$M/vscode-extensions.txt" 2>/dev/null; cursor --list-extensions > "$M/cursor-extensions.txt" 2>/dev/null
 npm ls -g --depth=0 > "$M/npm-global.txt" 2>/dev/null; uv python list --only-installed > "$M/uv-python.txt" 2>/dev/null
-ollama list > "$M/ollama-models.txt" 2>/dev/null; docker images > "$M/docker-images.txt" 2>/dev/null; docker volume ls > "$M/docker-volumes.txt" 2>/dev/null
-multipass list > "$M/multipass.txt" 2>/dev/null; tailscale status > "$M/tailscale.txt" 2>/dev/null
+ollama list > "$M/ollama-models.txt" 2>/dev/null; tailscale status > "$M/tailscale.txt" 2>/dev/null
 crontab -l > "$M/crontab.txt" 2>&1; ls -la ~/.claude > "$M/claude-symlinks.txt"
 sudo nmcli --show-secrets connection show Saad_5g > "$M/wifi-Saad_5g.txt" 2>/dev/null
 sudo nmcli --show-secrets connection show Saad_2.4g > "$M/wifi-Saad_2.4g.txt" 2>/dev/null
@@ -67,14 +67,7 @@ sudo tar czf - /etc/sudoers.d/ab /etc/polkit-1/rules.d /etc/udev/rules.d /etc/mo
 
 [ "$LIGHT" = 1 ] && { log "light mode: skipping heavy phase"; exit 0; }
 
-# ---- P4 heavy: docker volumes, ollama models, multipass -------------------
-log "P4 heavy: docker volumes"
-for v in $(docker volume ls -q 2>/dev/null | grep -v "^buildx_"); do   # buildx caches are junk (56 GB)
-  log "  volume $v"
-  docker run --rm -v "$v":/v alpine tar cf - -C /v . | ssh "$DEST_HOST" "cat > ~/$DEST/heavy/docker-volume-$v.tar"
-done
+# ---- P4 heavy: ollama models (re-pullable; 14 GB saved) -------------------
 log "P4 heavy: ollama models (14 GB)"
 sudo tar cf - /usr/share/ollama/.ollama/models 2>/dev/null | ssh "$DEST_HOST" "cat > ~/$DEST/heavy/ollama-models.tar"
-log "P4 heavy: multipass VMs (62 GB)"
-sudo tar cf - /var/snap/multipass/common/data/multipassd 2>/dev/null | ssh "$DEST_HOST" "cat > ~/$DEST/heavy/multipass.tar"
 log "DONE"; ssh "$DEST_HOST" "du -sh ~/$DEST/*"
