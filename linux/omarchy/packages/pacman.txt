@@ -16,7 +16,7 @@ eza
 fastfetch
 fzf
 gawk               # ble.sh
-gh
+github-cli        # Arch name for `gh`
 git
 jq
 lazygit
@@ -55,10 +55,11 @@ noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 ttf-font-awesome
-ttf-material-design-icons-extended
 # Apps
 obsidian
 firefox
 tigervnc
+ghostty            # default terminal (also set via omarchy-install-terminal in step 3)
+doctl              # extra/doctl (there is no doctl-bin in the AUR)
 # AI
 ollama-vulkan      # RDNA3 iGPU: Vulkan beats ROCm; needs OLLAMA_IGPU_ENABLE=1

@@ -6,5 +6,4 @@ cursor-bin                # /usr/bin/cursor; ~/.local/bin/code -> /usr/bin/curso
 blesh-git                 # ble.sh -> /usr/share/blesh
 xremap-hypr-bin           # Mac-style Super clipboard in GUI apps (hypr backend for app exclusions)
 google-cloud-cli
-doctl-bin
-wezterm                   # installed on Ubuntu, unused; drop if never opened
+ttf-material-design-icons-extended   # AUR-only, not in official repos

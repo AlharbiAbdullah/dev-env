@@ -9,6 +9,21 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE="$HOME/.claude"
 RAI="$HOME/helm/03-rai"
 
+# Skills merge: on Omarchy, ~/.claude/skills and ~/.agents/skills already exist as
+# real dirs holding omarchy's own skills. `ln -sfn <dir> <existing-real-dir>` does
+# NOT replace them: it exits 0 and drops the link *inside*, giving skills/skills.
+# Link each vault skill individually so both sets live side by side.
+link_skills() {
+    local dest="$1"
+    mkdir -p "$dest"
+    rm -f "$dest/skills"
+    local s
+    for s in "$RAI/skills"/*; do
+        [ -e "$s" ] || continue
+        ln -sfn "$s" "$dest/$(basename "$s")"
+    done
+}
+
 mkdir -p "$CLAUDE/themes"
 
 if [ ! -d "$RAI" ]; then
@@ -19,7 +34,7 @@ fi
 # Symlinks into the vault (live layout, 2026-08).
 ln -sfn "$RAI/agents"                 "$CLAUDE/agents"
 ln -sfn "$RAI/hooks"                  "$CLAUDE/hooks"
-ln -sfn "$RAI/skills"                 "$CLAUDE/skills"
+link_skills "$CLAUDE/skills"
 ln -sfn "$RAI/memory"                 "$CLAUDE/memory"
 ln -sfn "$RAI/CLAUDE.md"              "$CLAUDE/CLAUDE.md"
 ln -sfn "$RAI/config/settings.json"   "$CLAUDE/settings.json"
@@ -39,7 +54,7 @@ fi
 mkdir -p "$HOME/.pi/agent/extensions" "$HOME/.agents"
 ln -sfn "$RAI/AGENTS.md"                "$HOME/.pi/agent/AGENTS.md"
 ln -sfn "$RAI/harness/pi/rai-bridge.ts" "$HOME/.pi/agent/extensions/rai-bridge.ts"
-ln -sfn "$RAI/skills"                   "$HOME/.agents/skills"
+link_skills "$HOME/.agents/skills"
 echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai"
 
 echo "  Claude config done. Run 'claude' once to authenticate (browser login),"

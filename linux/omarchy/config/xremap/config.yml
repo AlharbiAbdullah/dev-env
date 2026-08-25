@@ -27,7 +27,6 @@ keymap:
     application:
       not:
         - com.mitchellh.ghostty
-        - org.wezfurlong.wezterm
         - kitty
         - Alacritty
         - foot
