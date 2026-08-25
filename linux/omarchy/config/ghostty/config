@@ -1,0 +1,19 @@
+# Omarchy owns the colors (regenerated on every theme switch).
+config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
+
+font-family = NotoSansM Nerd Font
+font-family = Cairo
+font-family = Noto Color Emoji
+font-style = Bold
+font-size = 14
+font-feature = -liga
+confirm-close-surface = false
+copy-on-select = false
+working-directory = /home/abdullah/helm
+shell-integration-features = cursor,no-sudo,title,ssh-env,ssh-terminfo,path
+async-backend = epoll
+
+keybind = shift+enter=text:\n
+keybind = performable:super+c=copy_to_clipboard
+keybind = super+v=paste_from_clipboard
+keybind = super+a=select_all

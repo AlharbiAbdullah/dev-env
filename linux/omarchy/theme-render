@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""Render every ~/.config/themes/<name>/theme.lua into an Omarchy 4 user theme at
+~/.config/omarchy/themes/<name>/ (colors.toml + vscode.json + backgrounds/).
+Omarchy generates everything else (Hyprland border, Ghostty, Chrome, shell, btop,
+neovim, VS Code fallback theme) from colors.toml. Idempotent; re-run after editing
+a theme.lua. Usage: theme-render [name ...]"""
+import re, shutil, sys
+from pathlib import Path
+
+SRC = Path.home() / ".config/themes"
+DST = Path.home() / ".config/omarchy/themes"
+
+def h2rgb(h): return tuple(int(h[i:i+2], 16) for i in (1, 3, 5))
+def rgb2h(c): return "#%02x%02x%02x" % tuple(max(0, min(255, round(v))) for v in c)
+def mix(a, b, t):
+    A, B = h2rgb(a), h2rgb(b)
+    return rgb2h(tuple(A[i] + (B[i] - A[i]) * t for i in range(3)))
+
+def field(t, name):
+    m = re.search(r'\b' + name + r'\s*=\s*"([^"]*)"', t); return m.group(1) if m else ""
+def arr(t, name):
+    m = re.search(r'\b' + name + r'\s*=\s*\{(.*?)\}', t, re.S)
+    return re.findall(r'#[0-9a-fA-F]{6}', m.group(1)) if m else []
+
+def render(name):
+    lua = SRC / name / "theme.lua"
+    t = lua.read_text()
+    bg, fg = field(t, "background"), field(t, "foreground")
+    ansi, bri = arr(t, "ansi"), arr(t, "brights")
+    if len(ansi) < 8 or len(bri) < 8 or not bg or not fg:
+        print(f"skip {name}: incomplete palette"); return
+    border = field(t, "border")
+    accent = "#" + border[-6:] if border else ansi[4]
+    light = field(t, "macos") == "light"
+    sel = field(t, "selection_bg") or mix(bg, fg, 0.2)
+    toward = "#ffffff" if light else "#000000"
+    away = "#000000" if light else "#ffffff"
+    colors = {
+        "mode": "light" if light else "dark",
+        "accent": accent, "selection": sel, "muted": bri[0] if bri[0] != ansi[0] else mix(bg, fg, 0.45),
+        "background": bg, "dark_background": mix(bg, toward, 0.22), "darker_background": mix(bg, toward, 0.4),
+        "lighter_background": mix(bg, away, 0.06),
+        "foreground": fg, "dark_foreground": mix(fg, bg, 0.6), "light_foreground": mix(fg, bg, 0.3),
+        "bright_foreground": field(t, "cursor_bg") or bri[7],
+        "red": ansi[1], "yellow": ansi[3], "orange": mix(ansi[1], ansi[3], 0.5), "green": ansi[2],
+        "cyan": ansi[6], "blue": ansi[4], "magenta": ansi[5], "brown": mix(ansi[3], bg, 0.5),
+        "bright_red": bri[1], "bright_yellow": bri[3], "bright_green": bri[2], "bright_cyan": bri[6],
+        "bright_blue": bri[4], "bright_magenta": bri[5],
+    }
+    out = DST / name
+    (out / "backgrounds").mkdir(parents=True, exist_ok=True)
+    lines = [f'mode = "{colors.pop("mode")}"', ""] + [f'{k} = "{v}"' for k, v in colors.items()]
+    (out / "colors.toml").write_text("\n".join(lines) + "\n")
+    vs_name, vs_ext = field(t, "vscode"), field(t, "vscode_ext")
+    vs = out / "vscode.json"
+    if vs_name and "(generated)" not in vs_name:
+        body = f'{{\n  "name": "{vs_name}"' + (f',\n  "extension": "{vs_ext}"' if vs_ext else "") + "\n}\n"
+        vs.write_text(body)
+    elif vs.exists():
+        vs.unlink()          # generated themes: let Omarchy synthesize local.omarchy-theme
+    for wp in (out / "backgrounds").glob("*"):
+        wp.unlink()
+    for wp in sorted((SRC / name / "wallpapers").glob("*")):
+        if wp.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+            shutil.copy2(wp, out / "backgrounds" / wp.name)
+    print(f"rendered {name} -> {out}")
+
+names = sys.argv[1:] or sorted(p.parent.name for p in SRC.glob("*/theme.lua"))
+for n in names:
+    render(n)

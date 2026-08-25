@@ -1,6 +1,6 @@
 # dev-env
 
-Personal dev environment for macOS + Ubuntu, mirrored 1:1.
+Personal dev environment for macOS + Linux (Ubuntu, Omarchy), mirrored 1:1.
 
 ## Layout
 
@@ -8,8 +8,9 @@ Personal dev environment for macOS + Ubuntu, mirrored 1:1.
 |---|---|
 | `mac/` | zsh, Ghostty, tmux, AeroSpace, starship, theme system, Brewfile, `setup.sh` |
 | `linux/ubuntu/` | Hyprland mirror of the Mac setup for Ubuntu 26.04 LTS (bash shell), `setup.sh` |
-| `linux/Omarchy/` | Arch + Hyprland reference, kept as-is |
-| `common/themes/` | 10 shared theme definitions + per-theme wallpapers, consumed by both platforms |
+| `linux/omarchy/` | Omarchy 4 layer: reproduces the Ubuntu setup on Omarchy, `install.sh` + backup/restore (see its README) |
+| `linux/omarchy-3.5-archive/` | April 2026 Omarchy 3.5 configs, frozen history, not used |
+| `common/themes/` | 14 shared theme definitions (`theme.lua`) + 4 dharmx wallpapers each, consumed by mac, ubuntu, and omarchy |
 | `common/wallpaper/` | General wallpaper collection |
 
 ## Usage

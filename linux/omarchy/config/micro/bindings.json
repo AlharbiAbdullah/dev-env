@@ -1,0 +1,7 @@
+{
+  "Tab": "Autocomplete|lua:aspell.acceptsug|IndentSelection|InsertTab",
+  "Alt-s": "lua:aspell.acceptsug",
+  "F7": "lua:aspell.acceptsug",
+  "Alt-a": "lua:aspell.addpersonal",
+  "Alt-c": "lua:aspell.togglecheck"
+}

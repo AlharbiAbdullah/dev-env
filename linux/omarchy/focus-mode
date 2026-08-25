@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# focus-mode — Omarchy-style focus: float + center the active window; the rest
+# get dimmed + frosted (translucent over blur = foggy). Press again to tile the
+# window back and clear the effect. Keyed on the dim state (not the window) so
+# the toggle still resets cleanly even if the floated window was closed first.
+# NOTE: hyprctl --batch silently drops commands past ~5 per call — keep batches short.
+
+if [ "$(hyprctl getoption decoration:dim_inactive -j | jq -r '.int')" = "1" ]; then
+    hyprctl --batch "dispatch settiled; keyword decoration:dim_inactive false; keyword decoration:inactive_opacity 1.0"
+    hyprctl --batch "keyword decoration:blur:size 8; keyword decoration:blur:passes 1"
+else
+    hyprctl --batch "dispatch setfloating; dispatch resizeactive exact 62% 92%; dispatch centerwindow"
+    hyprctl --batch "keyword decoration:dim_inactive true; keyword decoration:dim_strength 0.65; keyword decoration:inactive_opacity 0.85"
+    hyprctl --batch "keyword decoration:blur:enabled true; keyword decoration:blur:size 10; keyword decoration:blur:passes 3"
+fi

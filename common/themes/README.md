@@ -1,6 +1,6 @@
 # common/themes
 
-10 shared theme definitions, consumed 1:1 by both the macOS and Ubuntu setups.
+14 shared theme definitions, consumed 1:1 by both the macOS and Ubuntu setups.
 Each `<name>/theme.lua` is a declarative palette (background, foreground, cursor,
 selection, 8 ANSI + 8 bright colors) plus a `wallpapers/` pack.
 

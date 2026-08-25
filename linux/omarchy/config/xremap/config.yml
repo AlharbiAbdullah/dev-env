@@ -1,0 +1,52 @@
+# xremap — Mac-style Cmd shortcuts on Linux.
+#
+# WHY: Abdullah's muscle memory is macOS (Cmd+C/V/X/A/Z). Ghostty already handles
+# these natively via its own `keybind = super+c=...` lines, so the terminal is
+# covered. This file covers everything Ghostty can't reach: Chrome, Obsidian,
+# file manager, and every other GUI app. Set up 2026-08-01.
+#
+# WHY NOT keyd: keyd rewrites at the hardware level with zero window awareness,
+# so a blanket Super->Ctrl remap also rewrote keys inside the terminal and broke
+# Ctrl+C as the shell interrupt. It was purged for that. xremap reads the focused
+# window class over Hyprland's IPC, so terminals can be excluded by name.
+#
+# SCOPE: clipboard core + undo only. The rest of the Mac set (W close, F find,
+# N new, L address bar) is unavailable because Hyprland already binds
+# Super+W/F/N/L to killactive/fullscreen/new-window/hyprlock.
+#
+# ESCAPE HATCH: if this ever wedges the keyboard, `systemctl --user stop xremap`
+# from an SSH session (Mac -> linux over Tailscale) releases the device grab.
+
+keymap:
+  - name: Mac-style Super shortcuts (GUI apps only, never terminals)
+    # xremap intercepts at the evdev layer, BELOW the compositor. Excluding the
+    # terminal classes here means Super+C is never rewritten there — the raw
+    # Super+C reaches Ghostty, whose native bind handles it, and Ctrl+C stays a
+    # true interrupt. Keys not listed under `remap` pass through untouched, so
+    # Hyprland still gets Super+1..0, Super+W, Super+Space, etc.
+    application:
+      not:
+        - com.mitchellh.ghostty
+        - org.wezfurlong.wezterm
+        - kitty
+        - Alacritty
+        - foot
+        - xterm
+    # Required for redo to work. xremap defaults to exact_match: false, where a
+    # binding fires as long as its modifiers are a SUBSET of what's held — so
+    # Super+Shift+Z would match plain `Super-z` too, and which of the two wins is
+    # not ordered. Exact matching keeps undo and redo distinct.
+    exact_match: true
+    remap:
+      Super-Shift-z: C-Shift-z
+      Super-c: C-c
+      Super-v: C-v
+      Super-x: C-x
+      Super-a: C-a
+      Super-z: C-z
+      # Browser reload. Super+Shift+R = hard refresh (Chrome's Ctrl+Shift+R,
+      # bypasses cache) was the ask; plain Super+R is its Mac counterpart.
+      # Hyprland's `hyprctl reload` was moved off SUPER SHIFT + R to SUPER CTRL
+      # + R to free this — see the SESSION block in hyprland.conf.
+      Super-Shift-r: C-Shift-r
+      Super-r: C-r

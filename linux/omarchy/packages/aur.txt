@@ -1,0 +1,10 @@
+# AUR packages (installed with yay, which Omarchy ships). One per line.
+google-chrome             # profile, extensions, and the news collectors are Chrome-based
+visual-studio-code-bin    # /usr/bin/code (theme switcher targets it explicitly)
+cursor-bin                # /usr/bin/cursor; ~/.local/bin/code -> /usr/bin/cursor shim
+1password-cli             # 1password app itself ships with Omarchy
+blesh-git                 # ble.sh -> /usr/share/blesh
+xremap-hypr-bin           # Mac-style Super clipboard in GUI apps (hypr backend for app exclusions)
+google-cloud-cli
+doctl-bin
+wezterm                   # installed on Ubuntu, unused; drop if never opened

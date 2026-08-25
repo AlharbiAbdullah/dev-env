@@ -1,0 +1,64 @@
+# Official repo packages beyond what Omarchy 4 already ships. One per line, # comments ok.
+# Desktop extras (Omarchy ships hyprland, hypridle, omarchy-shell, ghostty?, chromium, 1password, docker ...)
+ddcutil            # monitor brightness over DDC/CI (no backlight on the KTC)
+i2c-tools          # i2c-dev module for ddcutil
+xorg-server-xvfb   # optional: Xvfb :20 for GUI-over-SSH
+xorg-xdpyinfo      # detect-display.sh
+psmisc             # fuser (news collectors kill stale CDP ports)
+wtype
+wl-clipboard
+grim
+slurp
+# CLI
+bat
+btop
+eza
+fastfetch
+fzf
+gawk               # ble.sh
+gh
+git
+jq
+lazygit
+micro
+starship
+tmux
+zoxide
+glow
+unzip
+rsync
+bash-completion
+# Dev
+base-devel
+docker
+docker-buildx
+docker-compose
+uv
+nodejs
+npm
+python-requests
+python-beautifulsoup4
+python-yaml
+# Net / sec
+tailscale
+openssh
+gnome-keyring      # Chrome cookie encryption + VS Code secrets (must be unlocked by PAM)
+libsecret
+seahorse           # inspect the keyring
+# GTK / portal plumbing the theme switcher uses
+glib2
+gsettings-desktop-schemas
+xdg-desktop-portal-gtk
+# Fonts
+ttf-noto-nerd      # NotoSansM Nerd Font (Ghostty)
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-font-awesome
+ttf-material-design-icons-extended
+# Apps
+obsidian
+firefox
+tigervnc
+# AI
+ollama-vulkan      # RDNA3 iGPU: Vulkan beats ROCm; needs OLLAMA_IGPU_ENABLE=1

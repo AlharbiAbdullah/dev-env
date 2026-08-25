@@ -1,0 +1,11 @@
+{
+  "softwrap": true,
+  "*.md": {
+    "aspell.check": "on",
+    "aspell.lang": "en_US"
+  },
+  "*.txt": {
+    "aspell.check": "on",
+    "aspell.lang": "en_US"
+  }
+}
