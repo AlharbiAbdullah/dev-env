@@ -9,19 +9,22 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE="$HOME/.claude"
 RAI="$HOME/helm/03-rai"
 
-# Skills merge: on Omarchy, ~/.claude/skills and ~/.agents/skills already exist as
-# real dirs holding omarchy's own skills. `ln -sfn <dir> <existing-real-dir>` does
-# NOT replace them: it exits 0 and drops the link *inside*, giving skills/skills.
-# Link each vault skill individually so both sets live side by side.
+# Skills: ONE symlink to the vault (2026-08-26). Omarchy's own skills
+# (/usr/share/omarchy/default/agents/skills/*) are vendored into the vault as
+# the /omarchy router, so nothing outside helm needs to be mounted. Omarchy
+# pre-creates ~/.claude/skills and ~/.agents/skills as REAL dirs; `ln -sfn` onto
+# a real dir drops the link inside it (skills/skills), so remove the dir first.
+# A per-skill symlink farm was tried and rejected: it never picked up new skills.
 link_skills() {
     local dest="$1"
-    mkdir -p "$dest"
-    rm -f "$dest/skills"
-    local s
-    for s in "$RAI/skills"/*; do
-        [ -e "$s" ] || continue
-        ln -sfn "$s" "$dest/$(basename "$s")"
-    done
+    if [ -d "$dest" ] && [ ! -L "$dest" ]; then
+        if find "$dest" -mindepth 1 ! -type l | grep -q .; then
+            echo "  !! $dest holds real files; move them out, then re-run." >&2
+            return 1
+        fi
+        rm -rf "$dest"
+    fi
+    ln -sfn "$RAI/skills" "$dest"
 }
 
 mkdir -p "$CLAUDE/themes"
