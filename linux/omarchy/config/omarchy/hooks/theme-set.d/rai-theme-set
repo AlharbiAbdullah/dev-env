@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Runs after `omarchy theme set <name>` ($1 = theme name).
-# Omarchy already handles: Hyprland border, Ghostty, Chrome color, VS Code + Cursor,
+# Omarchy already handles: Hyprland border, Ghostty, Chrome color, VS Code,
 # gsettings light/dark, wallpaper, shell, Claude Code, pi, tmux.conf colors.
-# This hook covers what Omarchy does not: tmux status bar (own layout), starship
+# This hook covers what Omarchy does not: Cursor (generated rai-themes), the VS Code
+# extension install via the real binary, tmux status bar (own layout), starship
 # palette, and the ~/.config/themes/current.lua compat pointer (opencode theme-sync,
 # fastfetch, and any script that still reads it).
 set -uo pipefail
@@ -12,6 +13,34 @@ src="$THEMES_DIR/$name/theme.lua"
 [[ -f "$src" ]] || exit 0
 
 ln -sfn "$src" "$THEMES_DIR/current.lua"
+
+field() { grep -oP "\\b$1\\s*=\\s*\"\\K[^\"]*" "$src" | head -1; }
+
+# Write workbench.colorTheme in a VS Code-family settings.json (JSONC, edited in place).
+set_color_theme() {
+  local settings="$1" theme="$2"
+  [[ -n "$theme" ]] || return 0
+  mkdir -p "$(dirname "$settings")"
+  [[ -f "$settings" ]] || printf '{\n}\n' >"$settings"
+  grep -q '"workbench.colorTheme"' "$settings" ||
+    sed -i -E '0,/\{/{s/\{/{\n  "workbench.colorTheme": "",/}' "$settings"
+  sed -i -E "s|(\"workbench.colorTheme\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")|\1$theme\2|" "$settings"
+}
+
+# Cursor: the generated rai-themes theme named by the theme.lua `cursor` field
+# (rebuild the extension with `python3 ~/.config/themes/build-editor-themes.py`).
+# Omarchy's own Cursor path is toggled off (skip-cursor-theme-changes) because it
+# names marketplace themes Cursor's registry does not carry.
+set_color_theme "$HOME/.config/Cursor/User/settings.json" "$(field cursor)"
+
+# VS Code: Omarchy sets the colorTheme from vscode.json, but `code` on PATH is the
+# Cursor shim, so its extension install lands in the wrong editor. Install with the
+# real binary when the theme's extension is missing.
+vs_ext="$(field vscode_ext)"
+if [[ -n "$vs_ext" && -x /usr/bin/code ]] &&
+   ! /usr/bin/code --list-extensions 2>/dev/null | grep -Fxq "$vs_ext"; then
+  /usr/bin/code --install-extension "$vs_ext" >/dev/null 2>&1 || true
+fi
 
 if grep -qE '^palette\s*=' "$HOME/.config/starship.toml" 2>/dev/null; then
   sed -i -E "s|^palette[[:space:]]*=.*|palette = \"$name\"|" "$HOME/.config/starship.toml"

@@ -12,7 +12,7 @@ wallpaper, Hyprland defaults, theme generation); this layer adds the personal de
 | `packages/{pacman,aur}.txt` | packages beyond Omarchy's base |
 | `config/hypr/*.lua` | Hyprland overrides (Lua, Omarchy 4 convention): monitor 1440p@100 scale 1, `us,ara` Alt+Shift, gaps/border/blur, personal binds, xremap autostart |
 | `config/omarchy/shell.json` | bar layout + clock format + idle 600/900 |
-| `config/omarchy/hooks/theme-set.d/rai-theme-set` | after every theme switch: tmux bar, starship palette, `~/.config/themes/current.lua` pointer |
+| `config/omarchy/hooks/theme-set.d/rai-theme-set` | after every theme switch: Cursor colorTheme (generated rai-themes, `cursor =` field; Omarchy toggle `skip-cursor-theme-changes` on), VS Code extension install via `/usr/bin/code`, tmux bar, starship palette, `~/.config/themes/current.lua` pointer |
 | `theme`, `theme-render` | switcher wrapper over `omarchy theme`; renderer `theme.lua` -> `~/.config/omarchy/themes/<n>/{colors.toml,vscode.json,backgrounds/}` |
 | `config/{ghostty,xremap,micro,glow,git,fastfetch,opencode}`, `mimeapps.list`, `starship.toml`, `.tmux.conf`, `.bashrc` | carried configs |
 | `systemd/` | the 5 timers + xremap.service (xvfb dropped: nothing scheduled uses it) |
