@@ -1,9 +1,9 @@
 # Minimal two-line prompt, colors driven by the active theme palette.
 # The `theme` script updates the `palette = ...` line below on theme switch.
 
-palette = "everforest"
+palette = "aureth"
 
-format = "$directory$git_branch$git_status$cmd_duration$character "
+format = "$hostname$directory$git_branch$git_status$cmd_duration$character "
 
 add_newline = true
 
@@ -14,6 +14,13 @@ command_timeout = 2000
 [character]
 success_symbol = "[\u279c](bold fg:accent)"
 error_symbol = "[\u2717](bold fg:red)"
+
+# Remote-session OS icon: one quiet glyph, shown ONLY over SSH (ssh_only keys
+# off $SSH_CONNECTION/$SSH_TTY). This config runs on macOS, so it shows the
+# Apple glyph; the Linux box uses the Tux glyph. Local sessions show nothing.
+[hostname]
+ssh_only = true
+format = "[\uf179](fg:accent) "
 
 [directory]
 style = "bold fg:accent"
@@ -40,114 +47,121 @@ format = "[took $duration]($style) "
 # palettes (one per theme; keys must match theme folder names)
 # -----------------------------------------------------------------------------
 
-[palettes.gruvbox]
-accent = "#d3869b"
-yellow = "#fabd2f"
-red = "#fb4934"
-blue = "#83a598"
-green = "#b8bb26"
-
-[palettes.gruvbox-light]
-accent = "#8f3f71"
-yellow = "#b57614"
-red = "#9d0006"
-blue = "#076678"
-green = "#79740e"
-
-[palettes.tokyo-night]
-accent = "#7aa2f7"
-yellow = "#e0af68"
-red = "#f7768e"
-blue = "#7aa2f7"
-green = "#9ece6a"
-
-[palettes.catppuccin]
-accent = "#cba6f7"
-yellow = "#f9e2af"
-red = "#f38ba8"
-blue = "#89b4fa"
-green = "#a6e3a1"
-
-[palettes.nord]
-accent = "#81a1c1"
-yellow = "#ebcb8b"
-red = "#bf616a"
-blue = "#81a1c1"
-green = "#a3be8c"
-
-[palettes.miasma]
-accent = "#78824b"
-yellow = "#c9a554"
-red = "#b36d43"
-blue = "#666666"
-green = "#5f875f"
-
-[palettes.cobalt2]
-accent = "#ffc600"
-yellow = "#ffc600"
-red = "#ff628c"
-blue = "#0088ff"
-green = "#3ad900"
-
-[palettes.everforest]
-accent = "#7fbbb3"
-yellow = "#dbbc7f"
-red = "#e67e80"
-blue = "#7fbbb3"
-green = "#a7c080"
-
-[palettes.kanagawa]
-accent = "#7e9cd8"
-yellow = "#c0a36e"
-red = "#c34043"
-blue = "#7e9cd8"
-green = "#76946a"
-
-[palettes.ristretto]
-accent = "#f38d70"
-yellow = "#f9cc6c"
-red = "#fd6883"
-blue = "#a8a9eb"
-green = "#adda78"
-
-[palettes.rose-pine]
-accent = "#c4a7e7"
-yellow = "#f6c177"
-red = "#eb6f92"
-blue = "#9ccfd8"
-green = "#31748f"
-
-[palettes.melange]
-accent = "#e49b5d"
-yellow = "#ebc06d"
-red = "#bd8183"
-blue = "#7f91b2"
-green = "#78997a"
+[palettes.aureth]
+accent = "#d9a441"
+yellow = "#d9a441"
+red = "#c65a3a"
+blue = "#4a5d6b"
+green = "#7c9a4d"
 
 [palettes.bamboo]
 accent = "#81af58"
 yellow = "#ceba49"
 red = "#dc4f62"
-blue = "#409cdc"
+blue = "#5599c9"
 green = "#81af58"
 
-[palettes.kanagawa-dragon]
-accent = "#c4746e"
-yellow = "#c4b28a"
-red = "#c4746e"
-blue = "#8ba4b0"
-green = "#87a987"
-
 [palettes.dark-pro]
-accent = "#58a6ff"
+accent = "#2f81f7"
 yellow = "#d29922"
 red = "#ff7b72"
 blue = "#58a6ff"
 green = "#3fb950"
 
+[palettes.duskfox]
+accent = "#c4a7e7"
+yellow = "#f6c177"
+red = "#eb6f92"
+blue = "#569fba"
+green = "#a3be8c"
+
+[palettes.everbloom]
+accent = "#c3a5d8"
+yellow = "#d7b078"
+red = "#e47a7d"
+blue = "#8fa1cc"
+green = "#abb87f"
+
+[palettes.everbloom-noir]
+accent = "#d9b3ff"
+yellow = "#e6bb72"
+red = "#ef8085"
+blue = "#94a8e2"
+green = "#b5c97e"
+
+[palettes.everforest]
+accent = "#dbbc7f"
+yellow = "#dbbc7f"
+red = "#e67e80"
+blue = "#7fbbb3"
+green = "#a7c080"
+
+[palettes.forestbones-dark]
+accent = "#ddbd7f"
+yellow = "#ddbd7f"
+red = "#e67c7f"
+blue = "#7fbcb4"
+green = "#a9c181"
+
+[palettes.gruvbox]
+accent = "#d65d0e"
+yellow = "#d8a657"
+red = "#ea6962"
+blue = "#7daea3"
+green = "#a9b665"
+
+[palettes.gruvbox-light]
+accent = "#cc241d"
+yellow = "#d79921"
+red = "#cc241d"
+blue = "#458588"
+green = "#98971a"
+
+[palettes.gruvbox-material-soft]
+accent = "#d8a657"
+yellow = "#d8a657"
+red = "#ea6962"
+blue = "#7daea3"
+green = "#a9b665"
+
 [palettes.light-pro]
 accent = "#0969da"
-yellow = "#9a6700"
+yellow = "#4d2d00"
 red = "#cf222e"
 blue = "#0969da"
 green = "#116329"
+
+[palettes.nord]
+accent = "#88c0d0"
+yellow = "#ebcb8b"
+red = "#bf616a"
+blue = "#81a1c1"
+green = "#a3be8c"
+
+[palettes.ristretto]
+accent = "#f38d70"
+yellow = "#f9cc6c"
+red = "#fd6883"
+blue = "#f38d70"
+green = "#adda78"
+
+[palettes.solitude]
+accent = "#798186"
+yellow = "#d9dbdc"
+red = "#565d60"
+blue = "#798186"
+green = "#9fa5a9"
+
+[palettes.terramour]
+accent = "#7fa68f"
+yellow = "#d6c37a"
+red = "#d07a7a"
+blue = "#8fa3d1"
+green = "#7fa68f"
+
+[palettes.zenburned]
+accent = "#b77e64"
+yellow = "#b77e64"
+red = "#e3716e"
+blue = "#6099c0"
+green = "#819b69"
