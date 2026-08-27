@@ -28,6 +28,10 @@ after-startup-command = [
 # Dark Orange:   0xffd65d0e
 start-at-login = true
 
+# Reload this file automatically on save (0.21.0+). No more `aerospace reload-config`.
+auto-reload-config = true
+
+# Move the mouse to the center of the newly focused monitor
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
 # Enable normalization for proper tiling
@@ -54,6 +58,8 @@ outer.bottom = 15
 
 # =============================================================================
 # MAIN MODE KEYBINDINGS (Omarchy-style: Super/Cmd)
+# Unified with the Linux box 2026-08-27: Super or Ctrl only, Shift ok, no Alt.
+# Full table: helm/05-projects/kitchen/omarchy-migration/keybindings-unify.md
 # =============================================================================
 [mode.main.binding]
 
@@ -70,20 +76,21 @@ cmd-7 = 'workspace 7'
 cmd-8 = 'workspace 8'
 cmd-9 = 'workspace 9'
 cmd-0 = 'workspace 0'
+cmd-ctrl-tab = 'workspace-back-and-forth'
 
 # -----------------------------------------------------------------------------
-# Move Window to Workspace (cmd + shift + number)
+# Move Window to Workspace (cmd + shift + number), focus follows like Hyprland
 # -----------------------------------------------------------------------------
-cmd-shift-1 = 'move-node-to-workspace 1'
-cmd-shift-2 = 'move-node-to-workspace 2'
-cmd-shift-3 = 'move-node-to-workspace 3'
-cmd-shift-4 = 'move-node-to-workspace 4'
-cmd-shift-5 = 'move-node-to-workspace 5'
-cmd-shift-6 = 'move-node-to-workspace 6'
-cmd-shift-7 = 'move-node-to-workspace 7'
-cmd-shift-8 = 'move-node-to-workspace 8'
-cmd-shift-9 = 'move-node-to-workspace 9'
-cmd-shift-0 = 'move-node-to-workspace 0'
+cmd-shift-1 = 'move-node-to-workspace --focus-follows-window 1'
+cmd-shift-2 = 'move-node-to-workspace --focus-follows-window 2'
+cmd-shift-3 = 'move-node-to-workspace --focus-follows-window 3'
+cmd-shift-4 = 'move-node-to-workspace --focus-follows-window 4'
+cmd-shift-5 = 'move-node-to-workspace --focus-follows-window 5'
+cmd-shift-6 = 'move-node-to-workspace --focus-follows-window 6'
+cmd-shift-7 = 'move-node-to-workspace --focus-follows-window 7'
+cmd-shift-8 = 'move-node-to-workspace --focus-follows-window 8'
+cmd-shift-9 = 'move-node-to-workspace --focus-follows-window 9'
+cmd-shift-0 = 'move-node-to-workspace --focus-follows-window 0'
 
 # -----------------------------------------------------------------------------
 # Focus Navigation (cmd + arrows)
@@ -108,29 +115,35 @@ cmd-ctrl-t = 'exec-and-forget /opt/homebrew/bin/hs -c "themeChooser()"'
 cmd-ctrl-shift-t = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme cycle'
 cmd-ctrl-w = 'exec-and-forget /opt/homebrew/bin/hs -c "wallpaperChooser()"'
 cmd-ctrl-shift-w = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme wallpaper next'
-cmd-h = 'exec-and-forget /Users/abdullahalharbi/.local/bin/menu-toggle'
+# Focus mode (float + centre, same as Linux SUPER+H); menu bar hide on the bar key.
+cmd-h = 'exec-and-forget /opt/homebrew/bin/hs -c "focusMode()"'
+cmd-shift-ctrl-b = 'exec-and-forget /Users/abdullahalharbi/.local/bin/menu-toggle'
 
 # -----------------------------------------------------------------------------
-# Close Window (cmd + w, with workspace preservation - fixes macOS race condition)
+# Close Window (cmd + w)
+# The old capture-close-restore shell workaround is gone: verified 2026-08-16 on
+# 0.21.3 that closing the last window in a workspace no longer teleports focus.
 # -----------------------------------------------------------------------------
-cmd-w = '''exec-and-forget current_workspace="$(aerospace list-workspaces --focused)"; \
-aerospace close; \
-aerospace workspace "$current_workspace"'''
+cmd-w = 'close'
 
 # -----------------------------------------------------------------------------
 # Layout Controls
 # -----------------------------------------------------------------------------
-alt-slash = 'layout tiles horizontal vertical'
-alt-comma = 'layout accordion horizontal vertical'
+cmd-j = 'layout tiles horizontal vertical'
+cmd-g = 'layout accordion horizontal vertical'
 cmd-f = 'fullscreen'
 # Toggle the focused window between floating and tiling (un-float stragglers)
-alt-shift-space = 'layout floating tiling'
+cmd-shift-space = 'layout floating tiling'
 
 # -----------------------------------------------------------------------------
 # Resize
 # -----------------------------------------------------------------------------
-alt-minus = 'resize smart -50'
-alt-equal = 'resize smart +50'
+cmd-minus = 'resize width -100'
+cmd-equal = 'resize width +100'
+cmd-shift-minus = 'resize height -100'
+cmd-shift-equal = 'resize height +100'
+cmd-ctrl-minus = 'resize width -25'
+cmd-ctrl-equal = 'resize width +25'
 
 # -----------------------------------------------------------------------------
 # Move Tiled Window (cmd + shift + arrows, Omarchy-style)

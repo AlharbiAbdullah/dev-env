@@ -1,0 +1,8 @@
+// Linux. Super+C/V reach Cursor as Ctrl+C/V (xremap, GUI apps only), so the
+// editor already copies/pastes. The integrated terminal needs two rules so the
+// same keys behave like Cmd+C/V on the Mac: copy when text is selected
+// (otherwise Ctrl+C stays the interrupt), and paste on Ctrl+V.
+[
+  { "key": "ctrl+c", "command": "workbench.action.terminal.copySelection", "when": "terminalFocus && terminalTextSelected" },
+  { "key": "ctrl+v", "command": "workbench.action.terminal.paste", "when": "terminalFocus" }
+]

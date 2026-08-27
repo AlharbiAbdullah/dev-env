@@ -10,9 +10,8 @@
 # Ctrl+C as the shell interrupt. It was purged for that. xremap reads the focused
 # window class over Hyprland's IPC, so terminals can be excluded by name.
 #
-# SCOPE: clipboard core + undo only. The rest of the Mac set (W close, F find,
-# N new, L address bar) is unavailable because Hyprland already binds
-# Super+W/F/N/L to killactive/fullscreen/new-window/hyprlock.
+# SCOPE: clipboard core + undo + reload + address bar + quit. W/F/N stay with
+# Hyprland (close/fullscreen/new-window) by decision (keybindings-unify.md).
 #
 # ESCAPE HATCH: if this ever wedges the keyboard, `systemctl --user stop xremap`
 # from an SSH session (Mac -> linux over Tailscale) releases the device grab.
@@ -27,6 +26,7 @@ keymap:
     application:
       not:
         - com.mitchellh.ghostty
+        - org.wezfurlong.wezterm
         - kitty
         - Alacritty
         - foot
@@ -49,3 +49,7 @@ keymap:
       # + R to free this — see the SESSION block in hyprland.conf.
       Super-Shift-r: C-Shift-r
       Super-r: C-r
+      # Unified map 2026-08-27: Super+L = address bar (lock moved to Super+Ctrl+L),
+      # Super+Q = quit app (Mac Cmd+Q). Hyprland no longer binds Super+L.
+      Super-l: C-l
+      Super-q: C-q

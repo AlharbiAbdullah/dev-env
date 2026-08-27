@@ -3,13 +3,38 @@
 # get dimmed + frosted (translucent over blur = foggy). Press again to tile the
 # window back and clear the effect. Keyed on the dim state (not the window) so
 # the toggle still resets cleanly even if the floated window was closed first.
-# NOTE: hyprctl --batch silently drops commands past ~5 per call — keep batches short.
+#
+#   focus-mode              toggle
+#   focus-mode resize <px>  width +/- px, re-centered when floating (SUPER+-/=)
+#
+# Hyprland 0.56 with the Lua config (2026-08-27): `hyprctl dispatch` takes Lua
+# dispatchers (hl.dsp.*) and `hyprctl keyword` is dead ("use eval"), so config
+# writes go through `hyprctl eval 'hl.config({...})'`. Reads still work via
+# `hyprctl getoption`.
 
-if [ "$(hyprctl getoption decoration:dim_inactive -j | jq -r '.int')" = "1" ]; then
-    hyprctl --batch "dispatch settiled; keyword decoration:dim_inactive false; keyword decoration:inactive_opacity 1.0"
-    hyprctl --batch "keyword decoration:blur:size 8; keyword decoration:blur:passes 1"
+d() { hyprctl dispatch "$1" >/dev/null; }
+cfg() { hyprctl eval "hl.config({ decoration = { $1 } })" >/dev/null; }
+
+case "${1:-}" in
+  resize)
+    d "hl.dsp.window.resize({ x = ${2:?px}, y = 0, relative = true })"
+    if [ "$(hyprctl activewindow -j | jq -r '.floating')" = "true" ]; then
+      d "hl.dsp.window.center()"
+    fi
+    exit 0
+    ;;
+esac
+
+if hyprctl getoption decoration:dim_inactive | grep -q '^bool: true'; then
+    d 'hl.dsp.window.float({ action = "tile" })'
+    cfg "dim_inactive = false, inactive_opacity = 1.0"
+    cfg "blur = { size = 8, passes = 1 }"
 else
-    hyprctl --batch "dispatch setfloating; dispatch resizeactive exact 62% 92%; dispatch centerwindow"
-    hyprctl --batch "keyword decoration:dim_inactive true; keyword decoration:dim_strength 0.65; keyword decoration:inactive_opacity 0.85"
-    hyprctl --batch "keyword decoration:blur:enabled true; keyword decoration:blur:size 10; keyword decoration:blur:passes 3"
+    # Size is in pixels (62% x 92% of the focused monitor, logical px).
+    read -r mw mh < <(hyprctl monitors -j | jq -r '.[] | select(.focused) | "\(.width / .scale | floor) \(.height / .scale | floor)"')
+    d 'hl.dsp.window.float({ action = "float" })'
+    d "hl.dsp.window.resize({ x = $((mw * 62 / 100)), y = $((mh * 92 / 100)) })"
+    d "hl.dsp.window.center()"
+    cfg "dim_inactive = true, dim_strength = 0.65, inactive_opacity = 0.85"
+    cfg "blur = { enabled = true, size = 10, passes = 3 }"
 fi
