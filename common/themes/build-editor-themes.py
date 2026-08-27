@@ -4,7 +4,7 @@ build-editor-themes.py — regenerate every editor theme and package them as one
 
 Generates a VS Code color theme from each ~/.config/themes/<name>/theme.lua (see
 vscode-theme-gen.py), bundles them into a single `rai.rai-themes` extension, and
-installs it into Cursor and Antigravity. One extension, every theme, so a palette
+installs it into Cursor, VS Code and Antigravity. One extension, every theme, so a palette
 edit reaches the editor with one command instead of hunting for a published theme
 that happens to match.
 
@@ -29,7 +29,9 @@ _spec.loader.exec_module(_gen)
 build, read_theme = _gen.build, _gen.read_theme
 
 PUB, NAME = "rai", "rai-themes"
+# `code` on PATH may be the Cursor shim, so VS Code is addressed by absolute path.
 EDITORS = [("cursor", os.path.expanduser("~/.cursor/extensions")),
+           ("/usr/bin/code", os.path.expanduser("~/.vscode/extensions")),
            ("antigravity", os.path.expanduser("~/.antigravity-ide/extensions"))]
 
 MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
