@@ -1,6 +1,6 @@
 # common/themes
 
-14 shared theme definitions, consumed 1:1 by both the macOS and Ubuntu setups.
+16 shared theme definitions, consumed 1:1 by both the macOS and Ubuntu setups.
 Each `<name>/theme.lua` is a declarative palette (background, foreground, cursor,
 selection, 8 ANSI + 8 bright colors) plus a `wallpapers/` pack.
 
@@ -37,27 +37,19 @@ two axes is the only thing that lands both on top together.
 Full rationale, the discarded factors (lightness *gap*, average saturation), and
 the open questions live in the `comfort-score.py` docstring.
 
-## Wallpapers — the standard
+## Wallpapers — the standard (2026-08-12 rollout)
 
-Each theme's `wallpapers/` holds **3** hand-picked images. They must satisfy all of:
+Each theme's `wallpapers/` holds **4** images picked by measured palette match,
+kept under their **upstream dharmx filenames** (never renamed, never re-encoded).
+The full rule set (17-folder allowlist, landscape-only + width ≥ 1920 filters,
+CIELAB scoring, no image reused across themes, cap 3 per source folder per theme)
+is the single source of truth in the helm vault:
+`03-rai/skills/mac/theme.md`, section 6 (`/mac-theme wallpapers`).
 
-**Aesthetic**
-- **Art, dark.** Anime / illustration, digital art, minimalist, abstract, geometric, pixel-art. Stylized, not photographic.
-- **No women or girls.** No female figures or characters. Other figures — including anime (male/neutral) — are fine.
-- **No real-world photography.** No nature/forests/mountains, no coffee/food/drinks, no cities/buildings.
-- **Vary composition.** Centered subjects are fine but don't overuse them — mix full-bleed patterns, gradients, stylized landscapes, geometric, the occasional centered piece.
+Standing content rules: dark art (stylized, not photographic), **no women or
+girls**, `dharmx/walls` is the **only** sanctioned source. Score installed packs
+with `python3 common/themes/wallpaper-match.py <theme>` (0–100, CIELAB
+nearest-palette distance); treat < 60 as a weak match.
 
-**Color match (hard requirement)**
-- Each wallpaper must closely match its theme's palette. Verify objectively:
-  ```bash
-  python3 common/themes/wallpaper-match.py <theme> <image>...   # score candidates
-  python3 common/themes/wallpaper-match.py <theme>              # score installed wallpapers
-  ```
-  Scores 0–100 by per-pixel nearest-palette distance (CIELAB). The reference "amazing" themes score **nord ~88–99, gruvbox-light ~88–95**. Aim high; treat **<60** as a weak match worth replacing.
-
-**Format & fit**
-- 3 per theme, **16:9 aspect** (both displays are 16:9 — Linux QHD 2560×1440, Mac FHD 1920×1080), so swaybg/`-m fill` shows the whole image with no cropping.
-- **Native ≥1920×1080 minimum, ≥2560×1440 preferred** so the QHD monitor isn't upscaled (square/portrait/sub-1080 art is rejected even if it color-matches).
-- Normalized on install: center-crop to exactly 16:9, scale to ≤3840px wide (1920-wide art upscaled to 2560 via Lanczos), **JPEG quality 92** (~1–2 MB each) to keep the repo lean.
-
-**Source** — the **only** sanctioned repo: `dharmx/walls` (https://github.com/dharmx/walls). Abstract / minimal / poly / geometric, plus an `anime` set. All wallpapers are sourced from here; no other repos.
+History: the June 2026 `<theme>-N.jpg` set (3 per theme, normalized JPEG) was
+superseded by the 2026-08-12 rollout. Do not restore it.
