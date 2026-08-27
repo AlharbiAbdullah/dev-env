@@ -79,7 +79,13 @@ npm ls -g @openai/codex >/dev/null 2>&1 || npm i -g @openai/codex
 [ -x "$HOME/.bun/bin/bun" ] || curl -fsSL https://bun.sh/install | bash
 [ -x "$HOME/.opencode/bin/opencode" ] || curl -fsSL https://opencode.ai/install | bash
 uv python install 3.12 >/dev/null 2>&1 || true
-( cd "$HOME/helm/02-ana/financial/investment/paper-portfolio" 2>/dev/null && [ ! -d .venv ] && uv venv --python 3.12 -q && uv pip install -q yfinance pandas numpy curl_cffi ) || true
+# paper-portfolio venv: create if missing, then ALWAYS install deps (idempotent). A half-built
+# venv (dir present, no packages) failed the 17:00 mark for 2 days after the 2026-08-25 restore.
+if cd "$HOME/helm/02-ana/financial/investment/paper-portfolio" 2>/dev/null; then
+  [ -d .venv ] || uv venv --python 3.12 -q
+  uv pip install -q --python .venv yfinance pandas numpy curl_cffi || echo "WARN: paper-portfolio deps failed to install"
+  cd - >/dev/null
+fi
 
 # --- [8] claude ---
 step "[8/9] Claude Code"
