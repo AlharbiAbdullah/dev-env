@@ -200,3 +200,10 @@ yellow = "#e6bb72"
 red = "#ef8085"
 blue = "#94a8e2"
 green = "#b5c97e"
+
+[palettes.solitude]
+accent = "#798186"
+yellow = "#d9dbdc"
+red = "#de6145"
+blue = "#798186"
+green = "#9fa5a9"
