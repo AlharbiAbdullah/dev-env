@@ -3,6 +3,7 @@ return {
   border = "0xffb47109",
   macos = "light",
   source = "rai",
+  flat = true,
   vscode = "Calma Light (generated)",
   cursor = "Calma Light (generated)",
   colors = {

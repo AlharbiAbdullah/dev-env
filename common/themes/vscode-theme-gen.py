@@ -39,8 +39,10 @@ def read_theme(name):
         return re.findall(r'"(#[0-9a-fA-F]{6})"', m.group(1)) if m else []
 
     border = field("border")
+    flat = bool(re.search(r"flat\s*=\s*true", src))
     return {
         "name": name,
+        "flat": flat,
         "mode": field("macos", "dark"),
         "bg": field("background"),
         "fg": field("foreground"),
@@ -86,6 +88,15 @@ def build(t):
     muted = mix(bg, fg, 0.55)     # comments, dimmed text
     faint = mix(bg, fg, 0.38)     # whitespace, indent guides
     ghost = mix(bg, fg, 0.03)     # current-line highlight
+
+    # Flat chrome. With flat = true in theme.lua the sidebar, tab strip, panel,
+    # status bar and title bar sit on the editor floor and the separators between
+    # them disappear, so the window reads as one surface instead of a grid of
+    # boxes. Hover, selection and floating widgets keep their elevation, which is
+    # what still tells you where the cursor is.
+    if t.get("flat"):
+        panel = bg
+    edge = bg if t.get("flat") else line
 
     C = {
         # base
@@ -160,30 +171,30 @@ def build(t):
         "activityBar.background": bg,
         "activityBar.foreground": fg,
         "activityBar.inactiveForeground": faint,
-        "activityBar.border": line,
+        "activityBar.border": edge,
         "activityBarBadge.background": accent,
         "activityBarBadge.foreground": bg,
 
         # side bar
         "sideBar.background": panel,
         "sideBar.foreground": mix(bg, fg, 0.80),
-        "sideBar.border": line,
+        "sideBar.border": edge,
         "sideBarTitle.foreground": fg,
         "sideBarSectionHeader.background": panel,
         "sideBarSectionHeader.foreground": fg,
-        "sideBarSectionHeader.border": line,
+        "sideBarSectionHeader.border": edge,
 
         # editor groups and tabs
-        "editorGroup.border": line,
+        "editorGroup.border": edge,
         "editorGroupHeader.tabsBackground": panel,
-        "editorGroupHeader.tabsBorder": line,
+        "editorGroupHeader.tabsBorder": edge,
         "editorGroupHeader.noTabsBackground": panel,
         "tab.activeBackground": bg,
         "tab.activeForeground": fg,
         "tab.activeBorderTop": accent,
         "tab.inactiveBackground": panel,
         "tab.inactiveForeground": muted,
-        "tab.border": line,
+        "tab.border": edge,
         "tab.hoverBackground": elem,
         "tab.unfocusedActiveForeground": muted,
         "tab.lastPinnedBorder": border,
@@ -236,7 +247,7 @@ def build(t):
         "problemsInfoIcon.foreground": blue,
 
         # overview ruler
-        "editorOverviewRuler.border": line,
+        "editorOverviewRuler.border": edge,
         "editorOverviewRuler.errorForeground": red,
         "editorOverviewRuler.warningForeground": yellow,
         "editorOverviewRuler.infoForeground": blue,
@@ -280,7 +291,7 @@ def build(t):
 
         # panel and terminal chrome
         "panel.background": panel,
-        "panel.border": line,
+        "panel.border": edge,
         "panelTitle.activeForeground": fg,
         "panelTitle.activeBorder": accent,
         "panelTitle.inactiveForeground": muted,
@@ -288,7 +299,7 @@ def build(t):
         # status bar
         "statusBar.background": panel,
         "statusBar.foreground": mix(bg, fg, 0.75),
-        "statusBar.border": line,
+        "statusBar.border": edge,
         "statusBar.debuggingBackground": yellow,
         "statusBar.debuggingForeground": bg,
         "statusBar.noFolderBackground": panel,
@@ -305,7 +316,7 @@ def build(t):
         "titleBar.activeForeground": fg,
         "titleBar.inactiveBackground": panel,
         "titleBar.inactiveForeground": muted,
-        "titleBar.border": line,
+        "titleBar.border": edge,
 
         # menus
         "menubar.selectionBackground": elem,
@@ -480,7 +491,7 @@ def build(t):
         "terminal.foreground": fg,
         "terminalCursor.foreground": t["cursor"],
         "terminal.selectionBackground": sel,
-        "terminal.border": line,
+        "terminal.border": edge,
         "terminal.ansiBlack": ansi[0],
         "terminal.ansiRed": ansi[1],
         "terminal.ansiGreen": ansi[2],

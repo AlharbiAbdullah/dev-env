@@ -4,6 +4,7 @@ return {
   macos = "dark",
   light_variant = "calma-light",
   source = "rai",
+  flat = true,
   vscode = "Calma Dark (generated)",
   cursor = "Calma Dark (generated)",
   colors = {
