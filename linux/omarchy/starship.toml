@@ -1,7 +1,7 @@
 # Minimal two-line prompt, colors driven by the active theme palette.
 # The `theme` script updates the `palette = ...` line below on theme switch.
 
-palette = "aureth"
+palette = "calma-dark"
 
 format = "$hostname$directory$git_branch$git_status$cmd_duration$character "
 
@@ -60,6 +60,20 @@ yellow = "#ceba49"
 red = "#dc4f62"
 blue = "#5599c9"
 green = "#81af58"
+
+[palettes.calma-dark]
+accent = "#d8a657"
+yellow = "#d8a657"
+red = "#ea6962"
+blue = "#7daea3"
+green = "#a9b665"
+
+[palettes.calma-light]
+accent = "#b47109"
+yellow = "#b47109"
+red = "#c14a4a"
+blue = "#45707a"
+green = "#6c782e"
 
 [palettes.dark-pro]
 accent = "#2f81f7"
