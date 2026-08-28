@@ -62,14 +62,14 @@ blue = "#5599c9"
 green = "#81af58"
 
 [palettes.calma-dark]
-accent = "#d8a657"
+accent = "#a9b665"
 yellow = "#d8a657"
 red = "#ea6962"
 blue = "#7daea3"
 green = "#a9b665"
 
 [palettes.calma-light]
-accent = "#b47109"
+accent = "#6c782e"
 yellow = "#b47109"
 red = "#c14a4a"
 blue = "#45707a"

@@ -1,6 +1,6 @@
 return {
   name = "calma-dark",
-  border = "0xffd8a657",
+  border = "0xffa9b665",
   macos = "dark",
   light_variant = "calma-light",
   source = "rai",

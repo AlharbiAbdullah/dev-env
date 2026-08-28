@@ -1,6 +1,6 @@
 return {
   name = "calma-light",
-  border = "0xffb47109",
+  border = "0xff6c782e",
   macos = "light",
   source = "rai",
   flat = true,
