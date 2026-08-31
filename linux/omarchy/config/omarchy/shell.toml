@@ -1,0 +1,8 @@
+# Machine-level shell overrides. Merged over the active theme's shell.toml;
+# keys here win. Only size-horizontal, size-vertical, and scale-with-font are
+# read from [bar] -- the island geometry lives in the abdullah.bar plugin.
+
+[bar]
+# Height of each bar island. Stock is 26.
+size-horizontal = 34
+size-vertical = 34

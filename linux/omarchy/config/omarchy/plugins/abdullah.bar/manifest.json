@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "abdullah.bar",
+  "name": "Island Bar",
+  "version": "1.0.0",
+  "author": "Abdullah",
+  "description": "Detached three-island bar: left, center, and right float as separate rounded pills",
+  "kinds": [
+    "bar"
+  ],
+  "entryPoints": {
+    "bar": "Bar.qml"
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.bar"
+  }
+}
