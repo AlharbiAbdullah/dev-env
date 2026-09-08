@@ -71,19 +71,33 @@ case "${1:-}" in
     # The float rule resizes the window just after launch; wait it out so
     # tput reports the final column count.
     sleep 0.3
+    export PATH="/opt/homebrew/bin:$PATH"   # Mac: fzf lives in Homebrew, and the window is launched without a login shell
     width=$(tput cols 2>/dev/null || echo 100)
     rows 1 $((width - 8)) | fzf --ansi --no-sort --layout=reverse \
       --border=rounded --margin=1,1 --info=hidden --prompt='search ❯ ' \
       --pointer='' --marker='' --no-scrollbar --bind="start:pos(2),load:pos(2)" \
       --color=16,hl:2,hl+:2,prompt:2,border:2,gutter:-1,bg+:8 \
       >/dev/null
+    if [ "$(uname)" = Darwin ]; then
+      # iTerm2 keeps a finished session open ("Session Ended"); close this one by its tty.
+      tty=$(tty)
+      osascript -e "tell application \"iTerm\"
+        repeat with w in windows
+          repeat with t in tabs of w
+            repeat with s in sessions of t
+              if tty of s is \"$tty\" then close s
+            end repeat
+          end repeat
+        end repeat
+      end tell" >/dev/null 2>&1
+    fi
     exit 0
     ;;
   *)
     if [ "$(uname)" = Darwin ]; then
       # New iTerm2 window in the running instance (same as iterm2-window), running the sheet.
       osascript -e "tell application \"iTerm\"
-        create window with default profile command \"/bin/bash -lc '$HOME/.local/bin/keybindings-menu --view'\"
+        create window with default profile command \"/bin/zsh -lc '$HOME/.local/bin/keybindings-menu --view'\"
         activate
       end tell" >/dev/null
     else
