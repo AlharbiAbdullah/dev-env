@@ -1,5 +1,5 @@
 # style name or JSON path (default "auto")
-style: "dracula"
+style: "/home/abdullah/.config/glow/rai.json"
 # mouse support (TUI-mode only)
 mouse: false
 # use pager to display markdown

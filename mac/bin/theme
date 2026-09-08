@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Unified theme switcher: iTerm2, JankyBorders, Cursor, Antigravity,
-# Chrome tab bar, Starship prompt, OpenCode, cliamp, macOS appearance,
-# desktop wallpaper.
+# Chrome tab bar, Starship prompt, OpenCode, cliamp, Claude Code, pi, btop,
+# tmux, glow (via theme-extras), macOS appearance, desktop wallpaper.
 #
 # Usage:
 #   theme                         list available themes + current
@@ -516,6 +516,10 @@ apply_theme() {
 
   # cliamp: generated TOML theme + live apply
   update_cliamp_theme "$src" "$name"
+
+  # Claude Code, pi, btop, tmux, glow: rendered from theme.lua by theme-extras
+  # (Omarchy's own template derivations, so Mac == Linux hex for hex).
+  "$HOME/.local/bin/theme-extras" "$src" "$name" || echo "  extras:    FAILED" >&2
 
   # Cursor + Antigravity (both VS Code forks, same theme extension IDs)
   update_vscode_settings "$CURSOR_SETTINGS" "$cursor_theme"

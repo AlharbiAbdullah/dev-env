@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""theme-extras <theme.lua> <name>: render the surfaces the Mac switcher did not
+cover, straight from theme.lua, using the same colour derivations Omarchy applies on
+Linux (its claude.json / pi.json / btop.theme templates, mix(a, b, t) = a + (b-a)*t)
+and the same tmux/glow generators as the Linux rai-theme-set hook. Called from
+`theme` on every switch. One source of colour: nothing here is hand-typed.
+
+  Claude Code  ~/.claude/themes/omarchy.json        + settings.json theme=custom:omarchy
+  pi           ~/.pi/agent/themes/omarchy-system.json + settings.json theme=omarchy-system
+  btop         ~/.config/btop/themes/rai.theme      + btop.conf color_theme="rai"
+  tmux         ~/.config/tmux/theme.conf            (+ live `tmux source-file`)
+  glow         ~/.config/glow/rai.json              (glow.yml points at it)
+"""
+import json, math, os, re, subprocess, sys
+from pathlib import Path
+
+src, name = Path(sys.argv[1]), sys.argv[2]
+t = src.read_text()
+H = Path.home()
+
+
+def field(n):
+    m = re.search(r'\b' + n + r'\s*=\s*"([^"]*)"', t)
+    return m.group(1) if m else ""
+
+
+def arr(n):
+    m = re.search(r'\b' + n + r'\s*=\s*\{(.*?)\}', t, re.S)
+    return re.findall(r'#[0-9a-fA-F]{6}', m.group(1)) if m else []
+
+
+def h2rgb(h): return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+def rgb2h(c, rnd): return "#%02x%02x%02x" % tuple(max(0, min(255, rnd(v))) for v in c)
+def mix(a, b, p):
+    """Omarchy template mix: rounds half-up."""
+    A, B = h2rgb(a), h2rgb(b)
+    return rgb2h(tuple(A[i] + (B[i] - A[i]) * p for i in range(3)), lambda v: math.floor(v + 0.5))
+def mix_r(a, b, p):
+    """theme-render mix (colors.toml derived keys): Python round (half-even)."""
+    A, B = h2rgb(a), h2rgb(b)
+    return rgb2h(tuple(A[i] + (B[i] - A[i]) * p for i in range(3)), round)
+
+
+bg, fg = field("background"), field("foreground")
+ansi, bri = arr("ansi"), arr("brights")
+if len(ansi) < 8 or len(bri) < 8 or not bg or not fg:
+    sys.exit(f"theme-extras: incomplete palette in {src}")
+border = field("border")
+accent = "#" + border[-6:] if border else ansi[4]
+light = field("macos") == "light"
+sel = field("selection_bg") or mix(bg, fg, 0.2)
+sel_fg = field("selection_fg") or field("cursor_bg") or bri[7]
+away = "#000000" if light else "#ffffff"
+# same derived keys theme-render writes into Omarchy's colors.toml
+muted = bri[0] if bri[0] != ansi[0] else mix_r(bg, fg, 0.45)
+lighter_bg = mix_r(bg, away, 0.06)
+dark_fg, light_fg = mix_r(fg, bg, 0.6), mix_r(fg, bg, 0.3)
+bright_fg = field("cursor_bg") or bri[7]
+red, green, yellow, blue, magenta, cyan = ansi[1:7]
+b_red, b_green, b_yellow, b_blue, b_magenta, b_cyan = bri[1:7]
+
+
+def write(path, text):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def set_json_key(path, key, value):
+    """Edit one top-level key in place (JSON only, writes THROUGH symlinks)."""
+    path = Path(path)
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    if d.get(key) == value:
+        return
+    d[key] = value
+    path.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
+
+
+# ---- Claude Code (Omarchy claude.json.tpl) ----------------------------------
+claude = {
+    "name": "Omarchy", "base": "light" if light else "dark",
+    "overrides": {
+        "claude": accent, "claudeShimmer": mix(accent, fg, 0.35),
+        "text": fg, "inverseText": bg,
+        "inactive": mix(fg, bg, 0.40), "inactiveShimmer": mix(fg, bg, 0.25),
+        "subtle": muted, "suggestion": cyan,
+        "permission": blue, "permissionShimmer": mix(blue, fg, 0.35),
+        "remember": yellow, "success": green, "error": red,
+        "warning": yellow, "warningShimmer": mix(yellow, fg, 0.35),
+        "merged": magenta, "promptBorder": accent, "promptBorderShimmer": mix(accent, fg, 0.35),
+        "planMode": cyan, "autoAccept": yellow, "bashBorder": b_yellow, "ide": b_cyan,
+        "diffAdded": mix(bg, green, 0.15), "diffRemoved": mix(bg, red, 0.15),
+        "diffAddedDimmed": mix(bg, green, 0.08), "diffRemovedDimmed": mix(bg, red, 0.08),
+        "diffAddedWord": mix(bg, green, 0.32), "diffRemovedWord": mix(bg, red, 0.32),
+        "userMessageBackground": mix(bg, fg, 0.06), "userMessageBackgroundHover": mix(bg, fg, 0.10),
+        "bashMessageBackgroundColor": mix(bg, fg, 0.06), "memoryBackgroundColor": mix(bg, fg, 0.06),
+        "selectionBg": sel, "rate_limit_fill": accent, "rate_limit_empty": mix(bg, fg, 0.20),
+        "briefLabelYou": yellow, "briefLabelClaude": accent,
+    },
+}
+write(H / ".claude/themes/omarchy.json", json.dumps(claude, indent=2) + "\n")
+set_json_key(H / ".claude/settings.json", "theme", "custom:omarchy")
+
+# ---- pi (Omarchy pi.json.tpl) ------------------------------------------------
+pi = {
+    "$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+    "name": "omarchy-system",
+    "vars": {
+        "background": bg, "foreground": fg, "accent": accent,
+        "selectionBackground": sel, "selectionForeground": sel_fg,
+        "selectedBackground": mix(bg, accent, 0.22),
+        "color0": bg, "color1": red, "color2": green, "color3": yellow, "color4": blue,
+        "color5": magenta, "color6": cyan, "color7": fg, "color8": muted,
+        "color9": b_red, "color10": b_green, "color11": b_yellow, "color12": b_blue,
+        "color13": b_magenta, "color14": b_cyan, "color15": bright_fg,
+        "panel": mix(bg, fg, 0.06), "panelAlt": mix(bg, fg, 0.10),
+        "panelPending": mix(bg, accent, 0.12), "panelSuccess": mix(bg, green, 0.12),
+        "panelError": mix(bg, red, 0.12),
+        "border": mix(bg, fg, 0.30), "borderMuted": mix(bg, fg, 0.20),
+        "mutedText": mix(fg, bg, 0.34), "dimText": mix(fg, bg, 0.52),
+    },
+    "colors": {
+        "accent": "accent", "border": "border", "borderAccent": "accent", "borderMuted": "borderMuted",
+        "success": "color2", "error": "color1", "warning": "color3", "muted": "mutedText",
+        "dim": "dimText", "text": "foreground", "thinkingText": "dimText",
+        "selectedBg": "selectedBackground", "userMessageBg": "panel", "userMessageText": "foreground",
+        "customMessageBg": "panel", "customMessageText": "foreground", "customMessageLabel": "accent",
+        "toolPendingBg": "panelPending", "toolSuccessBg": "panelSuccess", "toolErrorBg": "panelError",
+        "toolTitle": "accent", "toolOutput": "foreground",
+        "mdHeading": "color5", "mdLink": "accent", "mdLinkUrl": "color6", "mdCode": "color6",
+        "mdCodeBlock": "foreground", "mdCodeBlockBorder": "borderMuted", "mdQuote": "mutedText",
+        "mdQuoteBorder": "borderMuted", "mdHr": "borderMuted", "mdListBullet": "color5",
+        "toolDiffAdded": "color2", "toolDiffRemoved": "color1", "toolDiffContext": "mutedText",
+        "syntaxComment": "dimText", "syntaxKeyword": "color5", "syntaxFunction": "color4",
+        "syntaxVariable": "accent", "syntaxString": "color2", "syntaxNumber": "color3",
+        "syntaxType": "color4", "syntaxOperator": "color5", "syntaxPunctuation": "mutedText",
+        "thinkingOff": "borderMuted", "thinkingMinimal": "accent", "thinkingLow": "color4",
+        "thinkingMedium": "color5", "thinkingHigh": "color3", "thinkingXhigh": "color1",
+        "bashMode": "color3",
+    },
+    "export": {"pageBg": bg, "cardBg": mix(bg, fg, 0.06), "infoBg": mix(bg, fg, 0.10)},
+}
+write(H / ".pi/agent/themes/omarchy-system.json", json.dumps(pi, indent=2) + "\n")
+set_json_key(H / ".pi/agent/settings.json", "theme", "omarchy-system")
+
+# ---- btop (Omarchy btop.theme.tpl) ------------------------------------------
+btop = {
+    "main_bg": bg, "main_fg": fg, "title": fg, "hi_fg": accent, "selected_bg": sel,
+    "selected_fg": accent, "inactive_fg": muted, "graph_text": light_fg, "meter_bg": sel,
+    "proc_misc": light_fg, "cpu_box": magenta, "mem_box": green, "net_box": red,
+    "proc_box": accent, "div_line": muted,
+    "temp_start": green, "temp_mid": yellow, "temp_end": red,
+    "cpu_start": cyan, "cpu_mid": blue, "cpu_end": magenta,
+    "free_start": magenta, "free_mid": blue, "free_end": cyan,
+    "cached_start": blue, "cached_mid": cyan, "cached_end": magenta,
+    "available_start": yellow, "available_mid": red, "available_end": red,
+    "used_start": green, "used_mid": cyan, "used_end": blue,
+    "download_start": yellow, "download_mid": red, "download_end": red,
+    "upload_start": green, "upload_mid": cyan, "upload_end": blue,
+    "process_start": cyan, "process_mid": blue, "process_end": magenta,
+    "gradient_color_0": bg, "gradient_color_1": lighter_bg, "gradient_color_2": sel,
+    "gradient_color_3": muted, "gradient_color_4": dark_fg, "gradient_color_5": fg,
+    "gradient_color_6": light_fg, "gradient_color_7": bright_fg,
+}
+write(H / ".config/btop/themes/rai.theme",
+      "# generated by theme-extras from theme.lua: edit the theme.lua, not this file\n"
+      + "".join(f'theme[{k}]="{v}"\n' for k, v in btop.items()))
+conf = H / ".config/btop/btop.conf"
+if conf.exists():
+    c = conf.read_text()
+    c2 = re.sub(r'^color_theme\s*=.*$', 'color_theme = "rai"', c, count=1, flags=re.M)
+    if c2 != c:
+        conf.write_text(c2)
+
+# ---- tmux (same layout as the Linux rai-theme-set hook) ---------------------
+surface, info = ansi[0], ansi[4]
+tmux = [
+    "# generated from theme.lua: edit the theme.lua, not this file",
+    "set -g status on", "set -g status-interval 30", "set -g status-position bottom", "set -g status-justify left",
+    f'set -g status-style "bg={bg},fg={fg}"', "set -g status-left-length 40", "set -g status-right-length 60",
+    f'set -g status-left "#[fg={info},bg={bg}]#[fg={bg},bg={info},bold] #S #[fg={info},bg={bg}] "',
+    f'set -g status-right "#[fg={info},bg={bg}]#[fg={bg},bg={info},bold] %H:%M #[fg={info},bg={bg}]"',
+    'set -g window-status-separator ""',
+    f'set -g window-status-format "#[fg={fg},bg={bg}]  #I:#W "',
+    f'set -g window-status-current-format "#[fg={accent},bg={bg}]#[fg={bg},bg={accent},bold] #I:#W #[fg={accent},bg={bg}]"',
+    f'set -g pane-active-border-style "fg={accent}"', f'set -g pane-border-style "fg={surface}"',
+    f'set -g message-style "bg={accent},fg={bg}"', f'set -g message-command-style "bg={accent},fg={bg}"',
+    f'set -g mode-style "bg={sel},fg={sel_fg}"', f'set -g clock-mode-colour "{accent}"',
+]
+write(H / ".config/tmux/theme.conf", "\n".join(tmux) + "\n")
+for tmux_bin in ("/opt/homebrew/bin/tmux", "/usr/local/bin/tmux", "/usr/bin/tmux"):
+    if os.path.exists(tmux_bin):
+        if subprocess.run([tmux_bin, "ls"], capture_output=True).returncode == 0:
+            subprocess.run([tmux_bin, "source-file", str(H / ".config/tmux/theme.conf")], capture_output=True)
+        break
+
+# ---- glow (same as the Linux hook) ------------------------------------------
+glow = {
+    "document": {"block_prefix": "\n", "block_suffix": "\n", "color": fg, "margin": 2},
+    "block_quote": {"indent": 1, "indent_token": "│ ", "color": cyan},
+    "paragraph": {}, "list": {"level_indent": 2},
+    "heading": {"block_suffix": "\n", "color": accent, "bold": True},
+    "h1": {"prefix": " ", "suffix": " ", "color": bg, "background_color": accent, "bold": True},
+    "h2": {"prefix": "", "color": yellow}, "h3": {"prefix": "", "color": green},
+    "h4": {"prefix": "", "color": blue}, "h5": {"prefix": "", "color": magenta},
+    "h6": {"prefix": "", "color": magenta, "bold": False},
+    "text": {}, "strikethrough": {"crossed_out": True}, "emph": {"italic": True}, "strong": {"bold": True},
+    "hr": {"color": sel, "format": "\n--------\n"},
+    "item": {"block_prefix": "• "}, "enumeration": {"block_prefix": ". "},
+    "task": {"ticked": "[✓] ", "unticked": "[ ] "},
+    "link": {"color": blue, "underline": True}, "link_text": {"color": cyan, "bold": True},
+    "image": {"color": magenta, "underline": True}, "image_text": {"color": cyan, "format": "Image: {{.text}} →"},
+    "code": {"prefix": "\u00a0", "suffix": "\u00a0", "color": green, "background_color": sel},
+    "code_block": {"color": fg, "margin": 2, "chroma": {
+        "text": {"color": fg}, "error": {"color": bg, "background_color": red},
+        "comment": {"color": muted}, "comment_preproc": {"color": yellow},
+        "keyword": {"color": magenta}, "keyword_reserved": {"color": magenta}, "keyword_namespace": {"color": magenta},
+        "keyword_type": {"color": cyan}, "operator": {"color": magenta}, "punctuation": {"color": fg},
+        "name": {"color": fg}, "name_builtin": {"color": cyan}, "name_tag": {"color": red}, "name_attribute": {"color": yellow},
+        "name_class": {"color": cyan, "bold": True}, "name_constant": {"color": yellow}, "name_decorator": {"color": yellow},
+        "name_exception": {"color": red}, "name_function": {"color": blue}, "name_other": {},
+        "literal": {}, "literal_number": {"color": yellow}, "literal_date": {"color": yellow},
+        "literal_string": {"color": green}, "literal_string_escape": {"color": cyan},
+        "generic_deleted": {"color": red}, "generic_emph": {"italic": True}, "generic_inserted": {"color": green},
+        "generic_strong": {"bold": True}, "generic_subheading": {"color": sel}, "background": {"background_color": bg}}},
+    "table": {}, "definition_list": {}, "definition_term": {},
+    "definition_description": {"block_prefix": "\n\U0001f836 "}, "html_block": {}, "html_span": {},
+}
+write(H / ".config/glow/rai.json", json.dumps(glow, indent=2) + "\n")
+
+print(f"  extras:    claude, pi, btop, tmux, glow <- {name}")

@@ -7,5 +7,6 @@
   "*.txt": {
     "aspell.check": "on",
     "aspell.lang": "en_US"
-  }
+  },
+  "colorscheme": "simple"
 }

@@ -19,6 +19,7 @@ export PATH="$HOME/.opencode/bin:$PATH"
 # --- locale / history ---
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
+export FZF_DEFAULT_OPTS="--color=16"   # follow the terminal palette (= active theme)
 HISTSIZE=50000; HISTFILESIZE=50000; HISTCONTROL=ignoreboth:erasedups; shopt -s histappend
 
 # --- tools (Omarchy's rc already inits starship + zoxide + fzf; guard against double init) ---

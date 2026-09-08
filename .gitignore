@@ -15,3 +15,7 @@ common/themes/current.lua
 # Python cache (from common/themes/comfort-score.py)
 __pycache__/
 *.pyc
+
+# Syncthing (~/dev-env is a synced folder since 2026-08-27)
+.stfolder/
+.stignore

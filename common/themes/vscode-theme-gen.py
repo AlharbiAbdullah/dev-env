@@ -49,6 +49,8 @@ def read_theme(name):
         "cursor": field("cursor_bg") or field("foreground"),
         "sel_bg": field("selection_bg"),
         "accent": "#" + border[-6:] if border.startswith("0x") else (border or None),
+        "action": field("accent_action") or None,
+        "highlight": field("accent_highlight") or None,
         "ansi": clist("ansi"),
         "brights": clist("brights"),
     }
@@ -77,6 +79,12 @@ def build(t):
     # ansi slots: 0 black 1 red 2 green 3 yellow 4 blue 5 magenta 6 cyan 7 white
     red, green, yellow, blue, magenta, cyan = (ansi[i] for i in range(1, 7))
     accent = t["accent"] or blue
+    # Role split (falls back to single-accent themes): accent frames (focus and
+    # active borders), action marks interactive elements (buttons, badges,
+    # progress), highlight marks transient matches (links, bracket match, list
+    # typeahead).
+    action = t.get("action") or accent
+    hl = t.get("highlight") or accent
     sel = t["sel_bg"] or mix(bg, fg, 0.12)
 
     # Neutral chrome elevations. Same ladder as the OpenCode generator.
@@ -110,7 +118,7 @@ def build(t):
         "widget.shadow": alpha(_darkest(bg), 0.35),
         "widget.border": border,
         "sash.hoverBorder": accent,
-        "textLink.foreground": accent,
+        "textLink.foreground": hl,
         "textLink.activeForeground": fg,
         "textPreformat.foreground": yellow,
         "textBlockQuote.background": panel,
@@ -119,9 +127,9 @@ def build(t):
         "textSeparator.foreground": border,
 
         # buttons, inputs, dropdowns
-        "button.background": accent,
+        "button.background": action,
         "button.foreground": bg,
-        "button.hoverBackground": mix(accent, fg, 0.12),
+        "button.hoverBackground": mix(action, fg, 0.12),
         "button.secondaryBackground": elem,
         "button.secondaryForeground": fg,
         "button.secondaryHoverBackground": raise_,
@@ -149,9 +157,9 @@ def build(t):
         "scrollbarSlider.background": alpha(fg, 0.10),
         "scrollbarSlider.hoverBackground": alpha(fg, 0.16),
         "scrollbarSlider.activeBackground": alpha(fg, 0.22),
-        "badge.background": accent,
+        "badge.background": action,
         "badge.foreground": bg,
-        "progressBar.background": accent,
+        "progressBar.background": action,
 
         # lists and trees
         "list.activeSelectionBackground": elem,
@@ -162,7 +170,7 @@ def build(t):
         "list.hoverForeground": fg,
         "list.focusBackground": elem,
         "list.focusForeground": fg,
-        "list.highlightForeground": accent,
+        "list.highlightForeground": hl,
         "list.errorForeground": red,
         "list.warningForeground": yellow,
         "tree.indentGuidesStroke": faint,
@@ -172,7 +180,7 @@ def build(t):
         "activityBar.foreground": fg,
         "activityBar.inactiveForeground": faint,
         "activityBar.border": edge,
-        "activityBarBadge.background": accent,
+        "activityBarBadge.background": action,
         "activityBarBadge.foreground": bg,
 
         # side bar
@@ -191,7 +199,7 @@ def build(t):
         "editorGroupHeader.noTabsBackground": panel,
         "tab.activeBackground": bg,
         "tab.activeForeground": fg,
-        "tab.activeBorderTop": accent,
+        "tab.activeBorderTop": action,
         "tab.inactiveBackground": panel,
         "tab.inactiveForeground": muted,
         "tab.border": edge,
@@ -220,9 +228,9 @@ def build(t):
         "editorIndentGuide.activeBackground1": mix(bg, fg, 0.30),
         "editorRuler.foreground": line,
         "editorCodeLens.foreground": muted,
-        "editorBracketMatch.background": alpha(accent, 0.18),
-        "editorBracketMatch.border": alpha(accent, 0.60),
-        "editorLink.activeForeground": accent,
+        "editorBracketMatch.background": alpha(hl, 0.18),
+        "editorBracketMatch.border": alpha(hl, 0.60),
+        "editorLink.activeForeground": hl,
 
         # bracket pair colors, walked around the palette
         "editorBracketHighlight.foreground1": yellow,
@@ -273,7 +281,7 @@ def build(t):
         "editorSuggestWidget.foreground": fg,
         "editorSuggestWidget.border": border,
         "editorSuggestWidget.selectedBackground": elem,
-        "editorSuggestWidget.highlightForeground": accent,
+        "editorSuggestWidget.highlightForeground": hl,
         "peekView.border": accent,
         "peekViewEditor.background": panel,
         "peekViewEditor.matchHighlightBackground": alpha(yellow, 0.25),
@@ -293,7 +301,7 @@ def build(t):
         "panel.background": panel,
         "panel.border": edge,
         "panelTitle.activeForeground": fg,
-        "panelTitle.activeBorder": accent,
+        "panelTitle.activeBorder": action,
         "panelTitle.inactiveForeground": muted,
 
         # status bar
@@ -303,7 +311,7 @@ def build(t):
         "statusBar.debuggingBackground": yellow,
         "statusBar.debuggingForeground": bg,
         "statusBar.noFolderBackground": panel,
-        "statusBarItem.remoteBackground": accent,
+        "statusBarItem.remoteBackground": action,
         "statusBarItem.remoteForeground": bg,
         "statusBarItem.hoverBackground": alpha(fg, 0.08),
         "statusBarItem.errorBackground": red,
@@ -333,7 +341,7 @@ def build(t):
         "notifications.background": raise_,
         "notifications.foreground": fg,
         "notifications.border": border,
-        "notificationLink.foreground": accent,
+        "notificationLink.foreground": hl,
         "notificationsErrorIcon.foreground": red,
         "notificationsWarningIcon.foreground": yellow,
         "notificationsInfoIcon.foreground": blue,
@@ -350,7 +358,7 @@ def build(t):
         "breadcrumb.background": bg,
         "breadcrumb.foreground": muted,
         "breadcrumb.focusForeground": fg,
-        "breadcrumb.activeSelectionForeground": accent,
+        "breadcrumb.activeSelectionForeground": hl,
         "breadcrumbPicker.background": raise_,
 
         # git decorations
@@ -364,7 +372,7 @@ def build(t):
 
         # settings editor
         "settings.headerForeground": fg,
-        "settings.modifiedItemIndicator": accent,
+        "settings.modifiedItemIndicator": action,
         "settings.dropdownBackground": elem,
         "settings.dropdownBorder": border,
         "settings.textInputBackground": elem,
@@ -474,16 +482,16 @@ def build(t):
         "keybindingLabel.foreground": fg,
         "keybindingLabel.border": border,
         "keybindingLabel.bottomBorder": border,
-        "extensionButton.prominentBackground": accent,
+        "extensionButton.prominentBackground": action,
         "extensionButton.prominentForeground": bg,
-        "extensionBadge.remoteBackground": accent,
+        "extensionBadge.remoteBackground": action,
         "extensionIcon.starForeground": yellow,
         "walkThrough.embeddedEditorBackground": panel,
         "welcomePage.background": bg,
         "welcomePage.tileBackground": panel,
         "welcomePage.tileHoverBackground": elem,
         "welcomePage.progress.background": elem,
-        "welcomePage.progress.foreground": accent,
+        "welcomePage.progress.foreground": action,
 
         # integrated terminal: exact, so it matches iTerm2 to the hex
         "terminal.background": bg,
@@ -564,7 +572,7 @@ def build(t):
         rule("Heading", ["markup.heading", "entity.name.section"], accent, "bold"),
         rule("Bold", ["markup.bold"], red, "bold"),
         rule("Italic", ["markup.italic"], magenta, "italic"),
-        rule("Link", ["markup.underline.link", "string.other.link"], accent, "underline"),
+        rule("Link", ["markup.underline.link", "string.other.link"], hl, "underline"),
         rule("Quote", ["markup.quote"], muted, "italic"),
         rule("List", ["markup.list", "punctuation.definition.list"], cyan),
         rule("Inline code", ["markup.inline.raw", "markup.raw"], green),

@@ -16,6 +16,7 @@ export NVM_DIR="$HOME/.nvm"
 # =============================================================================
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
+export FZF_DEFAULT_OPTS="--color=16"   # follow the terminal palette (= active theme)
 
 # =============================================================================
 # HISTORY

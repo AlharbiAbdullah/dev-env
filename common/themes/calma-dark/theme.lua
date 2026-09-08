@@ -1,6 +1,8 @@
 return {
   name = "calma-dark",
   border = "0xffa9b665",
+  accent_action = "#d8a657",
+  accent_highlight = "#d3869b",
   macos = "dark",
   light_variant = "calma-light",
   source = "rai",
@@ -8,10 +10,10 @@ return {
   vscode = "Calma Dark (generated)",
   cursor = "Calma Dark (generated)",
   colors = {
-    background = "#393836",
+    background = "#282828",
     foreground = "#f5deb3",
     cursor_bg = "#d8a657",
-    cursor_fg = "#393836",
+    cursor_fg = "#282828",
     selection_bg = "#4a4846",
     selection_fg = "#f5deb3",
     ansi = {

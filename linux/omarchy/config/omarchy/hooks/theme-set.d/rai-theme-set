@@ -3,8 +3,8 @@
 # Omarchy already handles: Hyprland border, Ghostty, Chrome color, gsettings
 # light/dark, wallpaper, shell, Claude Code, pi, tmux.conf colors.
 # This hook covers what Omarchy does not: Cursor + VS Code (generated rai-themes,
-# exact palette), tmux status bar (own layout), starship
-# palette, and the ~/.config/themes/current.lua compat pointer (opencode theme-sync,
+# exact palette), tmux status bar (own layout), starship (active palette AND every
+# [palettes.*] block regenerated from theme.lua), glow style, and the ~/.config/themes/current.lua compat pointer (opencode theme-sync,
 # fastfetch, and any script that still reads it).
 set -uo pipefail
 name="$1"
@@ -27,6 +27,22 @@ set_color_theme() {
   sed -i -E "s|(\"workbench.colorTheme\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")|\1$theme\2|" "$settings"
 }
 
+# Chrome / Chromium: seed the browser colour from theme.lua so the frame and tab
+# strip follow the palette. Both policy dirs are world-writable (Omarchy's
+# theme-system.sh does that at install), so no sudo. The colour scheme stays
+# "device": Omarchy already flips gsettings light/dark on a theme switch, and the
+# portal reports that to Chrome, so one source decides light vs dark. Chrome reads
+# policy at launch, so a running window keeps the old colour until it restarts or
+# chrome://policy -> Reload policies.
+chrome_bg="$(field background)"
+if [[ -n "$chrome_bg" ]]; then
+  for dir in /etc/opt/chrome/policies/managed /etc/chromium/policies/managed; do
+    [[ -d "$dir" && -w "$dir" ]] || continue
+    printf '{"BrowserThemeColor": "%s", "BrowserColorScheme": "device"}\n' "$chrome_bg" \
+      >"$dir/color.json" 2>/dev/null || true
+  done
+fi
+
 # Cursor + VS Code: the generated rai-themes theme named by the theme.lua `cursor`
 # field, built from the exact theme.lua palette (rebuild + install into both editors
 # with `python3 ~/.config/themes/build-editor-themes.py`). Omarchy's own editor paths
@@ -40,6 +56,92 @@ set_color_theme "$HOME/.config/Code/User/settings.json" "$generated"
 if grep -qE '^palette\s*=' "$HOME/.config/starship.toml" 2>/dev/null; then
   sed -i -E "s|^palette[[:space:]]*=.*|palette = \"$name\"|" "$HOME/.config/starship.toml"
 fi
+
+# Starship: rewrite EVERY [palettes.*] section from theme.lua (same generator as
+# the Mac `theme regen`). Starship used to carry a hand-maintained second copy of
+# the colours, which let gruvbox run the original palette (#fb4934) in the prompt
+# while theme.lua ran the material one (#ea6962). One source of colour now.
+if [[ -f "$HOME/.config/starship.toml" ]]; then
+  python3 - "$HOME/.config/starship.toml" "$THEMES_DIR" <<'PYSTAR'
+import os, re, sys
+cfg, themes_dir = sys.argv[1], sys.argv[2]
+MARK = "# palettes (one per theme; keys must match theme folder names)"
+names = sorted(d for d in os.listdir(themes_dir)
+               if not d.startswith(("_", ".")) and os.path.isfile(f"{themes_dir}/{d}/theme.lua"))
+blocks = []
+for n in names:
+    src = open(f"{themes_dir}/{n}/theme.lua").read()
+    m = re.search(r"ansi\s*=\s*\{(.*?)\}", src, re.S)
+    ansi = re.findall(r'"(#[0-9a-fA-F]{6})"', m.group(1)) if m else []
+    if len(ansi) < 5:
+        continue
+    b = re.search(r'border\s*=\s*"(0x[0-9a-fA-F]{8}|#[0-9a-fA-F]{6})"', src)
+    # The prompt marks the point of action, so a theme's accent_action wins
+    # over the border accent when defined (calma role split).
+    a = re.search(r'accent_action\s*=\s*"(#[0-9a-fA-F]{6})"', src)
+    accent = a.group(1) if a else (("#" + b.group(1)[-6:]) if b else ansi[4])
+    blocks.append(f"[palettes.{n}]\naccent = \"{accent}\"\nyellow = \"{ansi[3]}\"\n"
+                  f"red = \"{ansi[1]}\"\nblue = \"{ansi[4]}\"\ngreen = \"{ansi[2]}\"\n")
+c = open(cfg).read()
+if MARK in c:
+    head = c.split(MARK)[0]
+    sep = "# " + "-" * 77 + "\n"
+    open(cfg, "w").write(head + MARK + "\n" + sep + "\n" + "\n".join(blocks))
+PYSTAR
+fi
+
+# glow: render ~/.config/glow/rai.json from theme.lua (glow.yml points at it).
+python3 - "$src" "$HOME/.config/glow/rai.json" <<'PYGLOW'
+import json, os, re, sys
+src, out = sys.argv[1], sys.argv[2]
+t = open(src).read()
+def field(n):
+    m = re.search(r'\b' + n + r'\s*=\s*"([^"]+)"', t); return m.group(1) if m else None
+ansi = re.findall(r'#[0-9a-fA-F]{6}', re.search(r'ansi\s*=\s*\{(.*?)\}', t, re.S).group(1))
+bg, fg = field('background'), field('foreground')
+sel = field('selection_bg') or ansi[0]
+b = re.search(r'border\s*=\s*"0x[0-9a-fA-F]{2}([0-9a-fA-F]{6})"', t)
+accent = ('#' + b.group(1)) if b else ansi[4]
+red, green, yellow, blue, magenta, cyan = ansi[1:7]
+bri = re.findall(r'#[0-9a-fA-F]{6}', re.search(r'brights\s*=\s*\{(.*?)\}', t, re.S).group(1))
+def mix(a, b, p):
+    A = [int(a[i:i+2], 16) for i in (1, 3, 5)]; B = [int(b[i:i+2], 16) for i in (1, 3, 5)]
+    return '#%02x%02x%02x' % tuple(max(0, min(255, round(A[i] + (B[i] - A[i]) * p))) for i in range(3))
+muted = bri[0] if bri[0] != ansi[0] else mix(bg, fg, 0.45)   # = Omarchy colors.toml muted
+style = {
+  "document": {"block_prefix": "\n", "block_suffix": "\n", "color": fg, "margin": 2},
+  "block_quote": {"indent": 1, "indent_token": "│ ", "color": cyan},
+  "paragraph": {}, "list": {"level_indent": 2},
+  "heading": {"block_suffix": "\n", "color": accent, "bold": True},
+  "h1": {"prefix": " ", "suffix": " ", "color": bg, "background_color": accent, "bold": True},
+  "h2": {"prefix": "", "color": yellow}, "h3": {"prefix": "", "color": green},
+  "h4": {"prefix": "", "color": blue}, "h5": {"prefix": "", "color": magenta},
+  "h6": {"prefix": "", "color": magenta, "bold": False},
+  "text": {}, "strikethrough": {"crossed_out": True}, "emph": {"italic": True}, "strong": {"bold": True},
+  "hr": {"color": sel, "format": "\n--------\n"},
+  "item": {"block_prefix": "• "}, "enumeration": {"block_prefix": ". "},
+  "task": {"ticked": "[✓] ", "unticked": "[ ] "},
+  "link": {"color": blue, "underline": True}, "link_text": {"color": cyan, "bold": True},
+  "image": {"color": magenta, "underline": True}, "image_text": {"color": cyan, "format": "Image: {{.text}} →"},
+  "code": {"prefix": " ", "suffix": " ", "color": green, "background_color": sel},
+  "code_block": {"color": fg, "margin": 2, "chroma": {
+    "text": {"color": fg}, "error": {"color": bg, "background_color": red},
+    "comment": {"color": muted}, "comment_preproc": {"color": yellow},
+    "keyword": {"color": magenta}, "keyword_reserved": {"color": magenta}, "keyword_namespace": {"color": magenta},
+    "keyword_type": {"color": cyan}, "operator": {"color": magenta}, "punctuation": {"color": fg},
+    "name": {"color": fg}, "name_builtin": {"color": cyan}, "name_tag": {"color": red}, "name_attribute": {"color": yellow},
+    "name_class": {"color": cyan, "bold": True}, "name_constant": {"color": yellow}, "name_decorator": {"color": yellow},
+    "name_exception": {"color": red}, "name_function": {"color": blue}, "name_other": {},
+    "literal": {}, "literal_number": {"color": yellow}, "literal_date": {"color": yellow},
+    "literal_string": {"color": green}, "literal_string_escape": {"color": cyan},
+    "generic_deleted": {"color": red}, "generic_emph": {"italic": True}, "generic_inserted": {"color": green},
+    "generic_strong": {"bold": True}, "generic_subheading": {"color": sel}, "background": {"background_color": bg}}},
+  "table": {}, "definition_list": {}, "definition_term": {},
+  "definition_description": {"block_prefix": "\n\U0001f836 "}, "html_block": {}, "html_span": {}
+}
+os.makedirs(os.path.dirname(out), exist_ok=True)
+json.dump(style, open(out, 'w'), indent=2)
+PYGLOW
 
 if command -v tmux >/dev/null 2>&1; then
   mkdir -p "$HOME/.config/tmux"
@@ -57,19 +159,22 @@ def arr(name):
 base = field('background') or '#1c2027'; text = field('foreground') or '#d3c6aa'
 sel_bg = field('selection_bg') or text; sel_fg = field('selection_fg') or base
 ansi = arr('ansi'); surface = ansi[0] if ansi else base; info = ansi[4] if len(ansi) > 4 else accent
+# Role split (falls back to accent): action = current window + clock,
+# highlight = message bar. The pane border keeps the frame accent.
+action = field('accent_action') or accent; hl = field('accent_highlight') or accent
 lb, rb = '', ''
 lines = [
- '# generated by rai-theme-set hook: edit the theme.lua, not this file',
+ '# generated from theme.lua: edit the theme.lua, not this file',
  'set -g status on', 'set -g status-interval 30', 'set -g status-position bottom', 'set -g status-justify left',
  f'set -g status-style "bg={base},fg={text}"', 'set -g status-left-length 40', 'set -g status-right-length 60',
  f'set -g status-left "#[fg={info},bg={base}]{lb}#[fg={base},bg={info},bold] #S #[fg={info},bg={base}]{rb} "',
  f'set -g status-right "#[fg={info},bg={base}]{lb}#[fg={base},bg={info},bold] %H:%M #[fg={info},bg={base}]{rb}"',
  'set -g window-status-separator ""',
  f'set -g window-status-format "#[fg={text},bg={base}]  #I:#W "',
- f'set -g window-status-current-format "#[fg={accent},bg={base}]{lb}#[fg={base},bg={accent},bold] #I:#W #[fg={accent},bg={base}]{rb}"',
+ f'set -g window-status-current-format "#[fg={action},bg={base}]{lb}#[fg={base},bg={action},bold] #I:#W #[fg={action},bg={base}]{rb}"',
  f'set -g pane-active-border-style "fg={accent}"', f'set -g pane-border-style "fg={surface}"',
- f'set -g message-style "bg={accent},fg={base}"', f'set -g message-command-style "bg={accent},fg={base}"',
- f'set -g mode-style "bg={sel_bg},fg={sel_fg}"', f'set -g clock-mode-colour "{accent}"',
+ f'set -g message-style "bg={hl},fg={base}"', f'set -g message-command-style "bg={hl},fg={base}"',
+ f'set -g mode-style "bg={sel_bg},fg={sel_fg}"', f'set -g clock-mode-colour "{action}"',
 ]
 open(out, 'w').write('\n'.join(lines) + '\n')
 PY

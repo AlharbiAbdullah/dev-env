@@ -1,6 +1,8 @@
 return {
   name = "calma-light",
   border = "0xff6c782e",
+  accent_action = "#b47109",
+  accent_highlight = "#945e80",
   macos = "light",
   source = "rai",
   flat = true,
