@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# Keybindings cheat sheet (SUPER+K on Linux, CMD+K on the Mac, 2026-09-08): only
+# the bindings Abdullah actually uses, parsed live from the canonical map in
+# ~/dev-env/KEYBINDINGS.md. Shown as a type-to-filter fzf list (like the stock
+# Omarchy menu) in a floating themed terminal: type to search, arrows/wheel to
+# move, Esc or Enter to close. One script for both machines (common/bin): the
+# Mac reads the Mac column, Linux the Linux column, and the launcher differs.
+#
+#   (no args)  launch the floating terminal with the searchable sheet
+#   --view     run the fzf sheet in the current terminal
+#   --print    plain text, no color (for grep/tests)
+#
+# Colors are ANSI, so they follow the active theme through the terminal.
+# Not the full Omarchy dump: that stays on `omarchy-menu-keybindings`.
+
+doc="$HOME/dev-env/KEYBINDINGS.md"
+case "$(uname)" in Darwin) col=4 ;; *) col=5 ;; esac   # table column: Mac | Linux
+
+rows() {
+  local color="$1" width="$2"
+
+  awk -F'|' -v color="$color" -v w="$width" -v col="$col" '
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    function rep(c, n,   s) {
+      if (n < 0) n = 0
+      s = sprintf("%" n "s", "")
+      gsub(/ /, c, s)
+      return s
+    }
+    BEGIN {
+      if (color == "1") {
+        C_HDR = "\033[1;32m"; C_KEY = "\033[33m"; C_OFF = "\033[0m"
+      }
+    }
+    /^## / { heading = substr($0, 4); next }
+    /^\|/ {
+      key = trim($2); action = trim($3); linux_cell = trim($col)
+      if (key == "Key") { in_table = 1; next }
+      if (key ~ /^-+$/) next
+      if (!in_table) next
+      if (linux_cell == "" || linux_cell == ".") next
+      if (heading != cur) { nsec++; sect[nsec] = toupper(heading); cur = heading }
+      gsub(/`/, "", action)
+      nrow++
+      rsec[nrow] = nsec
+      rkey[nrow] = toupper(key)
+      ract[nrow] = action
+      if (length(rkey[nrow]) > kw) kw = length(rkey[nrow])
+    }
+    !/^\|/ { in_table = 0 }
+    END {
+      open = 0
+      for (i = 1; i <= nrow; i++) {
+        if (rsec[i] != open) {
+          open = rsec[i]
+          t = sect[open]
+          print C_HDR "── " t " " rep("─", w - length(t) - 4) C_OFF
+        }
+        printf "%s%-" kw "s%s  %s\n", C_KEY, rkey[i], C_OFF, ract[i]
+      }
+    }
+  ' "$doc"
+}
+
+case "${1:-}" in
+  --print|-p)
+    rows 0 80
+    ;;
+  --view|-v)
+    # The float rule resizes the window just after launch; wait it out so
+    # tput reports the final column count.
+    sleep 0.3
+    width=$(tput cols 2>/dev/null || echo 100)
+    rows 1 $((width - 8)) | fzf --ansi --no-sort --layout=reverse \
+      --border=rounded --margin=1,1 --info=hidden --prompt='search ❯ ' \
+      --pointer='' --marker='' --no-scrollbar --bind="start:pos(2),load:pos(2)" \
+      --color=16,hl:2,hl+:2,prompt:2,border:2,gutter:-1,bg+:8 \
+      >/dev/null
+    exit 0
+    ;;
+  *)
+    if [ "$(uname)" = Darwin ]; then
+      # New iTerm2 window in the running instance (same as iterm2-window), running the sheet.
+      osascript -e "tell application \"iTerm\"
+        create window with default profile command \"/bin/bash -lc '$HOME/.local/bin/keybindings-menu --view'\"
+        activate
+      end tell" >/dev/null
+    else
+      exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.omarchy.keybindings --title=Keybindings -e "$0" --view
+    fi
+    ;;
+esac

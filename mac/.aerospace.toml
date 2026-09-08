@@ -59,7 +59,7 @@ outer.bottom = 15
 # =============================================================================
 # MAIN MODE KEYBINDINGS (Omarchy-style: Super/Cmd)
 # Unified with the Linux box 2026-08-27: Super or Ctrl only, Shift ok, no Alt.
-# Full table: helm/05-projects/kitchen/omarchy-migration/keybindings-unify.md
+# Full table: helm/05-projects/completed/omarchy-migration/keybindings-unify.md
 # =============================================================================
 [mode.main.binding]
 
@@ -117,6 +117,7 @@ cmd-ctrl-w = 'exec-and-forget /opt/homebrew/bin/hs -c "wallpaperChooser()"'
 cmd-ctrl-shift-w = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme wallpaper next'
 # Focus mode (float + centre, same as Linux SUPER+H); menu bar hide on the bar key.
 cmd-h = 'exec-and-forget /opt/homebrew/bin/hs -c "focusMode()"'
+cmd-k = 'exec-and-forget /Users/abdullahalharbi/.local/bin/keybindings-menu'
 cmd-shift-ctrl-b = 'exec-and-forget /Users/abdullahalharbi/.local/bin/menu-toggle'
 
 # -----------------------------------------------------------------------------

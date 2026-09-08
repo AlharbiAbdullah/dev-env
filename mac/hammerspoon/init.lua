@@ -35,6 +35,30 @@ function focusMode()
   end)
 end
 
+-- Ctrl+C/V/X/A/Z/Shift+Z act as Cmd+C/V/X/A/Z/Shift+Z in GUI apps (Linux habit,
+-- decided 2026-09-08: Ctrl on both machines). Keycodes, not names, so the Arabic
+-- layout remaps the same physical keys. Skipped in terminals (Ctrl+C must stay
+-- the interrupt) and in Cursor/Antigravity (they carry their own Ctrl set in
+-- keybindings.json, guarded for the integrated terminal).
+local CTRL_TO_CMD_KEYCODES = { [8] = "c", [9] = "v", [7] = "x", [0] = "a", [6] = "z" }
+local CTRL_TO_CMD_SKIP = {
+  ["com.googlecode.iterm2"] = true,
+  ["com.apple.Terminal"] = true,
+  ["com.mitchellh.ghostty"] = true,
+  ["com.todesktop.230313mzl4w4u92"] = true, -- Cursor
+  ["com.google.antigravity-ide"] = true,
+}
+ctrlToCmdTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp }, function(e)
+  local f = e:getFlags()
+  if not f.ctrl or f.cmd or f.alt or f.fn then return false end
+  if not CTRL_TO_CMD_KEYCODES[e:getKeyCode()] then return false end
+  local app = hs.application.frontmostApplication()
+  if app and CTRL_TO_CMD_SKIP[app:bundleID()] then return false end
+  e:setFlags({ cmd = true, shift = f.shift or nil })
+  return false
+end)
+ctrlToCmdTap:start()
+
 -- Reload on config change
 hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", function(files)
   for _, f in ipairs(files) do

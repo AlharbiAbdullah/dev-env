@@ -1,0 +1,87 @@
+// Linux-style Ctrl shortcuts on Mac (Cmd defaults still work). The standard is
+// the Cursor table in KEYBINDINGS.md: the same Ctrl set as the Linux box, where
+// most of these are stock. Deployed by setup.sh to
+// ~/Library/Application Support/Cursor/User/keybindings.json.
+// Editor-side rules are guarded with !terminalFocus (or tighter) so the
+// integrated terminal keeps Ctrl+C (SIGINT), Ctrl+W (delete word), Ctrl+A/E
+// (readline), Ctrl+L (clear), Ctrl+I (Tab), Ctrl+\ (SIGQUIT).
+[
+  // clipboard + undo (copy/cut act on the whole line when nothing is selected)
+  { "key": "ctrl+c", "command": "editor.action.clipboardCopyAction", "when": "!terminalFocus" },
+  { "key": "ctrl+x", "command": "editor.action.clipboardCutAction", "when": "!terminalFocus" },
+  { "key": "ctrl+v", "command": "editor.action.clipboardPasteAction", "when": "!terminalFocus" },
+  { "key": "ctrl+z", "command": "undo", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+z", "command": "redo", "when": "!terminalFocus" },
+  { "key": "ctrl+a", "command": "editor.action.selectAll", "when": "!terminalFocus" },
+
+  // its terminal: Ctrl+C copies when text is selected (otherwise it stays the
+  // interrupt) and Ctrl+V pastes — the same two rules as the Linux file
+  { "key": "ctrl+c", "command": "workbench.action.terminal.copySelection", "when": "terminalFocus && terminalTextSelected" },
+  { "key": "ctrl+v", "command": "workbench.action.terminal.paste", "when": "terminalFocus" },
+
+  // files + tabs
+  { "key": "ctrl+s", "command": "workbench.action.files.save", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+s", "command": "workbench.action.files.saveAs", "when": "!terminalFocus" },
+  { "key": "ctrl+n", "command": "workbench.action.files.newUntitledFile", "when": "!terminalFocus" },
+  { "key": "ctrl+w", "command": "workbench.action.closeActiveEditor", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+t", "command": "workbench.action.reopenClosedEditor", "when": "!terminalFocus" },
+  // Super+T = new tab in every tool (2026-09-08); in an editor that is a new untitled file
+  { "key": "cmd+t", "command": "workbench.action.files.newUntitledFile", "when": "!terminalFocus" },
+
+  // navigation + search (Ctrl+G and Ctrl+Tab are already Mac defaults)
+  { "key": "ctrl+p", "command": "workbench.action.quickOpen", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+p", "command": "workbench.action.showCommands", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+o", "command": "workbench.action.gotoSymbol", "when": "!terminalFocus" },
+  { "key": "ctrl+f", "command": "actions.find", "when": "!terminalFocus" },
+  { "key": "ctrl+h", "command": "editor.action.startFindReplaceAction", "when": "editorFocus" },
+  { "key": "ctrl+shift+f", "command": "workbench.action.findInFiles", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+h", "command": "workbench.action.replaceInFiles", "when": "!terminalFocus" },
+  { "key": "ctrl+g", "command": "workbench.action.gotoLine", "when": "!terminalFocus" },
+
+  // panels. Ctrl+E and Ctrl+B both toggle the sidebar (Ctrl+E is the standard,
+  // Ctrl+B mirrors the Linux stock key). Ctrl+T toggles the terminal like the
+  // Linux file; Ctrl+J works from inside the terminal too (skipShell default).
+  { "key": "ctrl+e", "command": "workbench.action.toggleSidebarVisibility", "when": "!terminalFocus" },
+  { "key": "ctrl+b", "command": "workbench.action.toggleSidebarVisibility", "when": "!terminalFocus" },
+  { "key": "ctrl+shift+e", "command": "workbench.view.explorer", "when": "!terminalFocus" },
+  { "key": "ctrl+t", "command": "workbench.action.terminal.toggleTerminal", "when": "!composerFocused" },
+  { "key": "ctrl+j", "command": "workbench.action.togglePanel" },
+  { "key": "ctrl+\\", "command": "workbench.action.splitEditor", "when": "!terminalFocus" },
+
+  // window zoom, the Linux stock set (Cmd defaults stay). Cursor writes the step
+  // to window.zoomLevel in settings.json, so editor.fontSize stays 16 on both.
+  { "key": "ctrl+=", "command": "workbench.action.zoomIn" },
+  { "key": "ctrl+shift+=", "command": "workbench.action.zoomIn" },
+  { "key": "ctrl+numpad_add", "command": "workbench.action.zoomIn" },
+  { "key": "ctrl+-", "command": "workbench.action.zoomOut" },
+  { "key": "ctrl+shift+-", "command": "workbench.action.zoomOut" },
+  { "key": "ctrl+numpad_subtract", "command": "workbench.action.zoomOut" },
+  { "key": "ctrl+numpad0", "command": "workbench.action.zoomReset" },
+
+  // editing
+  { "key": "ctrl+/", "command": "editor.action.commentLine", "when": "editorTextFocus" },
+  { "key": "ctrl+d", "command": "editor.action.addSelectionToNextFindMatch", "when": "editorFocus" },
+  { "key": "ctrl+shift+l", "command": "editor.action.selectHighlights", "when": "editorFocus" },
+  { "key": "ctrl+shift+k", "command": "editor.action.deleteLines", "when": "editorTextFocus" },
+  { "key": "ctrl+[", "command": "editor.action.outdentLines", "when": "editorTextFocus && !editorReadonly" },
+  { "key": "ctrl+]", "command": "editor.action.indentLines", "when": "editorTextFocus && !editorReadonly" },
+  { "key": "ctrl+.", "command": "editor.action.quickFix", "when": "editorHasCodeActionsProvider && textInputFocus && !editorReadonly" },
+
+  // word-wise cursor movement (Linux uses Ctrl+arrows, Mac default is Alt)
+  { "key": "ctrl+left", "command": "cursorWordLeft", "when": "textInputFocus && !terminalFocus" },
+  { "key": "ctrl+right", "command": "cursorWordEndRight", "when": "textInputFocus && !terminalFocus" },
+  { "key": "ctrl+shift+left", "command": "cursorWordLeftSelect", "when": "textInputFocus && !terminalFocus" },
+  { "key": "ctrl+shift+right", "command": "cursorWordEndRightSelect", "when": "textInputFocus && !terminalFocus" },
+  { "key": "ctrl+backspace", "command": "deleteWordLeft", "when": "textInputFocus && !terminalFocus" },
+  { "key": "ctrl+delete", "command": "deleteWordRight", "when": "textInputFocus && !terminalFocus" },
+
+  // AI, same keys as the Linux defaults (ids read from Cursor's own bundle)
+  { "key": "ctrl+l", "command": "aichat.newchataction", "when": "!terminalFocus" },
+  { "key": "ctrl+k", "command": "aipopup.action.modal.generate", "when": "editorFocus" },
+  { "key": "ctrl+i", "command": "composer.startComposerPrompt", "when": "!terminalFocus" },
+
+  // run the current file: Python straight to the terminal (no debugger),
+  // everything else starts without debugging — same two rules as the Linux file
+  { "key": "ctrl+enter", "command": "python.execInTerminal", "when": "editorTextFocus && editorLangId == python && !jupyter.hascodecells" },
+  { "key": "ctrl+enter", "command": "workbench.action.debug.run", "when": "editorTextFocus && editorLangId != python" }
+]

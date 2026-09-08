@@ -4,5 +4,22 @@
 // (otherwise Ctrl+C stays the interrupt), and paste on Ctrl+V.
 [
   { "key": "ctrl+c", "command": "workbench.action.terminal.copySelection", "when": "terminalFocus && terminalTextSelected" },
-  { "key": "ctrl+v", "command": "workbench.action.terminal.paste", "when": "terminalFocus" }
+  { "key": "ctrl+v", "command": "workbench.action.terminal.paste", "when": "terminalFocus" },
+
+  // Super+T = new tab in every tool (2026-09-08); here a new untitled file. xremap
+  // leaves Super+T raw for Cursor (Ctrl+T is the terminal toggle below).
+  { "key": "meta+t", "command": "workbench.action.files.newUntitledFile", "when": "!terminalFocus" },
+
+  // Comfort rebinds for the two toggles pressed all day. Ctrl+B and Ctrl+`
+  // stay bound as well, these are additions, not replacements.
+  // Ctrl+E default was a duplicate of Ctrl+P, and Ctrl+T was Go to Symbol
+  // in Workspace (Ctrl+Shift+O still covers symbols in the open file).
+  { "key": "ctrl+e", "command": "workbench.action.toggleSidebarVisibility" },
+  { "key": "ctrl+t", "command": "workbench.action.terminal.toggleTerminal", "when": "!composerFocused" },
+
+  // Run the current file. Python goes straight to the terminal (no debugger);
+  // everything else starts without debugging. Editor focus only, so Ctrl+Enter
+  // keeps its chat/composer and Jupyter-cell meanings.
+  { "key": "ctrl+enter", "command": "python.execInTerminal", "when": "editorTextFocus && editorLangId == python && !jupyter.hascodecells" },
+  { "key": "ctrl+enter", "command": "workbench.action.debug.run", "when": "editorTextFocus && editorLangId != python" }
 ]

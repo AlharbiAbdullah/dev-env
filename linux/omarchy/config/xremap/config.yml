@@ -1,27 +1,40 @@
-# xremap — Mac-style Cmd shortcuts on Linux.
+# xremap: the few Super chords that must reach GUI apps as Ctrl on Linux.
 #
-# WHY: Abdullah's muscle memory is macOS (Cmd+C/V/X/A/Z). Ghostty already handles
-# these natively via its own `keybind = super+c=...` lines, so the terminal is
-# covered. This file covers everything Ghostty can't reach: Chrome, Obsidian,
-# file manager, and every other GUI app. Set up 2026-08-01.
+# WHY: clipboard/undo are Ctrl+C/V/X/A/Z on BOTH machines since 2026-09-08 (the
+# Mac remaps Ctrl to Cmd in Hammerspoon), so nothing to do here for those. What
+# remains is the Mac reflexes that stay on Super: Super+T new tab, Super+R /
+# Super+Shift+R reload, Super+L address bar, Super+Q quit.
 #
 # WHY NOT keyd: keyd rewrites at the hardware level with zero window awareness,
 # so a blanket Super->Ctrl remap also rewrote keys inside the terminal and broke
 # Ctrl+C as the shell interrupt. It was purged for that. xremap reads the focused
 # window class over Hyprland's IPC, so terminals can be excluded by name.
 #
-# SCOPE: clipboard core + undo + reload + address bar + quit. W/F/N stay with
-# Hyprland (close/fullscreen/new-window) by decision (keybindings-unify.md).
+# NEEDS: user in the `input` group (udev 99-xremap.rules). Omarchy 4.0.2's
+# migration on 2026-08-31 removed it and xremap crash-looped for a week; the
+# group was re-added 2026-09-08.
 #
 # ESCAPE HATCH: if this ever wedges the keyboard, `systemctl --user stop xremap`
 # from an SSH session (Mac -> linux over Tailscale) releases the device grab.
 
 keymap:
+  # Cursor gets Super+T raw: its keybindings.json binds meta+t to a new untitled
+  # file, and Ctrl+T there is the terminal toggle. First matching keymap wins.
+  - name: Cursor
+    application:
+      only:
+        - cursor
+    exact_match: true
+    remap:
+      Super-Shift-r: C-Shift-r
+      Super-r: C-r
+      Super-l: C-l
+      Super-q: C-q
+
   - name: Mac-style Super shortcuts (GUI apps only, never terminals)
     # xremap intercepts at the evdev layer, BELOW the compositor. Excluding the
-    # terminal classes here means Super+C is never rewritten there — the raw
-    # Super+C reaches Ghostty, whose native bind handles it, and Ctrl+C stays a
-    # true interrupt. Keys not listed under `remap` pass through untouched, so
+    # terminal classes here means Super+T is never rewritten there (Ghostty binds
+    # it to new_tab itself). Keys not listed under `remap` pass through, so
     # Hyprland still gets Super+1..0, Super+W, Super+Space, etc.
     application:
       not:
@@ -31,25 +44,14 @@ keymap:
         - Alacritty
         - foot
         - xterm
-    # Required for redo to work. xremap defaults to exact_match: false, where a
-    # binding fires as long as its modifiers are a SUBSET of what's held — so
-    # Super+Shift+Z would match plain `Super-z` too, and which of the two wins is
-    # not ordered. Exact matching keeps undo and redo distinct.
+        - cursor
+    # exact_match keeps Super+Shift+R distinct from Super+R.
     exact_match: true
     remap:
-      Super-Shift-z: C-Shift-z
-      Super-c: C-c
-      Super-v: C-v
-      Super-x: C-x
-      Super-a: C-a
-      Super-z: C-z
-      # Browser reload. Super+Shift+R = hard refresh (Chrome's Ctrl+Shift+R,
-      # bypasses cache) was the ask; plain Super+R is its Mac counterpart.
-      # Hyprland's `hyprctl reload` was moved off SUPER SHIFT + R to SUPER CTRL
-      # + R to free this — see the SESSION block in hyprland.conf.
+      Super-t: C-t
       Super-Shift-r: C-Shift-r
       Super-r: C-r
-      # Unified map 2026-08-27: Super+L = address bar (lock moved to Super+Ctrl+L),
+      # Unified map 2026-08-27: Super+L = address bar (lock is Super+Ctrl+L),
       # Super+Q = quit app (Mac Cmd+Q). Hyprland no longer binds Super+L.
       Super-l: C-l
       Super-q: C-q

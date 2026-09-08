@@ -46,19 +46,36 @@ echo "Copying config files..."
 cp "$SCRIPT_DIR/.zshrc"           "$HOME/.zshrc";                    echo "  -> ~/.zshrc"
 cp "$SCRIPT_DIR/.zprofile"        "$HOME/.zprofile";                 echo "  -> ~/.zprofile"
 cp "$SCRIPT_DIR/.tmux.conf"       "$HOME/.tmux.conf";                echo "  -> ~/.tmux.conf"
-cp "$SCRIPT_DIR/.aerospace.toml"  "$HOME/.aerospace.toml";           echo "  -> ~/.aerospace.toml"
+ln -sf "$SCRIPT_DIR/.aerospace.toml" "$HOME/.aerospace.toml";          echo "  -> ~/.aerospace.toml (symlink)"
 cp "$SCRIPT_DIR/starship.toml"    "$HOME/.config/starship.toml";     echo "  -> ~/.config/starship.toml"
+mkdir -p "$HOME/Library/Application Support/Cursor/User"
+cp "$SCRIPT_DIR/cursor/keybindings.json" "$HOME/Library/Application Support/Cursor/User/keybindings.json"; echo "  -> Cursor keybindings.json (KEYBINDINGS.md Ctrl set)"
 mkdir -p "$HOME/.hammerspoon"
-cp "$SCRIPT_DIR"/hammerspoon/*.lua "$HOME/.hammerspoon/";             echo "  -> ~/.hammerspoon/"
+# Symlinks, not copies (2026-08-27): ~/dev-env is a Syncthing folder, so a Linux
+# edit reaches the live Mac config without re-running this script.
+for lua in "$SCRIPT_DIR"/hammerspoon/*.lua; do ln -sf "$lua" "$HOME/.hammerspoon/$(basename "$lua")"; done; echo "  -> ~/.hammerspoon/ (symlinks)"
 
 # --- Copy bin scripts (make executable) ---
 echo ""
 echo "Installing scripts to ~/.local/bin..."
-for script in theme menu-toggle new-window iterm2-window; do
+for script in theme theme-extras menu-toggle new-window iterm2-window; do
     cp "$SCRIPT_DIR/bin/$script" "$HOME/.local/bin/$script"
     chmod +x "$HOME/.local/bin/$script"
     echo "  -> ~/.local/bin/$script"
 done
+cp "$SCRIPT_DIR/../common/bin/keybindings-menu" "$HOME/.local/bin/keybindings-menu"; chmod +x "$HOME/.local/bin/keybindings-menu"; echo "  -> ~/.local/bin/keybindings-menu (Cmd+K cheat sheet)"
+
+# --- Tools with no theme file follow the terminal ANSI palette (= active theme);
+#     glow reads the style theme-extras renders on every switch ---
+mkdir -p "$HOME/.config/bat" "$HOME/.config/glow" "$HOME/.config/micro"
+printf -- '--theme=ansi\n' > "$HOME/.config/bat/config";                          echo "  -> ~/.config/bat/config (ansi)"
+printf 'style: "%s/.config/glow/rai.json"\npager: false\nwidth: 80\n' "$HOME" > "$HOME/.config/glow/glow.yml"; echo "  -> ~/.config/glow/glow.yml"
+python3 - "$HOME/.config/micro/settings.json" <<'PYM'
+import json, sys, os
+p = sys.argv[1]; d = json.load(open(p)) if os.path.exists(p) else {}
+d["colorscheme"] = "simple"; open(p, "w").write(json.dumps(d, indent=2) + "\n")
+PYM
+echo "  -> ~/.config/micro/settings.json (colorscheme simple)"
 
 # --- Wallpaper helper: NSWorkspace setter (macOS Sonoma+/Tahoe no longer renders
 #     wallpapers via the legacy System Events 'set picture'; the theme switcher calls this) ---
