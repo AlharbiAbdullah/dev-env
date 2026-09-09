@@ -60,7 +60,7 @@ API keys live in a gitignored machine-local file the rc file sources on startup:
 # Mac
 cp mac/.zshrc.local.example ~/.zshrc.local
 # Ubuntu
-echo 'export OPENROUTER_API_KEY="sk-or-..."' > ~/.bashrc.local
+cp mac/.zshrc.local.example ~/.bashrc.local   # secrets resolve from 1Password via op (see the __op_env helper)
 ```
 
 ## Theme system

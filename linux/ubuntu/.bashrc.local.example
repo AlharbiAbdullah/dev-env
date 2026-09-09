@@ -1,4 +1,14 @@
 # Copy to ~/.bashrc.local and fill in real values.
 # ~/.bashrc.local is gitignored (*.local) — secrets live here, never in the repo.
 # Sourced by ~/.bashrc on startup.
-export OPENROUTER_API_KEY="sk-or-v1-REPLACE_ME"
+# Secrets come from 1Password via the op CLI (ruling 2026-09-09: 1Password holds every
+# secret, password and API key; nothing in plaintext on disk). Cached in the per-boot RAM
+# dir so only the first shell after boot pays the op call.
+__op_env() {  # __op_env VAR 'op://vault/item/field'
+  local f="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/op-$1"
+  if [[ ! -s $f ]] && command -v op >/dev/null; then
+    ( umask 077; timeout 15 op read --no-newline "$2" >"$f.tmp" 2>/dev/null && [[ -s $f.tmp ]] && mv "$f.tmp" "$f" || rm -f "$f.tmp" )
+  fi
+  [[ -s $f ]] && export "$1"="$(<"$f")"
+}
+__op_env OPENROUTER_API_KEY 'op://Abdullah/OpenRouter API key/credential'
