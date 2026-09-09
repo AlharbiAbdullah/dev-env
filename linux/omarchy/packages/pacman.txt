@@ -82,3 +82,4 @@ hyperfine
 tree
 dbeaver            # 3.3 GUI client, Stage 3
 amdgpu_top           # iGPU GTT vs VRAM readout; `amdgpu_top -J -n 1` for JSON
+smartmontools        # smartd watches the NVMe; alerts via etc/smartd.conf + usr/local/bin/smartd-desktop-alert; enable --now smartd

@@ -1,0 +1,8 @@
+#!/bin/bash
+# smartd -M exec hook. smartd runs as root; forward the warning into the desktop
+# session as a persistent critical notification (same pattern as the timer alerts).
+# Env comes from smartd_warning.sh: SMARTD_FAILTYPE, SMARTD_MESSAGE, SMARTD_DEVICE.
+set -u
+exec systemd-run --quiet --machine=abdullah@.host --user --collect --pipe \
+  /usr/bin/omarchy-notification-send -u critical -g 󰋊 \
+  "smartd: ${SMARTD_FAILTYPE:-warning} on ${SMARTD_DEVICE:-disk}" "${SMARTD_MESSAGE:-no details}"
