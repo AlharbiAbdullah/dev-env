@@ -2,8 +2,6 @@
 # Desktop extras (Omarchy ships hyprland, hypridle, omarchy-shell, ghostty?, chromium, 1password, docker ...)
 ddcutil            # monitor brightness over DDC/CI (no backlight on the KTC)
 i2c-tools          # i2c-dev module for ddcutil
-xorg-server-xvfb   # optional: Xvfb :20 for GUI-over-SSH
-xorg-xdpyinfo      # detect-display.sh
 psmisc             # fuser (news collectors kill stale CDP ports)
 wtype
 wl-clipboard
@@ -16,7 +14,6 @@ eza
 fastfetch
 fzf
 gawk               # ble.sh
-github-cli        # Arch name for `gh`
 git
 jq
 lazygit
@@ -34,10 +31,7 @@ docker
 docker-buildx
 docker-compose
 uv
-nodejs
-npm
 python-requests
-python-beautifulsoup4
 python-yaml
 # Net / sec
 tailscale
@@ -57,9 +51,7 @@ noto-fonts-emoji
 ttf-font-awesome
 # Apps
 obsidian
-firefox
-tigervnc
 ghostty            # default terminal (also set via omarchy-install-terminal in step 3)
-doctl              # extra/doctl (there is no doctl-bin in the AUR)
 # AI
 ollama-vulkan      # RDNA3 iGPU: Vulkan beats ROCm; needs OLLAMA_IGPU_ENABLE=1
+tealdeer          # tldr client, parity with the Mac
