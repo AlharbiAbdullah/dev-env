@@ -437,6 +437,12 @@ profile = {
         "0xf746-0x20000": {"Action": 25, "Text": "Paste"},
         "0xf727-0x40000": {"Action": 25, "Text": "Copy"},
         "0xf746-0x40000": {"Action": 25, "Text": "Copy"},
+        # Shift+Enter -> LF (0x0a) instead of CR. Nothing at the tty layer
+        # distinguishes Enter from Shift+Enter: both send CR, so Claude Code
+        # over SSH submits the prompt instead of inserting a newline. Ghostty
+        # on Linux gets this free via the kitty keyboard protocol; iTerm2 has
+        # to be told. Action 11 = send hex code.
+        "0xd-0x20000": {"Action": 11, "Text": "0xa"},
     },
 }
 profile.update(colors)
