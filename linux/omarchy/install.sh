@@ -36,7 +36,7 @@ omarchy-install-service-1password || true
 sudo mkdir -p /etc/opt/chrome/policies/managed && sudo chmod a+rw /etc/opt/chrome/policies/managed
 xdg-settings set default-web-browser google-chrome.desktop || true
 mkdir -p "$HOME/.local/bin"
-ln -sfn /usr/bin/cursor "$HOME/.local/bin/code"   # `code` opens Cursor (theme script targets /usr/bin/code for real VS Code)
+rm -f "$HOME/.local/bin/code"   # `code` = VS Code, `cur` = Cursor (.bashrc alias); ruling 2026-09-09
 
 # --- [4] configs ---
 step "[4/9] configs"
@@ -50,9 +50,15 @@ cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$RE
 chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,keybindings-menu}
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
+# IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code
+# (ruling 2026-09-09); keybindings stay per editor/platform (config/Cursor/User/keybindings.json).
+for _ide in Code Cursor; do
+  mkdir -p "$HOME/.config/$_ide/User"
+  cp "$REPO_ROOT/common/vscode/settings.json" "$HOME/.config/$_ide/User/settings.json"
+done
 # IDE extensions: common/editor-extensions.txt is the one list for BOTH Cursor and VS Code
 # (ruling 2026-09-09). Remote pair differs per editor; Pylance/cursorpyright come back as a
-# pack dependency and are kept dormant by "python.languageServer": "None" in settings.json.
+# pack dependency and are kept dormant by "python.languageServer": "None" in common/vscode/settings.json.
 _ide_ext() {  # _ide_ext <cli> <remote-publisher>
   command -v "$1" >/dev/null || return 0
   grep -v '^#' "$REPO_ROOT/common/editor-extensions.txt" | while read -r e; do

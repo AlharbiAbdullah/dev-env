@@ -50,6 +50,17 @@ ln -sf "$SCRIPT_DIR/.aerospace.toml" "$HOME/.aerospace.toml";          echo "  -
 cp "$SCRIPT_DIR/starship.toml"    "$HOME/.config/starship.toml";     echo "  -> ~/.config/starship.toml"
 mkdir -p "$HOME/Library/Application Support/Cursor/User"
 cp "$SCRIPT_DIR/cursor/keybindings.json" "$HOME/Library/Application Support/Cursor/User/keybindings.json"; echo "  -> Cursor keybindings.json (KEYBINDINGS.md Ctrl set)"
+# IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code on both
+# machines (ruling 2026-09-09). The Mac adds the Remote-SSH platform hint for the hub.
+for _ide in Code Cursor; do
+    _u="$HOME/Library/Application Support/$_ide/User"; mkdir -p "$_u"
+    python3 - "$SCRIPT_DIR/../common/vscode/settings.json" "$_u/settings.json" <<'PYS'
+import json, sys
+d = json.load(open(sys.argv[1])); d["remote.SSH.remotePlatform"] = {"linux": "linux"}
+json.dump(d, open(sys.argv[2], "w"), indent=2); open(sys.argv[2], "a").write("\n")
+PYS
+    echo "  -> $_ide settings.json (common/vscode + remote.SSH.remotePlatform)"
+done
 mkdir -p "$HOME/.hammerspoon"
 # Symlinks, not copies (2026-08-27): ~/dev-env is a Syncthing folder, so a Linux
 # edit reaches the live Mac config without re-running this script.
@@ -151,12 +162,6 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     echo "Installing TPM..."
     git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi
-
-# --- VS Code (reference only, not auto-applied) ---
-echo ""
-echo "Note: mac/vscode/settings.json is a reference copy only. It is NOT"
-echo "      auto-copied (that would clobber your live VS Code settings)."
-echo "      Merge by hand if you want anything from it."
 
 # --- Default shell ---
 echo ""
