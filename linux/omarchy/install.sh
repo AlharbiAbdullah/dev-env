@@ -106,6 +106,10 @@ step "[8/9] Claude Code"
 step "[9/9] system: udev, polkit, ollama, groups, services, user units"
 sudo install -m 0644 "$HERE/etc/udev/rules.d/99-xremap.rules" /etc/udev/rules.d/99-xremap.rules
 sudo install -m 0644 "$HERE/etc/polkit-1/rules.d/99-1password-unlock.rules" /etc/polkit-1/rules.d/99-1password-unlock.rules
+# smartd: NVMe health, warnings as desktop notifications (3.4, 2026-09-09; helm-a4)
+sudo install -m 0644 "$HERE/etc/smartd.conf" /etc/smartd.conf
+sudo install -m 0755 "$HERE/usr/local/bin/smartd-desktop-alert" /usr/local/bin/smartd-desktop-alert
+sudo systemctl enable --now smartd
 sudo install -d /etc/systemd/system/ollama.service.d
 sudo install -m 0644 "$HERE/etc/systemd/system/ollama.service.d/expose.conf" /etc/systemd/system/ollama.service.d/expose.conf
 sudo install -d /etc/systemd/system/ollama.service.d && printf '[Service]\nEnvironment="OLLAMA_IGPU_ENABLE=1"\n' | sudo tee /etc/systemd/system/ollama.service.d/igpu.conf >/dev/null

@@ -4,12 +4,8 @@
 [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
 export PATH="$HOME/.local/bin:$PATH"
 
-# uv (Python; installs to ~/.local/bin, already on PATH)
-
-# nvm
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# mise owns node, claude, gh, opencode, pi (same config.toml as the hub)
+command -v mise >/dev/null && eval "$(mise activate zsh)"
 
 # =============================================================================
 # LOCALE
@@ -55,16 +51,20 @@ command -v fzf >/dev/null && source <(fzf --zsh)
 # =============================================================================
 # ALIASES
 # =============================================================================
+# Omarchy's eza set, same as the hub (ruling 2026-09-09: one shell shape where it maps)
 if command -v eza >/dev/null; then
-  alias ls="eza --icons --group-directories-first"
-  alias ll="eza -l --icons --group-directories-first --git"
-  alias la="eza -la --icons --group-directories-first --git"
-  alias lt="eza --tree --icons --level=2"
+  alias ls='eza -lh --group-directories-first --icons=auto'
+  alias lsa='ls -a'
+  alias lt='eza --tree --level=2 --long --icons --git'
+  alias lta='lt -a'
 fi
 
+alias python="python3"
 alias cl="claude"
-alias oc="opencode"
-alias gm="gemini"
+alias cx='printf "\033[2J\033[3J\033[H" && claude --permission-mode auto'
+alias c='opencode --auto'
+alias t='tmux attach || tmux new -s Work'
+alias mup='MISE_MINIMUM_RELEASE_AGE=0 mise up'
 alias cur="cursor"
 alias lg="lazygit"
 alias g="git"
@@ -74,7 +74,18 @@ alias gco="git checkout"
 alias gcb="git checkout -b"
 alias gp="git push"
 alias gl="git pull"
-alias c='clear'
+
+# code .        -> VS Code here on the Mac (cur . -> Cursor)
+# code remote   -> VS Code over SSH on the Linux box, same folder (synced roots map 1:1)
+code() {
+  if [[ "$1" == "remote" ]]; then
+    local p="${2:-$PWD}"
+    p="$(cd "$p" 2>/dev/null && pwd)" || { echo "code remote: no such folder: $2" >&2; return 1; }
+    command code --remote ssh-remote+linux "${p/#$HOME//home/abdullah}"
+  else
+    command code "$@"
+  fi
+}
 
 # Machine-local secrets and overrides (gitignored, never committed)
 [ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
