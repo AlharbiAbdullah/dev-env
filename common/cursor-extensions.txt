@@ -1,9 +1,0 @@
-anthropic.claude-code
-anysphere.remote-containers
-anysphere.remote-ssh
-astral-sh.ty
-charliermarsh.ruff
-ms-python.debugpy
-ms-python.python
-pkief.material-icon-theme
-rai.rai-themes

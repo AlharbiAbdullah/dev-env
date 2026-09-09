@@ -50,10 +50,19 @@ cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$RE
 chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,keybindings-menu}
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
-# Cursor extensions: common/cursor-extensions.txt is the 1:1 list for both machines
-if command -v cursor >/dev/null; then
-  while read -r e; do [ -n "$e" ] && cursor --install-extension "$e" >/dev/null 2>&1 || true; done < "$REPO_ROOT/common/cursor-extensions.txt"
-fi
+# IDE extensions: common/editor-extensions.txt is the one list for BOTH Cursor and VS Code
+# (ruling 2026-09-09). Remote pair differs per editor; Pylance/cursorpyright come back as a
+# pack dependency and are kept dormant by "python.languageServer": "None" in settings.json.
+_ide_ext() {  # _ide_ext <cli> <remote-publisher>
+  command -v "$1" >/dev/null || return 0
+  grep -v '^#' "$REPO_ROOT/common/editor-extensions.txt" | while read -r e; do
+    [ -n "$e" ] && "$1" --install-extension "$e" >/dev/null 2>&1 || true
+  done
+  "$1" --install-extension "$2.remote-ssh" >/dev/null 2>&1 || true
+  "$1" --install-extension "$2.remote-containers" >/dev/null 2>&1 || true
+}
+_ide_ext cursor anysphere
+_ide_ext /usr/bin/code ms-vscode-remote
 
 # --- [5] fonts ---
 step "[5/9] fonts"
