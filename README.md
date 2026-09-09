@@ -37,12 +37,12 @@ Mac = **zsh**. Linux = **bash**. The rc files mirror the same tools and aliases
 ## Secrets
 
 API keys live in a gitignored machine-local file the rc file sources on startup:
-`~/.zshrc.local` on Mac, `~/.bashrc.local` on Ubuntu.
+`~/.zshrc.local` on Mac, `~/.bashrc.local` on the hub.
 
 ```bash
 # Mac
 cp mac/.zshrc.local.example ~/.zshrc.local
-# Ubuntu
+# Omarchy hub
 cp mac/.zshrc.local.example ~/.bashrc.local   # secrets resolve from 1Password via op (see the __op_env helper)
 ```
 
@@ -60,21 +60,21 @@ Same commands on both platforms:
 
 Keybindings:
 
-| Action | Ubuntu | Mac |
+| Action | Hub | Mac |
 |---|---|---|
 | Cycle theme | `SUPER CTRL T` | `CMD CTRL T` |
 | Next wallpaper | `SUPER CTRL W` | `CMD CTRL W` |
 
-## Ubuntu parity checklist
+## Hub parity checklist
 
-After install, smoke-test the key bindings on the Ubuntu box:
+After install, smoke-test the key bindings on the hub:
 
 | Binding | Expected |
 |---|---|
 | `SUPER 1..0` | Switch to workspace 1..10 |
 | `SUPER ←↑↓→` | Move focus |
 | `SUPER RETURN` | New Ghostty window |
-| `SUPER D` | App launcher (fuzzel) |
+| `SUPER SPACE` | App launcher (Omarchy menu) |
 | `SUPER W` | Close active window |
 | `SUPER F` | Toggle fullscreen |
 | `ALT S` | Region screenshot to clipboard |
