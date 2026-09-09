@@ -6,6 +6,9 @@ omarchy_preinstalled_bindings = false
 
 require("default.hypr.omarchy")
 
+-- OCR keybind (Super+Ctrl+Print) reads Arabic too; needs tesseract-data-ara.
+hl.env("OMARCHY_OCR_LANGS", "eng+ara")
+
 require("hypr.monitors")
 require("hypr.input")
 require("hypr.bindings")
