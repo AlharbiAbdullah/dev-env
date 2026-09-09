@@ -15,19 +15,6 @@ export LC_ALL=en_US.UTF-8
 export FZF_DEFAULT_OPTS="--color=16"   # follow the terminal palette (= active theme)
 
 # =============================================================================
-# HISTORY
-# =============================================================================
-HISTFILE=~/.zsh_history
-HISTSIZE=50000
-SAVEHIST=50000
-setopt HIST_IGNORE_ALL_DUPS
-setopt HIST_IGNORE_SPACE
-setopt HIST_VERIFY
-setopt SHARE_HISTORY
-setopt APPEND_HISTORY
-setopt INC_APPEND_HISTORY
-
-# =============================================================================
 # COMPLETION
 # =============================================================================
 autoload -Uz compinit
@@ -47,6 +34,9 @@ compinit
 command -v starship >/dev/null && eval "$(starship init zsh)"
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 command -v fzf >/dev/null && source <(fzf --zsh)
+# atuin: synced, encrypted shell history (hosted sync, choice 2026-09-09). After fzf so
+# atuin owns Ctrl-R and the up arrow.
+command -v atuin >/dev/null && eval "$(atuin init zsh)"
 
 # =============================================================================
 # ALIASES
