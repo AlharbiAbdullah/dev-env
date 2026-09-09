@@ -68,16 +68,11 @@ omarchy-theme-set everbloom || true
 
 # --- [7] dev tools ---
 step "[7/9] dev tools"
-if [ ! -d "$HOME/.nvm" ]; then
-  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-fi
-export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
-nvm ls 24 >/dev/null 2>&1 || nvm install 24
-nvm alias default 24 >/dev/null
-npm ls -g @earendil-works/pi-coding-agent >/dev/null 2>&1 || npm i -g @earendil-works/pi-coding-agent
-npm ls -g @openai/codex >/dev/null 2>&1 || npm i -g @openai/codex
-[ -x "$HOME/.bun/bin/bun" ] || curl -fsSL https://bun.sh/install | bash
-[ -x "$HOME/.opencode/bin/opencode" ] || curl -fsSL https://opencode.ai/install | bash
+# Node, pi, codex, opencode, gh, claude: one manager, pinned in config/mise/config.toml
+# (copied to ~/.config/mise/ in step 4). No nvm, no npm -g, no bun, no curl installers.
+command -v mise >/dev/null || sudo pacman -S --needed --noconfirm mise
+mise install
+eval "$(mise activate bash --shims)"
 uv python install 3.12 >/dev/null 2>&1 || true
 # paper-portfolio venv: create if missing, then ALWAYS install deps (idempotent). A half-built
 # venv (dir present, no packages) failed the 17:00 mark for 2 days after the 2026-08-25 restore.
