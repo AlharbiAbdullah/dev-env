@@ -5,7 +5,7 @@ set -euo pipefail
 
 # --- Darwin guard ---
 if [ "$(uname -s)" != "Darwin" ]; then
-    echo "This script is for macOS only. Use linux/ubuntu/setup.sh on Linux."
+    echo "This script is for macOS only. Use linux/omarchy/install.sh on the hub."
     exit 1
 fi
 

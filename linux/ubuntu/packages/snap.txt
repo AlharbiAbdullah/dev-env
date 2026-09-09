@@ -1,5 +1,0 @@
-# User-chosen snaps (installed by bootstrap.sh via `snap install <name>`).
-# Canonical base/platform snaps (core*, gnome-*, gtk-common-themes, mesa-*,
-# snapd*, bare, snap-store, firmware-updater, desktop-security-center, etc.)
-# are pulled automatically as dependencies and are intentionally omitted.
-firefox

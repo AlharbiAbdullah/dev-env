@@ -4,9 +4,10 @@
 # secret, password and API key; nothing in plaintext on disk). Cached in the per-boot RAM
 # dir so only the first shell after boot pays the op call.
 __op_env() {  # __op_env VAR 'op://vault/item/field'
-  local f="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/op-$1"
+  local f="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/op-$1" t=()
+  command -v timeout >/dev/null && t=(timeout 15)  # macOS has no timeout without coreutils
   if [[ ! -s $f ]] && command -v op >/dev/null; then
-    ( umask 077; timeout 15 op read --no-newline "$2" >"$f.tmp" 2>/dev/null && [[ -s $f.tmp ]] && mv "$f.tmp" "$f" || rm -f "$f.tmp" )
+    ( umask 077; "${t[@]}" op read --no-newline "$2" >"$f.tmp" 2>/dev/null && [[ -s $f.tmp ]] && mv "$f.tmp" "$f" || rm -f "$f.tmp" )
   fi
   [[ -s $f ]] && export "$1"="$(<"$f")"
 }

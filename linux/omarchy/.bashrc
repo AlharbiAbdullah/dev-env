@@ -21,6 +21,10 @@ alias gs="git status"; alias gd="git diff"; alias gco="git checkout"; alias gcb=
 alias gp="git push"; alias gl="git pull"
 alias up="omarchy update"; alias ur="uv run"
 
+# atuin: synced, encrypted shell history (hosted sync, choice 2026-09-09). Needs ble.sh loaded
+# first (done above); ble.sh >= 0.4 is atuin's supported bash hook, so no bash-preexec.
+command -v atuin >/dev/null && eval "$(atuin init bash)"
+
 # Machine-local secrets (gitignored)
 [ -r "$HOME/.bashrc.local" ] && source "$HOME/.bashrc.local"
 

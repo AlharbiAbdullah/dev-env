@@ -1,6 +1,0 @@
-[Unit]
-Description=Rai maintenance - process sessions + commit/push
-
-[Service]
-Type=oneshot
-ExecStart=%h/helm/03-rai/skills/rai/scheduled/run-maintenance-ubuntu.sh

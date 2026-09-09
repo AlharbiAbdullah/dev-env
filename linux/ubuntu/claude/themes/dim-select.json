@@ -1,7 +1,0 @@
-{
-  "name": "Dim Select",
-  "base": "dark-ansi",
-  "overrides": {
-    "selectionBg": "ansi:black"
-  }
-}

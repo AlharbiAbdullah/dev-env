@@ -1,16 +1,14 @@
 # dev-env
 
-Personal dev environment for macOS + Linux (Ubuntu, Omarchy), mirrored 1:1.
+Personal dev environment for the Omarchy hub and the Mac, mirrored 1:1.
 
 ## Layout
 
 | Path | Contents |
 |---|---|
 | `mac/` | zsh, Ghostty, tmux, AeroSpace, starship, theme system, Brewfile, `setup.sh` |
-| `linux/ubuntu/` | Hyprland mirror of the Mac setup for Ubuntu 26.04 LTS (bash shell), `setup.sh` |
-| `linux/omarchy/` | Omarchy 4 layer: reproduces the Ubuntu setup on Omarchy, `install.sh` + backup/restore (see its README) |
-| `linux/omarchy-3.5-archive/` | April 2026 Omarchy 3.5 configs, frozen history, not used |
-| `common/themes/` | 14 shared theme definitions (`theme.lua`) + 4 dharmx wallpapers each, consumed by mac, ubuntu, and omarchy |
+| `linux/omarchy/` | Omarchy 4 layer: personal deltas over Omarchy defaults, `install.sh` + backup/restore (see its README) |
+| `common/themes/` | 14 shared theme definitions (`theme.lua`) + 4 dharmx wallpapers each, consumed by mac and omarchy |
 | `common/wallpaper/` | General wallpaper collection |
 
 ## Usage
@@ -25,26 +23,11 @@ git clone https://github.com/AlharbiAbdullah/dev-env.git
 cd mac && ./setup.sh
 ```
 
-**Ubuntu — full one-shot rebuild (fresh machine):**
+**Omarchy hub:**
 
 ```bash
-cd linux/ubuntu && ./bootstrap.sh   # pass --hyprland-ppa for the newer Hyprland PPA
+cd linux/omarchy && ./install.sh   # see linux/omarchy/README.md
 ```
-
-`bootstrap.sh` is idempotent and does everything: NOPASSWD sudoers, clones `~/helm`
-and `~/work/mirsad`, installs packages (`packages/apt.txt` + snaps + Obsidian), copies
-dotfiles (via `setup.sh`), sets up Claude Code, and installs + enables the scheduled
-jobs (`systemd/`). For the machine-to-machine cutover (the single-writer ChromaDB
-handoff), follow **[linux/ubuntu/MIGRATION.md](linux/ubuntu/MIGRATION.md)** and stage
-with `ENABLE_TIMERS=0 ./bootstrap.sh` so the timers don't arm early.
-
-**Ubuntu — dotfiles only (already-set-up machine):**
-
-```bash
-cd linux/ubuntu && ./setup.sh   # configs/fonts/tools only, no system changes
-```
-
-Then log out and pick **Hyprland** in the GDM session menu.
 
 ## Shells
 

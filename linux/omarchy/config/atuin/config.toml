@@ -1,0 +1,13 @@
+# atuin client. Sync target = atuin's hosted service (choice 2026-09-09), end-to-end encrypted
+# with the local key; key + account password live in 1Password item "atuin sync".
+# Aliases and env stay in git (dev-env), so the dotfiles sync stays off.
+sync_frequency = "5m"
+enter_accept = true
+style = "compact"
+inline_height = 20
+
+[sync]
+records = true
+
+[dotfiles]
+enabled = false

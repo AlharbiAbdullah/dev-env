@@ -1,7 +1,6 @@
 # linux/omarchy — Omarchy 4 layer
 
-Reproduces the Ubuntu box (as back-synced into `linux/ubuntu/` on 2026-08-25) on a fresh
-Omarchy 4.0.1 install. Omarchy owns the desktop (Quickshell bar/menu/notifications/lock,
+Personal layer on a fresh Omarchy 4 install. Omarchy owns the desktop (Quickshell bar/menu/notifications/lock,
 wallpaper, Hyprland defaults, theme generation); this layer adds the personal deltas.
 
 | Path | What |

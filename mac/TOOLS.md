@@ -1,9 +1,9 @@
 # Mac Tools
 
-Inventory of tools I use on macOS. Add new ones as I install them.
+Inventory of tools on the Mac. The Mac mirrors the Omarchy hub 1:1 (every add or remove on one machine is mirrored on the other); the declared list is `Brewfile`, editor extensions are `../common/editor-extensions.txt`, uv tools are `../common/uv-tools.txt`.
 
 ## Terminal & Shell
-- WezTerm
+- Ghostty (primary); iTerm2 for Arabic (Ghostty is still LTR-only)
 - zsh
 - starship (prompt)
 - zoxide (smart cd)
@@ -12,41 +12,40 @@ Inventory of tools I use on macOS. Add new ones as I install them.
 - bat (cat replacement)
 - btop (process monitor)
 - fastfetch (system info)
-- tmux + TPM (plugin manager) + tmux-resurrect + tmux-continuum
+- tmux + TPM + tmux-resurrect + tmux-continuum (shared `tmux.conf`)
 - micro (terminal editor)
 
 ## Window Management
 - AeroSpace (tiling WM)
 - JankyBorders (`borders`, active-window borders)
 - Hammerspoon (Lua automation)
-- Mos (smooth scroll)
+- LinearMouse (pointer and scroll)
 - Bartender (menu bar manager)
 - Stats (menu bar system monitor)
 
 ## Theme System
 - `theme` / `menu-toggle` / `new-window` scripts (`mac/bin/`)
-- `~/.config/themes/` — 17 shared theme definitions (from `common/themes/`)
+- `~/.config/themes/`: shared theme definitions from `common/themes/`
 
 ## Editors & IDEs
-- Cursor
-- VS Code
+- VS Code (`code .`) and Cursor (`cur .`), same extensions and settings
 
 ## AI / Coding Agents
-- Claude Code
-- Gemini CLI
-- OpenCode
-- Codex
+- Claude Code (via mise)
+- OpenCode (via mise)
+- pi (via mise, OpenRouter)
 
 ## Languages & Runtimes
-- Python (uv)
-- Node.js (nvm)
+- Python (uv; ruff, ty)
+- Node.js (mise)
 
 ## Package Managers
 - Homebrew + Brewfile
+- mise (`~/.config/mise/config.toml`)
 
 ## Version Control
 - Git
-- gh (GitHub CLI)
+- gh (GitHub CLI, via mise)
 - lazygit
 
 ## Apps
@@ -54,7 +53,9 @@ Inventory of tools I use on macOS. Add new ones as I install them.
 - Shottr (screenshots)
 - OrbStack (containers/VMs)
 - Tailscale (mesh VPN)
-- 1Password CLI (`op`)
+- Syncthing (six folders with the hub)
+- 1Password CLI (`op`, every secret; shells read via `__op_env`)
+- gcloud CLI
 
 ## Fonts
 - NotoSansM Nerd Font

@@ -55,3 +55,4 @@ ghostty            # default terminal (also set via omarchy-install-terminal in 
 # AI
 ollama-vulkan      # RDNA3 iGPU: Vulkan beats ROCm; needs OLLAMA_IGPU_ENABLE=1
 tealdeer          # tldr client, parity with the Mac
+atuin             # synced shell history (hosted sync; account + key in 1Password 'atuin sync')
