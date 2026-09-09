@@ -11,3 +11,7 @@ charliermarsh.ruff
 ms-python.debugpy
 ms-python.python
 pkief.material-icon-theme
+# SQLTools: core + Postgres + SQLite drivers (ruling 2026-09-09; DuckDB driver declined, Marketplace-only)
+mtxr.sqltools
+mtxr.sqltools-driver-pg
+mtxr.sqltools-driver-sqlite
