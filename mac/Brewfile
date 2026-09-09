@@ -3,6 +3,7 @@
 # under uv tool (common/uv-tools.txt); ollama stays for :cloud tags only (zero local models).
 # Verify: brew bundle check; prune: brew bundle cleanup (dry run), then --force.
 
+tap "bjarneo/cliamp"
 tap "felixkratz/formulae"
 tap "nikitabobko/tap"
 tap "teamookla/speedtest"
