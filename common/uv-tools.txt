@@ -1,4 +1,2 @@
 # uv-managed CLI tools, same on both machines (uv tool install $(grep -v "^#" uv-tools.txt)). ruff, ty and marimo are never here: `uv add --dev` per project.
 # Libraries never go here: they are `uv add` inside a project.
-sqruff
-visidata

@@ -8,7 +8,5 @@ xremap-hypr-bin           # Mac-style Super clipboard in GUI apps (hypr backend 
 ttf-material-design-icons-extended   # AUR-only, not in official repos
 
 # --- 3.1 both machines (two-machine audit, installed 2026-09-09) ---
-sesh-bin           # tmux session switcher (prefix T)
-quarto-cli-bin     # + `quarto add marimo-team/quarto-marimo` per project
 ttf-amiri          # Naskh body font
 ttf-readex-pro     # Arabic headings

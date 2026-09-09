@@ -54,7 +54,6 @@ obsidian
 ghostty            # default terminal (also set via omarchy-install-terminal in step 3)
 # AI
 ollama-vulkan      # RDNA3 iGPU: Vulkan beats ROCm; needs OLLAMA_IGPU_ENABLE=1
-tealdeer          # tldr client, parity with the Mac
 atuin             # synced shell history (hosted sync; account + key in 1Password 'atuin sync')
 
 # --- 3.4 hub extras ---
@@ -64,18 +63,12 @@ tesseract-data-ara   # Arabic OCR for omarchy-capture-text (OMARCHY_OCR_LANGS=en
 d2                 # diagrams as text, --sketch
 vale               # prose linter (style from voice.md, pending)
 harper             # harper-ls grammar server
-shfmt
-shellcheck
 go-yq              # mikefarah yq (pacman `yq` is the Python one)
 typst
 pandoc-cli
 ttf-cascadia-mono-nerd
 ttf-ibm-plex       # IBM Plex Sans Arabic
 yazi
-watchexec
 xh
-jless
-hyperfine
 tree
 dbeaver            # 3.3 GUI client, Stage 3
-amdgpu_top           # iGPU GTT vs VRAM readout; `amdgpu_top -J -n 1` for JSON
