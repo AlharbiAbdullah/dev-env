@@ -29,9 +29,11 @@ _spec.loader.exec_module(_gen)
 build, read_theme = _gen.build, _gen.read_theme
 
 PUB, NAME = "rai", "rai-themes"
-# `code` on PATH may be the Cursor shim, so VS Code is addressed by absolute path.
+# `code` on PATH may be the Cursor shim, so VS Code is addressed by absolute path
+# (pacman on Linux, the Homebrew cask on macOS).
+_VSCODE = next((p for p in ("/usr/bin/code", "/opt/homebrew/bin/code") if os.path.exists(p)), "/usr/bin/code")
 EDITORS = [("cursor", os.path.expanduser("~/.cursor/extensions")),
-           ("/usr/bin/code", os.path.expanduser("~/.vscode/extensions")),
+           (_VSCODE, os.path.expanduser("~/.vscode/extensions")),
            ("antigravity", os.path.expanduser("~/.antigravity-ide/extensions"))]
 
 MANIFEST = """<?xml version="1.0" encoding="utf-8"?>

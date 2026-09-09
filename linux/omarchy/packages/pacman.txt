@@ -59,3 +59,25 @@ atuin             # synced shell history (hosted sync; account + key in 1Passwor
 
 # --- 3.4 hub extras ---
 tesseract-data-ara   # Arabic OCR for omarchy-capture-text (OMARCHY_OCR_LANGS=eng+ara in hypr/hyprland.lua)
+
+# --- 3.1 both machines (two-machine audit, installed 2026-09-09) ---
+d2                 # diagrams as text, --sketch
+vale               # prose linter (style from voice.md, pending)
+harper             # harper-ls grammar server
+git-delta          # git + lazygit pager
+shfmt
+shellcheck
+duckdb
+pgcli
+go-yq              # mikefarah yq (pacman `yq` is the Python one)
+typst
+pandoc-cli
+ttf-cascadia-mono-nerd
+ttf-ibm-plex       # IBM Plex Sans Arabic
+yazi
+watchexec
+xh
+jless
+hyperfine
+tree
+dbeaver            # 3.3 GUI client, Stage 3

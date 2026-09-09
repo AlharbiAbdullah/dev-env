@@ -1,0 +1,6 @@
+# lazygit: delta as the diff pager (2026-09-09). Colors follow the terminal palette, so the
+# active theme applies without a per-theme file.
+git:
+  paging:
+    colorArg: always
+    pager: delta --paging=never

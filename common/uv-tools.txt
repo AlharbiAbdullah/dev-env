@@ -3,3 +3,6 @@
 marimo
 ruff
 ty
+harlequin[postgres]
+sqruff
+visidata
