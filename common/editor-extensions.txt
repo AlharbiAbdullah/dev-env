@@ -8,7 +8,6 @@
 anthropic.claude-code
 astral-sh.ty
 charliermarsh.ruff
-marimo-team.vscode-marimo
 ms-python.debugpy
 ms-python.python
 pkief.material-icon-theme

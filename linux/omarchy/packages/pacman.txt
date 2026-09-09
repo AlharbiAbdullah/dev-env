@@ -64,11 +64,8 @@ tesseract-data-ara   # Arabic OCR for omarchy-capture-text (OMARCHY_OCR_LANGS=en
 d2                 # diagrams as text, --sketch
 vale               # prose linter (style from voice.md, pending)
 harper             # harper-ls grammar server
-git-delta          # git + lazygit pager
 shfmt
 shellcheck
-duckdb
-pgcli
 go-yq              # mikefarah yq (pacman `yq` is the Python one)
 typst
 pandoc-cli
