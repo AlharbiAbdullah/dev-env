@@ -5,7 +5,6 @@ cursor-bin                # /usr/bin/cursor; ~/.local/bin/code -> /usr/bin/curso
 1password-cli             # 1password app itself ships with Omarchy
 blesh-git                 # ble.sh -> /usr/share/blesh
 xremap-hypr-bin           # Mac-style Super clipboard in GUI apps (hypr backend for app exclusions)
-google-cloud-cli
 ttf-material-design-icons-extended   # AUR-only, not in official repos
 
 # --- 3.1 both machines (two-machine audit, installed 2026-09-09) ---

@@ -1,5 +1,6 @@
 [tools]
 claude = "latest"
+gcloud = "latest"
 gh = "latest"
 node = "26.7.0"
 opencode = "latest"
