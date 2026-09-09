@@ -8,6 +8,7 @@
 # manager's environment, which xremap's hypr backend needs to read the focused
 # window class over Hyprland's IPC.
 Description=xremap — Mac-style Super shortcuts for GUI apps
+OnFailure=alert@%N.service
 Documentation=https://github.com/xremap/xremap
 After=hyprland-session.target
 

@@ -1,0 +1,9 @@
+#!/bin/bash
+# Omarchy migrations have dropped the user from the `input` group before (1787865477, 4.0.2).
+# xremap needs it for /dev/uinput. Re-add, restart the user unit, and say so out loud.
+# Ruling 2026-09-09 (two-machine audit): keep xremap as a user service, guard the group.
+if ! id -nG "$USER" | grep -qw input; then
+  sudo usermod -aG input "$USER" && msg="re-added $USER to the input group; relogin to reload xremap" || msg="could not re-add $USER to the input group"
+  omarchy-notification-send -u critical "xremap guard" "$msg (post-update hook)" 2>/dev/null || notify-send -u critical "xremap guard" "$msg"
+fi
+systemctl --user is-active --quiet xremap.service || systemctl --user restart xremap.service
