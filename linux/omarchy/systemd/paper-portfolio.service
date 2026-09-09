@@ -1,5 +1,6 @@
 [Unit]
 Description=Paper-portfolio daily mark (Sharia buy-and-hold paper books)
+OnFailure=alert@%N.service
 Documentation=file:///home/abdullah/helm/02-ana/financial/investment/paper-portfolio/README.md
 After=network-online.target
 Wants=network-online.target

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Weekly encrypted backup of the synced folders + helm to Google Drive via restic (rclone backend).
+# Retention: GFS - keep 4 weekly, 12 monthly, all yearly. Log: ~/.local/state/backup-drive/last-run.log
+set -uo pipefail
+source "$HOME/.config/restic/env"
+STATE="$HOME/.local/state/backup-drive"; mkdir -p "$STATE"
+LOG="$STATE/last-run.log"; : > "$LOG"
+FOLDERS=(dev-env personal playground projects reads work helm)
+log(){ printf '%s %s\n' "$(date '+%F %T')" "$*" | tee -a "$LOG"; }
+fail(){ log "FAIL: $*"; echo "$(date +%F) FAIL $*" > "$STATE/status"; notify-send -u critical 'Backup to Google Drive FAILED' "$*" 2>/dev/null; exit 1; }
+
+log "backup start"
+paths=(); for f in "${FOLDERS[@]}"; do [ -d "$HOME/$f" ] && paths+=("$HOME/$f"); done
+restic backup "${paths[@]}" --exclude-file="$HOME/.config/restic/excludes.txt" --exclude-caches --tag weekly --one-file-system 2>&1 | tee -a "$LOG"
+[ "${PIPESTATUS[0]}" -eq 0 ] || fail "restic backup exited non-zero"
+
+log "forget + prune (keep 4 weekly, 12 monthly, all yearly)"
+restic forget --keep-weekly 4 --keep-monthly 12 --keep-yearly unlimited --prune 2>&1 | tee -a "$LOG"
+[ "${PIPESTATUS[0]}" -eq 0 ] || fail "restic forget/prune exited non-zero"
+
+# function check: the newest snapshot on the remote must be from today
+latest=$(restic snapshots --latest 1 --json 2>>"$LOG" | python3 -c 'import json,sys; s=json.load(sys.stdin); print(s[-1]["time"][:10] if s else "")')
+[ "$latest" = "$(date +%F)" ] || fail "newest snapshot on Drive is $latest, expected today"
+
+restic check 2>&1 | tee -a "$LOG"
+[ "${PIPESTATUS[0]}" -eq 0 ] || fail "restic check reported errors"
+
+echo "$(date +%F) OK" > "$STATE/status"
+log "backup OK"

@@ -1,5 +1,6 @@
 [Unit]
 Description=X pre-pass collector for daily news digest (gentle accumulating pass)
+OnFailure=alert@%N.service
 After=graphical-session.target
 
 [Service]

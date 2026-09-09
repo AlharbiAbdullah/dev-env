@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly restic backup to Google Drive
+OnFailure=alert@%N.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/backup-drive
+Nice=10
+IOSchedulingClass=idle

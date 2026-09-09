@@ -1,5 +1,6 @@
 [Unit]
 Description=Daily news digest
+OnFailure=alert@%N.service
 After=graphical-session.target
 
 [Service]

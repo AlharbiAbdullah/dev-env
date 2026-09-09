@@ -1,0 +1,6 @@
+[Unit]
+Description=Critical desktop alert for a failed unit (%i)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'omarchy-notification-send -u critical "%i failed" "$(journalctl --user -u %i -n 20 --no-pager -o cat | tail -c 900)"'
