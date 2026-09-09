@@ -50,6 +50,10 @@ cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$RE
 chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,keybindings-menu}
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
+# Cursor extensions: common/cursor-extensions.txt is the 1:1 list for both machines
+if command -v cursor >/dev/null; then
+  while read -r e; do [ -n "$e" ] && cursor --install-extension "$e" >/dev/null 2>&1 || true; done < "$REPO_ROOT/common/cursor-extensions.txt"
+fi
 
 # --- [5] fonts ---
 step "[5/9] fonts"
