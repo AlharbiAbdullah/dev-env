@@ -121,6 +121,7 @@ for g in input i2c docker ollama; do getent group "$g" >/dev/null && ! id -nG "$
 grep -q '^WIRELESS_REGDOM=' /etc/conf.d/wireless-regdom 2>/dev/null || echo 'WIRELESS_REGDOM="SA"' | sudo tee -a /etc/conf.d/wireless-regdom >/dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable --now docker tailscaled sshd ollama 2>/dev/null || true
+sudo systemctl enable --now paccache.timer 2>/dev/null || true   # weekly pacman cache prune (keeps 3 versions); ruling 2026-09-09
 sudo ufw allow 22/tcp >/dev/null 2>&1 || true; sudo ufw allow 11434/tcp >/dev/null 2>&1 || true   # sshd (Mac sync) + ollama on the tailnet
 UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
