@@ -65,7 +65,6 @@ vale               # prose linter (style from voice.md, pending)
 harper             # harper-ls grammar server
 go-yq              # mikefarah yq (pacman `yq` is the Python one)
 typst
-pandoc-cli
 ttf-cascadia-mono-nerd
 ttf-ibm-plex       # IBM Plex Sans Arabic
 yazi
