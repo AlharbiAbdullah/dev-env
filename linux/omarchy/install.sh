@@ -45,9 +45,9 @@ cp "$HERE/.bashrc"      "$HOME/.bashrc"
 rm -f "$HOME/.tmux.conf"   # one tmux file only: ~/.config/tmux/tmux.conf (2026-09-08)
 cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
 cp -R "$HERE/config/." "$HOME/.config/"
-chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
-cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,keybindings-menu}
+chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
+cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/darkreader-theme" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,darkreader-theme,keybindings-menu}
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code

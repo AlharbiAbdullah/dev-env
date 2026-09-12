@@ -1,0 +1,217 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["websockets>=13"]
+# ///
+"""Push the current Omarchy theme into Dark Reader over the Chrome DevTools Protocol.
+
+Dark Reader only knows two palettes of its own. This script rewrites them from the
+active theme's colors.toml (background, foreground, selection) and flips Dark Reader
+between its dark and light scheme to match the theme's polarity, so every listed
+site follows theme.lua like the rest of the desktop.
+
+Requires Chrome launched with `--remote-debugging-port=$DARKREADER_CDP_PORT` (9230)
+AND a non-default `--user-data-dir` (Chrome 136+ ignores the port on the default
+profile folder). Both live in ~/.config/chrome-flags.conf.
+
+Called by the theme-set.d hook `darkreader-theme-set`; safe to run by hand.
+Exit code is always 0 so a missing browser never fails the theme switch; the
+reason is printed to stderr.
+"""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import json
+import os
+import sys
+import tomllib
+import urllib.request
+from pathlib import Path
+
+import websockets
+
+PORT = int(os.environ.get("DARKREADER_CDP_PORT", "9230"))
+EXT_ID = os.environ.get("DARKREADER_EXT_ID", "eimadpbcbfnmbkopoojfekhnkhdbieeh")
+COLORS = Path(
+    os.environ.get(
+        "OMARCHY_THEME_COLORS",
+        Path.home() / ".local/state/omarchy/current/theme/colors.toml",
+    )
+)
+POPUP = f"chrome-extension://{EXT_ID}/ui/popup/index.html"
+OPTIONS = f"chrome-extension://{EXT_ID}/ui/options/index.html"
+
+
+def log(msg: str) -> None:
+    print(f"darkreader-theme: {msg}", file=sys.stderr)
+
+
+def luminance(hex_color: str) -> float:
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def build_patch(colors_path: Path) -> tuple[dict, dict, str]:
+    data = tomllib.loads(colors_path.read_text())
+    bg, fg = data["background"], data["foreground"]
+    mode = data.get("mode") or ("light" if luminance(bg) > 0.5 else "dark")
+    dark = mode != "light"
+    theme = {
+        "mode": 1 if dark else 0,
+        "selectionColor": data.get("selection", "auto"),
+        "scrollbarColor": "",
+    }
+    if dark:
+        theme["darkSchemeBackgroundColor"] = bg
+        theme["darkSchemeTextColor"] = fg
+    else:
+        theme["lightSchemeBackgroundColor"] = bg
+        theme["lightSchemeTextColor"] = fg
+    settings = {
+        "enabled": True,
+        "automation": {"enabled": False, "mode": "", "behavior": "OnOff"},
+    }
+    return theme, settings, mode
+
+
+# JS run inside Dark Reader's own extension context. SEND is either the service
+# worker's onMessage.dispatch (invisible) or chrome.runtime.sendMessage from the
+# popup page (fallback). Both arrive at Dark Reader's Messenger with a sender URL it
+# trusts, so it applies the change through its own code path and persists it.
+JS = """
+(async () => {
+  const theme = %(theme)s, settings = %(settings)s;
+  const sender = { id: chrome.runtime.id, url: %(options)s, frameId: 0 };
+  const send = %(send)s;
+  send({ type: 'ui-bg-set-theme', data: theme }, sender);
+  send({ type: 'ui-bg-change-settings', data: settings }, sender);
+  const key = theme.mode === 1 ? 'darkSchemeBackgroundColor' : 'lightSchemeBackgroundColor';
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 100));
+    const s = await chrome.storage.sync.get(['theme', 'enabled', 'automation']);
+    if (s.theme && s.theme.mode === theme.mode && s.theme[key] === theme[key]
+        && s.enabled === true && s.automation && s.automation.enabled === false)
+      return { ok: true, waited_ms: (i + 1) * 100 };
+  }
+  return { ok: false, reason: 'not persisted' };
+})()
+"""
+SEND_DISPATCH = "(m, s) => chrome.runtime.onMessage.dispatch(m, s, () => {})"
+SEND_MESSAGE = "(m, s) => chrome.runtime.sendMessage(m)"
+
+
+class CDP:
+    def __init__(self, ws):
+        self.ws, self.n, self.pending = ws, 0, {}
+        self.reader = asyncio.create_task(self._read())
+
+    async def _read(self):
+        async for raw in self.ws:
+            msg = json.loads(raw)
+            fut = self.pending.pop(msg.get("id"), None)
+            if fut and not fut.done():
+                fut.set_result(msg)
+
+    async def send(self, method: str, params: dict | None = None, session: str | None = None):
+        self.n += 1
+        msg = {"id": self.n, "method": method, "params": params or {}}
+        if session:
+            msg["sessionId"] = session
+        fut = asyncio.get_running_loop().create_future()
+        self.pending[self.n] = fut
+        await self.ws.send(json.dumps(msg))
+        reply = await asyncio.wait_for(fut, 15)
+        if "error" in reply:
+            raise RuntimeError(f"{method}: {reply['error']}")
+        return reply.get("result", {})
+
+    async def evaluate(self, session: str, expression: str):
+        r = await self.send(
+            "Runtime.evaluate",
+            {"expression": expression, "awaitPromise": True, "returnByValue": True},
+            session,
+        )
+        if "exceptionDetails" in r:
+            raise RuntimeError(r["exceptionDetails"].get("text", "evaluate failed"))
+        return r["result"].get("value")
+
+
+async def find_worker(cdp: CDP) -> str | None:
+    targets = (await cdp.send("Target.getTargets"))["targetInfos"]
+    for t in targets:
+        if t["type"] == "service_worker" and t["url"].startswith(f"chrome-extension://{EXT_ID}/"):
+            return t["targetId"]
+    return None
+
+
+async def push(theme: dict, settings: dict) -> dict:
+    with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/json/version", timeout=3) as r:
+        ws_url = json.load(r)["webSocketDebuggerUrl"]
+    async with websockets.connect(ws_url, max_size=None) as ws:
+        cdp = CDP(ws)
+        opened = None
+        try:
+            worker = await find_worker(cdp)
+            if worker is None:
+                # The MV3 worker sleeps when idle. Opening the popup page in a
+                # background tab wakes it; the tab is closed again below.
+                opened = (await cdp.send("Target.createTarget", {"url": POPUP, "background": True}))["targetId"]
+                for _ in range(40):
+                    await asyncio.sleep(0.25)
+                    worker = await find_worker(cdp)
+                    if worker:
+                        break
+            if worker is None:
+                return {"ok": False, "reason": "Dark Reader service worker not found"}
+            fill = {
+                "theme": json.dumps(theme),
+                "settings": json.dumps(settings),
+                "options": json.dumps(OPTIONS),
+            }
+            sid = (await cdp.send("Target.attachToTarget", {"targetId": worker, "flatten": True}))["sessionId"]
+            has_dispatch = await cdp.evaluate(sid, "typeof chrome.runtime.onMessage.dispatch === 'function'")
+            if has_dispatch:
+                result = await cdp.evaluate(sid, JS % {**fill, "send": SEND_DISPATCH})
+                if result.get("ok"):
+                    return {**result, "route": "dispatch"}
+            # Fallback: talk to Dark Reader from its own popup page.
+            if opened is None:
+                opened = (await cdp.send("Target.createTarget", {"url": POPUP, "background": True}))["targetId"]
+                await asyncio.sleep(0.5)
+            psid = (await cdp.send("Target.attachToTarget", {"targetId": opened, "flatten": True}))["sessionId"]
+            result = await cdp.evaluate(psid, JS % {**fill, "send": SEND_MESSAGE})
+            return {**result, "route": "popup"}
+        finally:
+            if opened:
+                try:
+                    await cdp.send("Target.closeTarget", {"targetId": opened})
+                except Exception:
+                    pass
+            cdp.reader.cancel()
+
+
+def main() -> int:
+    if not COLORS.is_file():
+        log(f"no colors file at {COLORS}")
+        return 0
+    theme, settings, mode = build_patch(COLORS)
+    try:
+        result = asyncio.run(push(theme, settings))
+    except (OSError, urllib.error.URLError):
+        log(f"Chrome not reachable on 127.0.0.1:{PORT} (not running, or no --remote-debugging-port)")
+        return 0
+    except Exception as e:  # never fail the theme switch
+        log(f"failed: {e}")
+        return 0
+    if result.get("ok"):
+        bg = theme.get("darkSchemeBackgroundColor") or theme.get("lightSchemeBackgroundColor")
+        log(f"applied {mode} {bg} via {result['route']} in {result['waited_ms']}ms")
+    else:
+        log(f"not applied: {result.get('reason')}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

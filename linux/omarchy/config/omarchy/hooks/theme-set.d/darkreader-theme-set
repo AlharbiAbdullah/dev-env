@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Runs after `omarchy theme set <name>`: push the new palette into Dark Reader
+# (see ~/.local/bin/darkreader-theme). Detached so a slow or absent browser never
+# delays the switch; never exits non-zero (omarchy-hook prints "Hook failed").
+command -v darkreader-theme >/dev/null 2>&1 || exit 0
+log="${XDG_RUNTIME_DIR:-/tmp}/darkreader-theme.log"
+setsid -f bash -c "timeout 25 darkreader-theme >>'$log' 2>&1" >/dev/null 2>&1 || true
+exit 0
