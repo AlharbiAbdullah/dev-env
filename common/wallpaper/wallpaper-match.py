@@ -15,9 +15,12 @@ colors live inside the palette.
 Reference: the themes rated "amazing" score high — nord ~88-99, gruvbox-light
 ~88-95. Aim for matches in that range; treat <60 as a weak match worth replacing.
 
+Themes are read from ~/.config/themes (theme.lua + the machine's wallpapers/),
+since the repo no longer holds images.
+
 Usage:
-  python3 common/themes/wallpaper-match.py <theme> <image>...  # score given images
-  python3 common/themes/wallpaper-match.py <theme>             # score that theme's installed wallpapers
+  python3 common/wallpaper/wallpaper-match.py <theme> <image>...  # score given images
+  python3 common/wallpaper/wallpaper-match.py <theme>             # score that theme's installed wallpapers
 """
 import glob
 import os
@@ -25,7 +28,7 @@ import re
 import sys
 from PIL import Image
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.expanduser("~/.config/themes")
 
 
 def parse_palette(theme):
