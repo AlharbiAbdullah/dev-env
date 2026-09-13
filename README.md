@@ -8,8 +8,7 @@ Personal dev environment for the Omarchy hub and the Mac, mirrored 1:1.
 |---|---|
 | `mac/` | zsh, Ghostty, tmux, AeroSpace, starship, theme system, Brewfile, `setup.sh` |
 | `linux/omarchy/` | Omarchy 4 layer: personal deltas over Omarchy defaults, `install.sh` + backup/restore (see its README) |
-| `common/themes/` | 14 shared theme definitions (`theme.lua`) + 4 dharmx wallpapers each, consumed by mac and omarchy |
-| `common/wallpaper/` | General wallpaper collection |
+| `common/themes/` | 14 shared theme definitions (`theme.lua`), consumed by mac and omarchy |
 
 ## Usage
 
