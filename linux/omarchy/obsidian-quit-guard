@@ -1,0 +1,22 @@
+#!/bin/bash
+# Quit Obsidian cleanly and wait for it to exit before the Wayland session goes down.
+# A killed Obsidian corrupts its IndexedDB, and with it the Obsidian Sync pairing,
+# which then fails silently (hit 2026-07-28, 2026-08-22, 2026-08-31).
+# ExecStop of obsidian-quit-guard.service; ordered to stop before the compositor.
+
+main_pids() {
+  ps -u "$(id -u)" -o pid=,args= |
+    awk '$2 ~ /electron[0-9]*$/ && /\/usr\/lib\/obsidian\/app\.asar/ && !/--type=/ {print $1}'
+}
+
+pids=$(main_pids)
+[ -z "$pids" ] && exit 0
+
+kill -TERM $pids 2>/dev/null
+for _ in $(seq 100); do   # up to 20s
+  [ -z "$(main_pids)" ] && exit 0
+  sleep 0.2
+done
+
+echo "Obsidian still running after 20s" >&2
+exit 1

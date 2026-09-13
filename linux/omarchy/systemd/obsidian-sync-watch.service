@@ -1,0 +1,7 @@
+[Unit]
+Description=Re-pair Obsidian Sync if the desktop silently lost its pairing
+OnFailure=alert@%N.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/obsidian-sync-watch

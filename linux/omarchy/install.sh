@@ -46,8 +46,8 @@ rm -f "$HOME/.tmux.conf"   # one tmux file only: ~/.config/tmux/tmux.conf (2026-
 cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
 cp -R "$HERE/config/." "$HOME/.config/"
 chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
-cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/darkreader-theme" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,darkreader-theme,keybindings-menu}
+cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/darkreader-theme" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,darkreader-theme,obsidian-quit-guard,obsidian-sync-watch,keybindings-menu}
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code
@@ -115,6 +115,8 @@ sudo install -m 0644 "$HERE/etc/polkit-1/rules.d/99-1password-unlock.rules" /etc
 sudo install -d /etc/systemd/system/ollama.service.d
 sudo install -m 0644 "$HERE/etc/systemd/system/ollama.service.d/expose.conf" /etc/systemd/system/ollama.service.d/expose.conf
 sudo install -d /etc/systemd/system/ollama.service.d && printf '[Service]\nEnvironment="OLLAMA_IGPU_ENABLE=1"\n' | sudo tee /etc/systemd/system/ollama.service.d/igpu.conf >/dev/null
+sudo install -d /etc/systemd/system/user@.service.d   # 30s session stop so obsidian-quit-guard can finish (Omarchy default 5s)
+sudo install -m 0644 "$HERE/etc/systemd/system/user@.service.d/20-obsidian-quit-guard.conf" /etc/systemd/system/user@.service.d/20-obsidian-quit-guard.conf
 echo uinput | sudo tee /etc/modules-load.d/uinput.conf >/dev/null; sudo modprobe uinput || true
 echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null; sudo modprobe i2c-dev || true
 for g in input i2c docker ollama; do getent group "$g" >/dev/null && ! id -nG "$USER" | grep -qw "$g" && sudo usermod -aG "$g" "$USER"; done
@@ -126,7 +128,8 @@ sudo ufw allow 22/tcp >/dev/null 2>&1 || true; sudo ufw allow 11434/tcp >/dev/nu
 UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
 systemctl --user daemon-reload
-TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio backup-drive"
+systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio backup-drive obsidian-sync-watch"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
   systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)

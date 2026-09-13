@@ -1,0 +1,34 @@
+#!/bin/bash
+# Self-heal a silently dropped Obsidian Sync pairing. obsidian-quit-guard covers clean
+# reboots; this covers power loss and crashes. If Obsidian has been up for 3+ minutes and
+# Sync has no vaultId, re-pair to the remote vault, restore folder exclusions, and alert.
+# Run by obsidian-sync-watch.timer.
+set -u
+
+VAULT=helm
+IGNORE='["13-archive/historical-sessions","13-archive/news/dumps","03-rai/semantic-memory/chromadb","02-ana/financial/investment/paper-portfolio/.venv"]'
+
+notify() { omarchy-notification-send -u critical "Obsidian Sync" "$1"; }
+ob() { timeout 20 obsidian eval code="$1" 2>/dev/null | sed -n 's/^=> //p'; }
+
+# Never call the CLI when Obsidian is closed: it would launch the app and take focus.
+uptime=$(ps -u "$(id -u)" -o etimes=,args= |
+  awk '$2 ~ /electron[0-9]*$/ && /\/usr\/lib\/obsidian\/app\.asar/ && !/--type=/ && !/ eval / {print $1; exit}')
+[ -n "$uptime" ] && [ "$uptime" -ge 180 ] || exit 0
+
+[ "$(ob 'String(!!app.internalPlugins.plugins.sync.instance.vaultId)')" = "false" ] || exit 0
+
+ob 'app.internalPlugins.plugins.sync.instance.openChooseRemoteVaultModal(),"opened"' >/dev/null
+sleep 5
+r=$(ob "(()=>{const m=[...document.querySelectorAll('.modal-container')].find(x=>x.innerText.includes('Your remote vaults')&&x.innerText.includes('$VAULT'));if(!m)return 'no chooser';const b=[...m.querySelectorAll('button')].filter(x=>x.textContent.trim()==='Connect');if(b.length!==1)return 'connect buttons: '+b.length;b[0].click();return 'ok'})()")
+[ "$r" = "ok" ] || { notify "Pairing lost. Auto re-pair stopped at chooser ($r). Re-pair by hand."; exit 1; }
+sleep 5
+ob "(()=>{const m=[...document.querySelectorAll('.modal-container')].find(x=>x.innerText.includes('Confirm Merge Vault'));if(!m)return 'none';const b=[...m.querySelectorAll('button')].filter(x=>x.textContent.trim()==='Continue');if(b.length!==1)return 'continue buttons: '+b.length;b[0].click();return 'ok'})()" >/dev/null
+sleep 15
+
+if [ "$(ob 'String(!!app.internalPlugins.plugins.sync.instance.vaultId)')" != "true" ]; then
+  notify "Pairing lost. Auto re-pair did not finish. Re-pair by hand."
+  exit 1
+fi
+ob "(()=>{app.internalPlugins.plugins.sync.instance.setIgnoreFolders($IGNORE);return 'ok'})()" >/dev/null
+notify "Pairing was lost and has been restored. Check git status in helm for resurrected files."

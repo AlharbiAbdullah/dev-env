@@ -1,0 +1,15 @@
+[Unit]
+Description=Quit Obsidian cleanly before the Wayland session stops (keeps the Sync pairing)
+# Stops before graphical-session.target, which stops before the compositor.
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=%h/.local/bin/obsidian-quit-guard
+TimeoutStopSec=25
+
+[Install]
+WantedBy=graphical-session.target
