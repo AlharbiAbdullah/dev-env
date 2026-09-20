@@ -15,3 +15,5 @@ pkief.material-icon-theme
 mtxr.sqltools
 mtxr.sqltools-driver-pg
 mtxr.sqltools-driver-sqlite
+# dbt: the official dbt Labs extension only (ruling 2026-09-17; no dbt Power User, it pulls in Altimate + jinjahtml)
+dbtlabsinc.dbt

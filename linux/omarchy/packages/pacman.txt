@@ -69,5 +69,6 @@ ttf-cascadia-mono-nerd
 ttf-ibm-plex       # IBM Plex Sans Arabic
 yazi
 xh
+duckdb             # SQL over json, csv, parquet and sqlite files; no drivers
 tree
 dbeaver            # 3.3 GUI client, Stage 3
