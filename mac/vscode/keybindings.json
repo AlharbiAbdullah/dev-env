@@ -1,7 +1,8 @@
 // Linux-style Ctrl shortcuts on Mac (Cmd defaults still work). The standard is
-// the Cursor table in KEYBINDINGS.md: the same Ctrl set as the Linux box, where
-// most of these are stock. Deployed by setup.sh to
-// ~/Library/Application Support/Cursor/User/keybindings.json.
+// the editor table in KEYBINDINGS.md: the same Ctrl set as the Linux box, where
+// most of these are stock. Twin of cursor/keybindings.json (2026-09-09) so the
+// two editors share one keymap. Deployed by setup.sh to
+// ~/Library/Application Support/Code/User/keybindings.json.
 // Editor-side rules are guarded with !terminalFocus (or tighter) so the
 // integrated terminal keeps Ctrl+C (SIGINT), Ctrl+W (delete word), Ctrl+A/E
 // (readline), Ctrl+L (clear), Ctrl+I (Tab), Ctrl+\ (SIGQUIT).
@@ -41,12 +42,13 @@
   // panels. Ctrl+E is the sidebar key (Ctrl+B is go to definition, below).
   // Ctrl+T toggles the terminal like the
   // Linux file; Ctrl+J works from inside the terminal too (skipShell default).
-  // Ctrl+E is the file tree, not "whatever the side bar showed last", the same
-  // rule as VS Code, where the Claude view shares the primary side bar.
+  // Cursor guards Ctrl+T with !composerFocused; VS Code has no equivalent key.
+  // Ctrl+E is the file tree, not "whatever the side bar showed last": the Claude
+  // view shares the primary side bar, so a plain toggle could reopen Claude.
   { "key": "ctrl+e", "command": "workbench.view.explorer", "when": "!terminalFocus && !explorerViewletVisible" },
   { "key": "ctrl+e", "command": "workbench.action.closeSidebar", "when": "!terminalFocus && explorerViewletVisible" },
   { "key": "ctrl+shift+e", "command": "workbench.view.explorer", "when": "!terminalFocus" },
-  { "key": "ctrl+t", "command": "workbench.action.terminal.toggleTerminal", "when": "!composerFocused" },
+  { "key": "ctrl+t", "command": "workbench.action.terminal.toggleTerminal" },
 
   // Ctrl+B = go to definition (the JetBrains key), a home-row stand-in for F12,
   // which stays bound. Editor focus only, so the terminal keeps Ctrl+B (tmux,
@@ -103,10 +105,18 @@
   { "key": "ctrl+backspace", "command": "deleteWordLeft", "when": "textInputFocus && !terminalFocus" },
   { "key": "ctrl+delete", "command": "deleteWordRight", "when": "textInputFocus && !terminalFocus" },
 
-  // AI, same keys as the Linux defaults (ids read from Cursor's own bundle)
-  { "key": "ctrl+l", "command": "aichat.newchataction", "when": "!terminalFocus" },
-  { "key": "ctrl+k", "command": "aipopup.action.modal.generate", "when": "editorFocus" },
-  { "key": "ctrl+i", "command": "composer.startComposerPrompt", "when": "!terminalFocus" },
+  // AI pane on Ctrl+L, Cursor's chat key (2026-09-09), and Ctrl+L again closes it.
+  // claude-vscode.sideBarActive is true while a Claude chat surface is visible.
+  // Which bar holds it varies: the extension puts it in the secondary side bar
+  // (auxiliary), but the view can be moved into the primary one so it shares the
+  // right edge with the file tree. So close the bar whose active entry is Claude
+  // (activeAuxiliary / activeViewlet), and leave the other bar alone.
+  // Ctrl+I and Ctrl+K are left alone: Cursor's composer and inline edit have no
+  // Claude Code equivalent, and Ctrl+K stays VS Code's chord prefix. Terminal
+  // keeps Ctrl+L.
+  { "key": "ctrl+l", "command": "claude-vscode.sidebar.open", "when": "!terminalFocus && !claude-vscode.sideBarActive" },
+  { "key": "ctrl+l", "command": "workbench.action.closeAuxiliaryBar", "when": "!terminalFocus && claude-vscode.sideBarActive && activeAuxiliary == 'workbench.view.extension.claude-sidebar-secondary'" },
+  { "key": "ctrl+l", "command": "workbench.action.closeSidebar", "when": "!terminalFocus && claude-vscode.sideBarActive && activeViewlet == 'workbench.view.extension.claude-sidebar-secondary'" },
 
   // run the current file: Python straight to the terminal (no debugger),
   // everything else starts without debugging — same two rules as the Linux file

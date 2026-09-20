@@ -18,12 +18,14 @@
 # from an SSH session (Mac -> linux over Tailscale) releases the device grab.
 
 keymap:
-  # Cursor gets Super+T raw: its keybindings.json binds meta+t to a new untitled
-  # file, and Ctrl+T there is the terminal toggle. First matching keymap wins.
-  - name: Cursor
+  # Cursor and VS Code get Super+T raw: their keybindings.json binds meta+t to a
+  # new untitled file, and Ctrl+T there is the terminal toggle. Keys absent from
+  # a matching keymap fall through, so both classes are excluded below too.
+  - name: Cursor + VS Code
     application:
       only:
         - cursor
+        - code
     exact_match: true
     remap:
       Super-Shift-r: C-Shift-r
@@ -45,6 +47,7 @@ keymap:
         - foot
         - xterm
         - cursor
+        - code
     # exact_match keeps Super+Shift+R distinct from Super+R.
     exact_match: true
     remap:

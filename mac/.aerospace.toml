@@ -105,7 +105,6 @@ cmd-down = 'focus down'
 # -----------------------------------------------------------------------------
 cmd-enter = 'exec-and-forget /Users/abdullahalharbi/.local/bin/iterm2-window'
 cmd-n = 'exec-and-forget /Users/abdullahalharbi/.local/bin/new-window'
-cmd-b = 'exec-and-forget open -na "Google Chrome"'
 cmd-o = 'exec-and-forget open -na Obsidian'
 
 # -----------------------------------------------------------------------------
@@ -118,7 +117,7 @@ cmd-ctrl-shift-w = 'exec-and-forget /Users/abdullahalharbi/.local/bin/theme wall
 # Focus mode (float + centre, same as Linux SUPER+H); menu bar hide on the bar key.
 cmd-h = 'exec-and-forget /opt/homebrew/bin/hs -c "focusMode()"'
 cmd-k = 'exec-and-forget /Users/abdullahalharbi/.local/bin/keybindings-menu'
-cmd-shift-ctrl-b = 'exec-and-forget /Users/abdullahalharbi/.local/bin/menu-toggle'
+cmd-b = 'exec-and-forget /Users/abdullahalharbi/.local/bin/menu-toggle'
 
 # -----------------------------------------------------------------------------
 # Close Window (cmd + w)

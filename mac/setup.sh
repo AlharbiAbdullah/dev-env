@@ -48,8 +48,9 @@ cp "$SCRIPT_DIR/.zprofile"        "$HOME/.zprofile";                 echo "  -> 
 cp "$SCRIPT_DIR/.tmux.conf"       "$HOME/.tmux.conf";                echo "  -> ~/.tmux.conf"
 ln -sf "$SCRIPT_DIR/.aerospace.toml" "$HOME/.aerospace.toml";          echo "  -> ~/.aerospace.toml (symlink)"
 cp "$SCRIPT_DIR/starship.toml"    "$HOME/.config/starship.toml";     echo "  -> ~/.config/starship.toml"
-mkdir -p "$HOME/Library/Application Support/Cursor/User"
+mkdir -p "$HOME/Library/Application Support/Cursor/User" "$HOME/Library/Application Support/Code/User"
 cp "$SCRIPT_DIR/cursor/keybindings.json" "$HOME/Library/Application Support/Cursor/User/keybindings.json"; echo "  -> Cursor keybindings.json (KEYBINDINGS.md Ctrl set)"
+cp "$SCRIPT_DIR/vscode/keybindings.json" "$HOME/Library/Application Support/Code/User/keybindings.json"; echo "  -> VS Code keybindings.json (same map, Claude Code on the AI keys)"
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code on both
 # machines (ruling 2026-09-09). The Mac adds the Remote-SSH platform hint for the hub.
 for _ide in Code Cursor; do
