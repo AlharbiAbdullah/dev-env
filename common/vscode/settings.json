@@ -39,5 +39,7 @@
   "window.titleBarStyle": "native",
   "window.customTitleBarVisibility": "never",
   "workbench.editor.revealIfOpen": true,
-  "search.mode": "newEditor"
+  "search.mode": "newEditor",
+  "workbench.layoutControl.enabled": false,
+  "workbench.agentsWindowButton.enabled": false
 }
