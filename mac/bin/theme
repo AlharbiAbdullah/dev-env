@@ -400,7 +400,9 @@ profile = {
     "Guid": "rai-theme",
     "Name": "rai",
     "Dynamic Profile Rewritable": True,
-    "Normal Font": "NotoSansMNF-Bold 16",
+    # 14 = the editors' 14 px. macOS points are logical pixels (72 per inch both
+    # ways), so unlike Linux (Ghostty 10.5 pt) the number carries over as is.
+    "Normal Font": "NotoSansMNF-Bold 14",
     # Arabic: leave this False. Noto Sans Mono has no Arabic coverage, so
     # non-ASCII falls back through CoreText to the system Arabic font, which
     # shapes and joins correctly. Forcing Cairo here was tried 2026-08-14 and
