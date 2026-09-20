@@ -46,12 +46,13 @@ rm -f "$HOME/.tmux.conf"   # one tmux file only: ~/.config/tmux/tmux.conf (2026-
 cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
 cp -R "$HERE/config/." "$HOME/.config/"
 chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
-cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/darkreader-theme" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,darkreader-theme,obsidian-quit-guard,obsidian-sync-watch,keybindings-menu}
+cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/darkreader-theme" "$HERE/darkreader-theme-catchup" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,darkreader-theme,darkreader-theme-catchup,obsidian-quit-guard,obsidian-sync-watch,keybindings-menu}
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code
-# (ruling 2026-09-09); keybindings stay per editor/platform (config/Cursor/User/keybindings.json).
+# (ruling 2026-09-09). Keybindings stay per editor/platform but carry the same map
+# (config/{Cursor,Code}/User/keybindings.json, already deployed by the cp -R above).
 for _ide in Code Cursor; do
   mkdir -p "$HOME/.config/$_ide/User"
   cp "$REPO_ROOT/common/vscode/settings.json" "$HOME/.config/$_ide/User/settings.json"
@@ -129,6 +130,7 @@ UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
 systemctl --user daemon-reload
 systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
+systemctl --user enable --now darkreader-theme-catchup.service   # re-push the Dark Reader palette when Chrome starts (a switch while Chrome is closed is otherwise lost)
 TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio backup-drive obsidian-sync-watch"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then

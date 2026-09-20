@@ -1,0 +1,47 @@
+#!/bin/bash
+# Re-push the Omarchy theme into Dark Reader whenever Chrome starts.
+#
+# darkreader-theme (theme-set.d hook) pushes the palette over the DevTools port into
+# the RUNNING Chrome only. A theme switch while Chrome is closed is lost, and the next
+# Chrome start comes up with the previous theme's palette (2026-09-13: desktop on Nord,
+# every Dark Reader page still on Calma Dark grey). Chrome creates SingletonLock in its
+# profile dir on every start, so watch for it and push once the DevTools port answers.
+# The push is idempotent, so a spare run costs nothing visible.
+# Run by darkreader-theme-catchup.service. Needs inotify-tools (Omarchy ships it).
+set -u
+
+PROFILE="${DARKREADER_CHROME_PROFILE:-$HOME/.config/chrome-main}"
+PORT="${DARKREADER_CDP_PORT:-9230}"
+PUSH="$HOME/.local/bin/darkreader-theme"
+
+log() { echo "darkreader-theme-catchup: $*"; }
+
+push_when_ready() {
+  local i attempt out
+  for i in $(seq 1 30); do
+    if curl -fsS --max-time 2 "http://127.0.0.1:$PORT/json/version" >/dev/null 2>&1; then
+      sleep 2 # let the extension service workers register before we look for Dark Reader's
+      for attempt in 1 2 3; do
+        out=$("$PUSH" 2>&1)
+        log "$out"
+        [[ $out == *": applied "* ]] && return 0
+        sleep 5
+      done
+      return 1
+    fi
+    sleep 1
+  done
+  log "DevTools port $PORT never answered after Chrome start"
+  return 1
+}
+
+[[ -d $PROFILE ]] || { log "no profile dir at $PROFILE"; exit 1; }
+
+# Chrome already up when this starts (login race, service restart): push once now.
+[[ -L $PROFILE/SingletonLock ]] && push_when_ready
+
+# --include is an extended regex against the full path; the dir is busy, so filter here.
+while inotifywait -qq -e create -e moved_to --include '/SingletonLock$' "$PROFILE"; do
+  log "Chrome started"
+  push_when_ready
+done

@@ -1,0 +1,14 @@
+[Unit]
+Description=Re-push the Omarchy theme into Dark Reader when Chrome starts
+# default.target, not graphical-session.target: that target sits inactive on this
+# machine (see xremap.service). Only loopback HTTP is needed, so no session deps.
+OnFailure=alert@%N.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/darkreader-theme-catchup
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
