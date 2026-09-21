@@ -14,7 +14,7 @@ return {
     foreground = "#f5deb3",
     cursor_bg = "#d8a657",
     cursor_fg = "#282828",
-    selection_bg = "#4a4846",
+    selection_bg = "#564934",
     selection_fg = "#f5deb3",
     ansi = {
       "#454340", "#ea6962", "#a9b665", "#d8a657", "#7daea3", "#d3869b", "#89b482", "#f5deb3",
