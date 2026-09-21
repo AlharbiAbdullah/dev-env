@@ -4,7 +4,6 @@ config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
 font-family = JetBrainsMono Nerd Font
 font-family = Cairo
 font-family = Noto Color Emoji
-font-style = Bold
 font-size = 10.5
 font-feature = -liga
 font-feature = -calt

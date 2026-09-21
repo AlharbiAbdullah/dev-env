@@ -1,7 +1,6 @@
 {
   "workbench.iconTheme": "material-icon-theme",
   "editor.fontSize": 14,
-  "editor.fontWeight": "bold",
   "editor.fontFamily": "'JetBrainsMono Nerd Font', monospace",
   "editor.fontLigatures": false,
   "terminal.integrated.fontLigatures.enabled": false,
