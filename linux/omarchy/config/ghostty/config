@@ -1,12 +1,10 @@
 # Omarchy owns the colors (regenerated on every theme switch).
 config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
 
-font-family = JetBrainsMono Nerd Font
-font-family = Cairo
-font-family = Noto Color Emoji
-font-size = 10.5
-font-feature = -liga
-font-feature = -calt
+# Font (Omarchy default)
+font-family = "JetBrainsMono Nerd Font"
+font-style = Regular
+font-size = 9
 confirm-close-surface = false
 copy-on-select = false
 working-directory = home
