@@ -45,9 +45,12 @@ cp "$HERE/.bashrc"      "$HOME/.bashrc"
 rm -f "$HOME/.tmux.conf"   # one tmux file only: ~/.config/tmux/tmux.conf (2026-09-08)
 cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
 cp -R "$HERE/config/." "$HOME/.config/"
-chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
-cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/darkreader-theme" "$HERE/darkreader-theme-catchup" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,darkreader-theme,darkreader-theme-catchup,obsidian-quit-guard,obsidian-sync-watch,keybindings-menu}
+chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
+cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,keybindings-menu}
+# Web page theming retired 2026-09-25: sites use their own dark mode via the OS color-scheme. Drop what older runs installed.
+systemctl --user disable --now darkreader-theme-catchup.service 2>/dev/null || true
+rm -f "$HOME/.local/bin/darkreader-theme" "$HOME/.local/bin/darkreader-theme-catchup" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/systemd/user/darkreader-theme-catchup.service"
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code
@@ -130,7 +133,6 @@ UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
 systemctl --user daemon-reload
 systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
-systemctl --user enable --now darkreader-theme-catchup.service   # re-push the Dark Reader palette when Chrome starts (a switch while Chrome is closed is otherwise lost)
 TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio backup-drive obsidian-sync-watch"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
