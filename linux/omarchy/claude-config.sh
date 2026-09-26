@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # claude-config.sh — Claude Code config for this machine (mirrors the live layout).
-# Reality: ~/.claude is a thin edge over the helm vault. Eight symlinks point into
+# Reality: ~/.claude is a thin edge over the helm vault. Seven symlinks point into
 # ~/helm/03-rai; the only real local files are keybindings.json, themes/, the
 # credentials, and settings.local.json.
 set -euo pipefail
@@ -38,12 +38,11 @@ fi
 ln -sfn "$RAI/agents"                 "$CLAUDE/agents"
 ln -sfn "$RAI/hooks"                  "$CLAUDE/hooks"
 link_skills "$CLAUDE/skills"
-ln -sfn "$RAI/memory"                 "$CLAUDE/memory"
-ln -sfn "$RAI/CLAUDE.md"              "$CLAUDE/CLAUDE.md"
+ln -sfn "$RAI/AGENTS.md"              "$CLAUDE/CLAUDE.md"
 ln -sfn "$RAI/config/settings.json"   "$CLAUDE/settings.json"
 ln -sfn "$RAI/config/mcp.json"        "$CLAUDE/mcp.json"
 ln -sfn "$RAI/config/statusline.sh"   "$CLAUDE/statusline.sh"
-echo "  ~/.claude/{agents,hooks,skills,memory,CLAUDE.md,settings.json,mcp.json,statusline.sh} -> helm/03-rai"
+echo "  ~/.claude/{agents,hooks,skills,CLAUDE.md,settings.json,mcp.json,statusline.sh} -> helm/03-rai"
 
 # Real local files.
 cp "$HERE/claude/keybindings.json"       "$CLAUDE/keybindings.json"
