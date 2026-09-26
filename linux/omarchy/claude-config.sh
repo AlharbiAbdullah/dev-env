@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # claude-config.sh — Claude Code config for this machine (mirrors the live layout).
-# Reality: ~/.claude is a thin edge over the helm vault. Five symlinks point into
+# Reality: ~/.claude is a thin edge over the helm vault. Six symlinks point into
 # ~/helm/03-rai; the only real local files are keybindings.json, themes/, the
 # credentials, and settings.local.json. The Context7 MCP server is registered at user
 # scope in ~/.claude.json, and the status line is the claude-hud plugin.
@@ -42,6 +42,18 @@ link_skills "$CLAUDE/skills"
 ln -sfn "$RAI/AGENTS.md"              "$CLAUDE/CLAUDE.md"
 ln -sfn "$RAI/config/settings.json"   "$CLAUDE/settings.json"
 echo "  ~/.claude/{agents,hooks,skills,CLAUDE.md,settings.json} -> helm/03-rai"
+
+# Auto-memory store: Claude Code keys it by project path (~/helm -> -home-abdullah-helm). The notes
+# live in the vault (2026-09-26) so git backs them up and every machine shares one store. A real
+# dir here holds this machine's own notes: merge them into the vault by hand, never clobber them.
+MEM="$CLAUDE/projects/-home-abdullah-helm/memory"
+mkdir -p "$(dirname "$MEM")"
+if [ -d "$MEM" ] && [ ! -L "$MEM" ]; then
+    echo "  !! $MEM is a real dir: merge its notes into $RAI/auto-memory, move it aside, re-run." >&2
+else
+    ln -sfn "$RAI/auto-memory" "$MEM"
+    echo "  ~/.claude/projects/-home-abdullah-helm/memory -> helm/03-rai/auto-memory"
+fi
 
 # Context7 MCP server at user scope (~/.claude.json, where Claude Code reads MCP servers).
 # Idempotent: skipped when already registered.
