@@ -6,7 +6,9 @@
 set -u
 
 VAULT=helm
-IGNORE='["13-archive/historical-sessions","13-archive/news/dumps","03-rai/semantic-memory/chromadb"]'
+EXCLUDE_FILE="$HOME/dev-env/linux/omarchy/obsidian-sync-exclude.json"
+IGNORE=$(cat "$EXCLUDE_FILE" 2>/dev/null)
+[ -n "$IGNORE" ] || IGNORE='["13-archive/historical-sessions","13-archive/news/dumps","03-rai/semantic-memory","03-rai/memory"]'
 
 notify() { omarchy-notification-send -u critical "Obsidian Sync" "$1"; }
 ob() { timeout 20 obsidian eval code="$1" 2>/dev/null | sed -n 's/^=> //p'; }
