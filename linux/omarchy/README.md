@@ -16,7 +16,7 @@ wallpaper, Hyprland defaults, theme generation); this layer adds the personal de
 | `config/{ghostty,xremap,micro,glow,git,fastfetch,opencode}`, `mimeapps.list`, `starship.toml`, `.tmux.conf`, `.bashrc` | carried configs |
 | `systemd/` | the 5 timers + xremap.service (xvfb dropped: nothing scheduled uses it) |
 | `etc/` | sudoers NOPASSWD, xremap udev, 1Password polkit, ollama expose |
-| `claude/`, `claude-config.sh` | Claude Code local files + the 7 vault symlinks + pi/opencode edges |
+| `claude/`, `claude-config.sh` | Claude Code local files + the 5 vault symlinks + Context7 at user scope + pi/opencode edges |
 
 What Omarchy replaces from the Ubuntu layer: waybar, rofi, mako (muted: use `Super+Ctrl+,` silencing toggle), hypridle/hyprlock, swaybg, hyprpolkitagent, grim/slurp binds (kept as Ctrl+3/4 to clipboard), the theme script's Ghostty/Chrome/gsettings/VS Code/Cursor/wallpaper writers.
 
