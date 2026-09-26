@@ -8,7 +8,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/home/abdullah/helm/02-ana/financial/investment/paper-portfolio
-ExecStart=/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/.venv/bin/python /home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.py
+ExecStart=uv run --script /home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.py
 StandardOutput=append:/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.log
 StandardError=append:/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/portfolio.log
 TimeoutStartSec=300

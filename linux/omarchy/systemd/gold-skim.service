@@ -1,0 +1,14 @@
+[Unit]
+Description=Gold-skim monthly paper run (profit-above-high-water-mark skim, ring-fenced account)
+OnFailure=alert@%N.service
+Documentation=file:///home/abdullah/helm/02-ana/financial/investment/paper-portfolio/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/abdullah/helm/02-ana/financial/investment/paper-portfolio
+ExecStart=uv run --script /home/abdullah/helm/02-ana/financial/investment/paper-portfolio/gold_skim.py --live
+StandardOutput=append:/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/gold_skim.log
+StandardError=append:/home/abdullah/helm/02-ana/financial/investment/paper-portfolio/gold_skim.log
+TimeoutStartSec=300

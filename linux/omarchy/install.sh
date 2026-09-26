@@ -99,13 +99,8 @@ eval "$(mise activate bash --shims)"
 uv python install 3.12 >/dev/null 2>&1 || true
 # uv tools: common/uv-tools.txt is the one list for both machines (real CLIs only; ruff, ty, marimo are per project)
 grep -v '^#' "$REPO_ROOT/common/uv-tools.txt" | while read -r t; do [ -n "$t" ] && uv tool install "$t" >/dev/null 2>&1 || true; done
-# paper-portfolio venv: create if missing, then ALWAYS install deps (idempotent). A half-built
-# venv (dir present, no packages) failed the 17:00 mark for 2 days after the 2026-08-25 restore.
-if cd "$HOME/helm/02-ana/financial/investment/paper-portfolio" 2>/dev/null; then
-  [ -d .venv ] || uv venv --python 3.12 -q
-  uv pip install -q --python .venv yfinance pandas numpy curl_cffi || echo "WARN: paper-portfolio deps failed to install"
-  cd - >/dev/null
-fi
+# paper-portfolio + gold-skim are PEP 723 uv scripts (inline deps); no venv to build here.
+# `uv run --script` resolves + caches dependencies itself on first run via the systemd timers.
 
 # --- [8] claude ---
 step "[8/9] Claude Code"
@@ -133,7 +128,7 @@ UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
 systemctl --user daemon-reload
 systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
-TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio backup-drive obsidian-sync-watch"
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio gold-skim backup-drive obsidian-sync-watch"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
   systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)

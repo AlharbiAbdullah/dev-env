@@ -6,7 +6,7 @@
 set -u
 
 VAULT=helm
-IGNORE='["13-archive/historical-sessions","13-archive/news/dumps","03-rai/semantic-memory/chromadb","02-ana/financial/investment/paper-portfolio/.venv"]'
+IGNORE='["13-archive/historical-sessions","13-archive/news/dumps","03-rai/semantic-memory/chromadb"]'
 
 notify() { omarchy-notification-send -u critical "Obsidian Sync" "$1"; }
 ob() { timeout 20 obsidian eval code="$1" 2>/dev/null | sed -n 's/^=> //p'; }

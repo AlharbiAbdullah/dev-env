@@ -1,0 +1,10 @@
+[Unit]
+Description=Run gold-skim monthly paper mark at 14:00 Asia/Riyadh on the 1st
+
+[Timer]
+OnCalendar=*-*-01 14:00:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
