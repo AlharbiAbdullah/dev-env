@@ -28,4 +28,4 @@ cd ~/dev-env/linux/omarchy && ENABLE_TIMERS=0 ./install.sh && ./restore-backup.s
 ```
 
 Then the manual logins `install.sh` prints, and the checklist in
-`~/helm/05-projects/kitchen/omarchy-migration/checklist.md`.
+`~/helm/05-projects/completed/omarchy-migration/checklist.md`.

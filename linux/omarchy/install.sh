@@ -153,5 +153,5 @@ cat <<MSG
   5. Chrome: sign in, then log in to x.com, substack.com, medium.com (collectors read the Default profile cookies)
   6. Obsidian: open ~/helm, Settings > Sync re-pair, set "cli": true in ~/.config/obsidian/obsidian.json (app closed)
   7. restore-backup.sh   (creds, repos, docker volumes, ollama models) if not done already
-  8. omarchy update; theme everbloom; verify with the checklist in helm/05-projects/kitchen/omarchy-migration/
+  8. omarchy update; theme everbloom; verify with the checklist in helm/05-projects/completed/omarchy-migration/
 MSG
