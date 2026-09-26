@@ -23,7 +23,33 @@ sudo install -m 0440 "$HERE/etc/sudoers.d/ab" /etc/sudoers.d/ab
 # --- [2] gh + helm ---
 step "[2/9] GitHub auth + helm"
 if ! gh auth status >/dev/null 2>&1; then gh auth login --web --git-protocol https; fi
-[ -d "$HOME/helm/.git" ] || git clone https://github.com/AlharbiAbdullah/helm.git "$HOME/helm"
+if [ ! -d "$HOME/helm/.git" ]; then
+  if command -v tailscale >/dev/null 2>&1 && tailscale status >/dev/null 2>&1 \
+     && git ls-remote linux:helm >/dev/null 2>&1; then
+    # hub (the Omarchy desktop, Tailscale name "linux") reachable: LAN-speed over the tailnet
+    echo "  hub reachable over Tailscale: cloning linux:helm"
+    git clone linux:helm "$HOME/helm"
+    git -C "$HOME/helm" remote set-url origin https://github.com/AlharbiAbdullah/helm.git
+  else
+    # hub unreachable: helm is a ~930MB pack and a single HTTPS transfer regularly dies mid-pack
+    # on flaky Wi-Fi (fatal: early EOF / invalid index-pack output). Shallow clone first (small,
+    # rarely dies), then deepen with a bounded retry loop instead of restarting from zero.
+    echo "  hub unreachable: resumable clone from GitHub"
+    rm -rf "$HOME/helm"   # a dead prior attempt leaves a partial dir
+    ok=0
+    for attempt in 1 2 3 4 5; do
+      git clone --depth=1 https://github.com/AlharbiAbdullah/helm.git "$HOME/helm" && { ok=1; break; }
+      echo "  shallow clone attempt $attempt failed, retrying in 10s"; rm -rf "$HOME/helm"; sleep 10
+    done
+    [ "$ok" = 1 ] || { echo "helm clone failed after 5 attempts"; exit 1; }
+    ok=0
+    for attempt in 1 2 3 4 5; do
+      git -C "$HOME/helm" fetch --unshallow && { ok=1; break; }
+      echo "  unshallow attempt $attempt failed, retrying in 10s"; sleep 10
+    done
+    [ "$ok" = 1 ] || echo "!! helm stayed shallow after 5 attempts; re-run 'git -C ~/helm fetch --unshallow' by hand"
+  fi
+fi
 
 # --- [3] packages ---
 step "[3/9] packages (pacman + AUR via omarchy pkg)"
