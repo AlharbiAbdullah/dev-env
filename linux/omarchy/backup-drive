@@ -5,7 +5,7 @@ set -uo pipefail
 source "$HOME/.config/restic/env"
 STATE="$HOME/.local/state/backup-drive"; mkdir -p "$STATE"
 LOG="$STATE/last-run.log"; : > "$LOG"
-FOLDERS=(dev-env personal playground projects reads work helm)
+FOLDERS=(dev-env personal playground projects reads work helm .local/state/rai .local/state/rai-maintenance .local/state/news-digest)
 log(){ printf '%s %s\n' "$(date '+%F %T')" "$*" | tee -a "$LOG"; }
 fail(){ log "FAIL: $*"; echo "$(date +%F) FAIL $*" > "$STATE/status"; notify-send -u critical 'Backup to Google Drive FAILED' "$*" 2>/dev/null; exit 1; }
 
