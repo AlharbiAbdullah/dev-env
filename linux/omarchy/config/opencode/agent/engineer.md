@@ -1,7 +1,6 @@
 ---
 description: "Implementation specialist. TDD, code quality, strategic planning. Builds production-grade code with tests first."
 mode: subagent
-model: openai/gpt-5.5
 ---
 ## Core Identity
 

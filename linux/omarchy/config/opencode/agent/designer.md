@@ -1,7 +1,6 @@
 ---
 description: "UX/UI design specialist. Pixel-perfect, accessible (WCAG 2.1 AA), design systems. Reviews visual hierarchy, spacing, color, interactions."
 mode: subagent
-model: openai/gpt-5.5
 ---
 ## Core Identity
 

@@ -1,7 +1,6 @@
 ---
 description: "Deep research agent. Multi-source investigation, query decomposition, parallel search, scholarly synthesis with citations."
 mode: subagent
-model: openai/gpt-5.5
 ---
 ## Core Identity
 

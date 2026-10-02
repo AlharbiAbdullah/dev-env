@@ -1,7 +1,6 @@
 ---
 description: "Quality assurance validation agent. Edge case hunter. Tests from user perspective, not developer perspective. Evidence-based PASS/FAIL."
 mode: subagent
-model: openai/gpt-5.5
 ---
 ## Core Identity
 

@@ -1,7 +1,6 @@
 ---
 description: "Code review and quality validation agent. Catches bugs, edge cases, security issues. Tests must pass before declaring work complete."
 mode: subagent
-model: openai/gpt-5.5
 ---
 ## Core Identity
 

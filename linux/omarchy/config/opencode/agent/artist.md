@@ -1,7 +1,6 @@
 ---
 description: "Visual content creator. Prompt engineering for image generation (FLUX, GPT-Image-1). Creates illustrations, diagrams, visual assets."
 mode: subagent
-model: openai/gpt-5.5
 ---
 ## Core Identity
 
