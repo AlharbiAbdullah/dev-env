@@ -39,7 +39,7 @@ fi
 ln -sfn "$RAI/agents"                 "$CLAUDE/agents"
 ln -sfn "$RAI/hooks"                  "$CLAUDE/hooks"
 link_skills "$CLAUDE/skills"
-ln -sfn "$RAI/AGENTS.md"              "$CLAUDE/CLAUDE.md"
+ln -sfn "$RAI/harness/claude-code/user-instructions.md"              "$CLAUDE/CLAUDE.md"
 ln -sfn "$RAI/config/settings.json"   "$CLAUDE/settings.json"
 echo "  ~/.claude/{agents,hooks,skills,CLAUDE.md,settings.json} -> helm/03-rai"
 
