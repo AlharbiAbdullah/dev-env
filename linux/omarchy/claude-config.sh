@@ -76,6 +76,7 @@ fi
 mkdir -p "$HOME/.pi/agent/extensions" "$HOME/.agents"
 ln -sfn "$RAI/AGENTS.md"                "$HOME/.pi/agent/AGENTS.md"
 ln -sfn "$RAI/harness/pi/rai-bridge.ts" "$HOME/.pi/agent/extensions/rai-bridge.ts"
+ln -sfn "$RAI/harness/pi/prompts"      "$HOME/.pi/agent/prompts"        # /recall, /remember
 ln -sfn "$HERE/pi/models.json"         "$HOME/.pi/agent/models.json"   # Ollama cloud models
 link_skills "$HOME/.agents/skills"
 echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai; models.json -> dev-env"
