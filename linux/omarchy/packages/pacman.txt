@@ -52,6 +52,7 @@ ttf-font-awesome
 # Apps
 obsidian
 ghostty            # default terminal (also set via omarchy-install-terminal in step 3)
+sublime-text-4     # omarchy repo; CLI is `subl`
 # AI
 ollama-vulkan      # RDNA3 iGPU: Vulkan beats ROCm; needs OLLAMA_IGPU_ENABLE=1
 atuin             # synced shell history (hosted sync; account + key in 1Password 'atuin sync')
