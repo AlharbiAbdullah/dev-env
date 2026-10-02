@@ -16,6 +16,7 @@ source "$OMARCHY_PATH/default/bash/rc"
 
 # --- additions Omarchy does not provide ---
 export FZF_DEFAULT_OPTS="--color=16"   # follow the terminal palette (= active theme)
+export OPENCODE_DISABLE_CLAUDE_CODE=1   # opencode gets Rai from its own edges, never ~/.claude (helm 03-rai/harness/opencode)
 alias cl="claude"; alias cur="cursor"; alias lg="lazygit"
 alias gs="git status"; alias gd="git diff"; alias gco="git checkout"; alias gcb="git checkout -b"
 alias gp="git push"; alias gl="git pull"

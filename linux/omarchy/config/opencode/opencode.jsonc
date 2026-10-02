@@ -342,10 +342,5 @@
       }
     }
   },
-  "instructions": [
-    "/home/abdullah/helm/03-rai/identity/*.md",
-    "/home/abdullah/helm/02-ana/identity/*.md",
-    "/home/abdullah/helm/03-rai/AGENTS.md"
-  ],
   "model": "ollama/deepseek-v4.1-flash:cloud"
 }

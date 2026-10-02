@@ -79,6 +79,10 @@ ln -sfn "$RAI/harness/pi/rai-bridge.ts" "$HOME/.pi/agent/extensions/rai-bridge.t
 ln -sfn "$HERE/pi/models.json"         "$HOME/.pi/agent/models.json"   # Ollama cloud models
 link_skills "$HOME/.agents/skills"
 echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai; models.json -> dev-env"
+mkdir -p "$HOME/.config/opencode/plugin"
+ln -sfn "$RAI/AGENTS.md"                "$HOME/.config/opencode/AGENTS.md"
+ln -sfn "$RAI/harness/opencode/rai.ts"  "$HOME/.config/opencode/plugin/rai.ts"
+echo "  ~/.config/opencode/{AGENTS.md,plugin/rai.ts} -> helm/03-rai"
 
 echo "  Claude config done. Run 'claude' once to authenticate (browser login),"
 echo "  then: claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud"
