@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh pi/opencode/agy usage records for the Omarchy agents panel
+OnFailure=alert@%N.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/agents-local
+Nice=10
+IOSchedulingClass=idle

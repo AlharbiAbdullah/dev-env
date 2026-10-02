@@ -13,6 +13,8 @@ wallpaper, Hyprland defaults, theme generation); this layer adds the personal de
 | `config/omarchy/shell.json` | bar layout + clock format + idle 600/900 |
 | `config/omarchy/hooks/theme-set.d/rai-theme-set` | after every theme switch: Cursor + VS Code colorTheme (generated rai-themes = exact theme.lua palette, `cursor =` field; Omarchy toggles `skip-cursor-theme-changes` + `skip-vscode-theme-changes` on), tmux bar, starship palette, `~/.config/themes/current.lua` pointer |
 | `theme`, `theme-render` | switcher wrapper over `omarchy theme`; renderer `theme.lua` -> `~/.config/omarchy/themes/<n>/{colors.toml,vscode.json,backgrounds/}` |
+| `agents-local` | writes the `pi`, `opencode` and `agy` usage records the Omarchy agents bar panel reads; the stock collectors only cover `claude`, `codex` and `fireworks`. Driven by the `agents-local` timer |
+| `agents-panel-setup.sh`, `agents-panel/` | clones the Omarchy agents panel (`abdullah.agents`) so it can carry `pi`/`opencode`/`agy`/`AI` marks and give the `AI` record a model-only layout; `Main.qml`/`Agent.qml` stay symlinked to the package, `Panel.qml` is a patched copy re-applied on every run and after `omarchy update` |
 | `config/{ghostty,xremap,micro,glow,git,fastfetch,opencode}`, `mimeapps.list`, `starship.toml`, `.tmux.conf`, `.bashrc` | carried configs |
 | `systemd/` | the 5 timers + xremap.service (xvfb dropped: nothing scheduled uses it) |
 | `etc/` | sudoers NOPASSWD, xremap udev, 1Password polkit, ollama expose |

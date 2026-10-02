@@ -71,9 +71,16 @@ cp "$HERE/.bashrc"      "$HOME/.bashrc"
 rm -f "$HOME/.tmux.conf"   # one tmux file only: ~/.config/tmux/tmux.conf (2026-09-08)
 cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
 cp -R "$HERE/config/." "$HOME/.config/"
-chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group"
-cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,keybindings-menu}
+# Agents panel: clone it so it carries pi/opencode/agy marks, QML symlinked to the package (ruling 2026-10-02).
+"$HERE/agents-panel-setup.sh" || echo "!! agents panel setup failed (clone + marks)"
+chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group" "$HOME/.config/omarchy/hooks/post-update.d/agents-panel"
+# Omarchy agents bar panel: per-harness tabs. The stock collectors only cover claude/codex/fireworks
+# and run from $OMARCHY_PATH/bin, which a user cannot extend; agents-local writes pi/opencode/agy
+# records on its own timer instead, and agents-panel-setup.sh clones the panel to carry their
+# marks (ruling 2026-10-02). Revert: disable agents-local.timer, omarchy plugin remove abdullah.agents,
+# delete ~/.local/state/omarchy/agents/usage/{pi,opencode,agy}.json.
+cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$HERE/agents-local" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,agents-local,keybindings-menu}
 # Web page theming retired 2026-09-25: sites use their own dark mode via the OS color-scheme. Drop what older runs installed.
 systemctl --user disable --now darkreader-theme-catchup.service 2>/dev/null || true
 rm -f "$HOME/.local/bin/darkreader-theme" "$HOME/.local/bin/darkreader-theme-catchup" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/systemd/user/darkreader-theme-catchup.service"
@@ -154,7 +161,7 @@ UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
 systemctl --user daemon-reload
 systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
-TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio gold-skim backup-drive obsidian-sync-watch"
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio gold-skim backup-drive obsidian-sync-watch agents-local"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
   systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)

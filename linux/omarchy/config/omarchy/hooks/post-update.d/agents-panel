@@ -1,0 +1,4 @@
+#!/bin/bash
+# `omarchy update` replaces the packaged agents panel, dropping our patched
+# Panel.qml copy. Re-apply the clone + patch (ruling 2026-10-02).
+"$HOME/dev-env/linux/omarchy/agents-panel-setup.sh" >/dev/null 2>&1 || true

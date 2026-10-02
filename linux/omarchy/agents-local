@@ -1,0 +1,358 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+"""Write local usage records for the per-harness agent tabs.
+
+Omarchy's `omarchy-agent-usage-update` owns claude, codex and fireworks and
+runs from `$OMARCHY_PATH/bin`, so a user collector cannot join its glob. The
+agents panel, however, just reads one JSON record per agent from the usage
+directory, so this companion writes the harness tabs the stock collectors do
+not cover: pi, opencode and agy.
+
+Invoked by the `agents-local` systemd timer, which also refreshes the synthetic
+"AI" record: one row per model and effort across Claude Code, pi and opencode
+(input+output tokens, no cache). Pass agent ids to refresh a subset, or
+`--force` to rebuild the Claude scan before its cache ages out:
+`agents-local --force 0-ai`.
+"""
+
+import json
+import os
+import sqlite3
+import sys
+import tempfile
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+
+STATE = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
+USAGE_DIR = STATE / "omarchy" / "agents" / "usage"
+TODAY = datetime.now().strftime("%Y-%m-%d")
+RECENT_DATES = [
+    (datetime.now() - timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(6, -1, -1)
+]
+
+AGENTS = ["pi", "opencode", "agy"]
+# The AI tab aggregates every harness by model and effort. The Claude scan reads
+# ~1.5 GB of transcripts, so the record is rebuilt at most this often.
+AI_ID = "0-ai"
+AI_MAX_AGE = 1800
+
+
+def number(value):
+    try:
+        return int(value or 0)
+    except Exception:
+        return 0
+
+
+def local_day(value):
+    if value is None:
+        return TODAY
+    if isinstance(value, (int, float)):
+        if value > 10_000_000_000:  # milliseconds
+            value = value / 1000
+        return datetime.fromtimestamp(value).strftime("%Y-%m-%d")
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if dt.tzinfo is not None:
+            dt = dt.astimezone()
+        return dt.strftime("%Y-%m-%d")
+    except Exception:
+        return TODAY
+
+
+def label(model, effort):
+    """A model key that carries the effort when there is one, for the AI tab."""
+    base = str(model or "unknown").split("/")[-1].replace(":cloud", "")
+    effort = str(effort or "").strip()
+    return f"{base} ({effort})" if effort else base
+
+
+class Stats:
+    """Token and session accumulator for one agent."""
+
+    def __init__(self):
+        self.recent = {day: 0 for day in RECENT_DATES}
+        self.today_prompts = 0
+        self.today_sessions = set()
+        self.today_tokens_by_model = {}
+        self.model_usage = {}
+        self.total_prompts = 0
+        self.total_sessions = set()
+        self.active_days = set()
+
+    def add(self, day, session_key, model, input_tokens, output_tokens, cache_read, cache_write):
+        total = input_tokens + output_tokens + cache_read + cache_write
+        self.total_prompts += 1
+        self.total_sessions.add(session_key)
+        self.active_days.add(day)
+        bucket = self.model_usage.setdefault(
+            model, {"inputTokens": 0, "outputTokens": 0, "cacheReadInputTokens": 0, "cacheCreationInputTokens": 0}
+        )
+        bucket["inputTokens"] += input_tokens
+        bucket["outputTokens"] += output_tokens
+        bucket["cacheReadInputTokens"] += cache_read
+        bucket["cacheCreationInputTokens"] += cache_write
+        if day in self.recent:
+            self.recent[day] += total
+        if day == TODAY:
+            self.today_prompts += 1
+            self.today_sessions.add(session_key)
+            self.today_tokens_by_model[model] = self.today_tokens_by_model.get(model, 0) + total
+
+    def add_session(self, day, session_key):
+        self.total_sessions.add(session_key)
+        self.active_days.add(day)
+        if day == TODAY:
+            self.today_sessions.add(session_key)
+
+    def record(self, agent_id, name, tier="", has_prompt_stats=True):
+        return {
+            "schemaVersion": 1,
+            "id": agent_id,
+            "name": name,
+            "updatedAt": datetime.now().astimezone().isoformat(),
+            "ready": True,
+            "hasLocalStats": True,
+            "hasPromptStats": has_prompt_stats,
+            "tierLabel": tier,
+            "limits": [],
+            "balance": None,
+            "todayPrompts": self.today_prompts,
+            "todaySessions": len(self.today_sessions),
+            "todayTotalTokens": sum(self.today_tokens_by_model.values()),
+            "todayTokensByModel": self.today_tokens_by_model,
+            "recentDays": [{"date": day, "messageCount": self.recent[day]} for day in RECENT_DATES],
+            "totalPrompts": self.total_prompts,
+            "totalSessions": len(self.total_sessions),
+            "activeDays": len(self.active_days),
+            "activeDates": sorted(self.active_days),
+            "modelUsage": self.model_usage,
+        }
+
+
+def usage_from_parts(usage):
+    input_tokens = number(usage.get("input"))
+    output_tokens = number(usage.get("output"))
+    cache_read = number(usage.get("cacheRead"))
+    cache_write = number(usage.get("cacheWrite"))
+    if not (input_tokens or output_tokens or cache_read or cache_write):
+        total = number(usage.get("totalTokens"))
+        if total:
+            input_tokens = total
+    return input_tokens, output_tokens, cache_read, cache_write
+
+
+def scan_pi(stats=None, effort=False, io_only=False):
+    """Every pi (and omp) assistant message, whatever provider it ran on.
+
+    With effort=True the model key carries the session's thinking level, for
+    the AI tab. io_only drops cache tokens so the rows stay comparable.
+    """
+    stats = stats or Stats()
+    seen = set()
+    roots = [
+        Path.home() / ".pi" / "agent" / "sessions",
+        Path.home() / ".omp" / "agent" / "sessions",
+    ]
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in root.rglob("*.jsonl"):
+            level = ""
+            try:
+                lines = path.read_text(errors="replace").splitlines()
+            except OSError:
+                continue
+            for raw in lines:
+                try:
+                    entry = json.loads(raw)
+                except Exception:
+                    continue
+                if entry.get("type") == "thinking_level_change":
+                    level = str(entry.get("thinkingLevel") or "")
+                    continue
+                if entry.get("type") != "message":
+                    continue
+                key = (str(path), str(entry.get("id") or ""))
+                if key in seen:
+                    continue
+                seen.add(key)
+                message = entry.get("message") or {}
+                if message.get("role") != "assistant":
+                    continue
+                input_tokens, output_tokens, cache_read, cache_write = usage_from_parts(
+                    message.get("usage") or {}
+                )
+                if not (input_tokens or output_tokens or cache_read or cache_write):
+                    continue
+                model = str(message.get("model") or "unknown")
+                if effort:
+                    model = label(model, level)
+                if io_only:
+                    cache_read = cache_write = 0
+                day = local_day(entry.get("timestamp") or message.get("timestamp"))
+                stats.add(day, str(path), model, input_tokens, output_tokens, cache_read, cache_write)
+    return stats
+
+
+def scan_opencode(stats=None, effort=False, io_only=False):
+    """Every opencode assistant message, whatever provider it ran on."""
+    stats = stats or Stats()
+    db = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "opencode" / "opencode.db"
+    if not db.is_file():
+        return stats
+    conn = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
+    try:
+        conn.execute("PRAGMA query_only = ON")
+        rows = conn.execute(
+            "SELECT session_id, data FROM message"
+            " WHERE data LIKE '%\"role\"%:%\"assistant\"%'"
+            " AND CASE WHEN json_valid(data) THEN json_extract(data, '$.role') END = 'assistant'"
+        )
+        for session_id, raw in rows:
+            try:
+                entry = json.loads(raw)
+                if not isinstance(entry, dict) or entry.get("role") != "assistant":
+                    continue
+                tokens = entry.get("tokens") or {}
+                cache = tokens.get("cache") or {}
+                input_tokens = number(tokens.get("input"))
+                output_tokens = number(tokens.get("output")) + number(tokens.get("reasoning"))
+                cache_read = number(cache.get("read"))
+                cache_write = number(cache.get("write"))
+                if not (input_tokens or output_tokens or cache_read or cache_write):
+                    continue
+                day = local_day((entry.get("time") or {}).get("created"))
+                model = str(entry.get("modelID") or "unknown").rstrip("/").split("/")[-1]
+                if effort:
+                    model = label(model, entry.get("variant"))
+                if io_only:
+                    cache_read = cache_write = 0
+            except Exception:
+                continue
+            stats.add(day, "opencode:" + str(session_id), model, input_tokens, output_tokens, cache_read, cache_write)
+    finally:
+        conn.close()
+    return stats
+
+
+def scan_claude(stats=None):
+    """Claude Code transcripts: model, effort, and input+output tokens."""
+    stats = stats or Stats()
+    root = Path.home() / ".claude" / "projects"
+    if not root.exists():
+        return stats
+    for path in root.rglob("*.jsonl"):
+        try:
+            handle = path.open(errors="replace")
+        except OSError:
+            continue
+        with handle:
+            for raw in handle:
+                try:
+                    entry = json.loads(raw)
+                except Exception:
+                    continue
+                message = entry.get("message") or {}
+                if not isinstance(message, dict) or message.get("role") != "assistant":
+                    continue
+                usage = message.get("usage") or {}
+                model = str(message.get("model") or "")
+                if not usage or model in ("", "<synthetic>"):
+                    continue
+                input_tokens = number(usage.get("input_tokens"))
+                output_tokens = number(usage.get("output_tokens"))
+                if not (input_tokens or output_tokens):
+                    continue
+                stats.add(
+                    local_day(entry.get("timestamp")), str(path),
+                    label(model, entry.get("effort") or entry.get("perTurnEffort")),
+                    input_tokens, output_tokens, 0, 0,
+                )
+    return stats
+
+
+def scan_ai():
+    """One row per model and effort across every harness that counts tokens."""
+    stats = Stats()
+    scan_pi(stats, effort=True, io_only=True)
+    scan_opencode(stats, effort=True, io_only=True)
+    scan_claude(stats)
+    record = stats.record(AI_ID, "AI", "every model")
+    return record
+
+
+def scan_agy():
+    """Antigravity CLI sessions. It stores no readable token counts, so the
+    record carries session and day activity only."""
+    stats = Stats()
+    db = Path.home() / ".gemini" / "antigravity-cli" / "conversation_summaries.db"
+    if not db.is_file():
+        return stats
+    conn = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
+    try:
+        conn.execute("PRAGMA query_only = ON")
+        for conversation_id, ts in conn.execute(
+            "SELECT conversation_id, last_user_input_time FROM conversation_summaries"
+        ):
+            stats.add_session(local_day(ts), "agy:" + str(conversation_id))
+    finally:
+        conn.close()
+    return stats
+
+
+COLLECTORS = {
+    "pi": lambda: scan_pi().record("pi", "pi", "multi-provider"),
+    "opencode": lambda: scan_opencode().record("opencode", "opencode", "multi-provider"),
+    "agy": lambda: scan_agy().record("agy", "agy", "Google AI Pro", has_prompt_stats=False),
+}
+
+
+def ai_stale():
+    path = USAGE_DIR / f"{AI_ID}.json"
+    if not path.exists():
+        return True
+    return time.time() - path.stat().st_mtime > AI_MAX_AGE
+
+
+def write_record(agent_id, record):
+    USAGE_DIR.mkdir(parents=True, exist_ok=True)
+    handle_fd, tmp_name = tempfile.mkstemp(dir=USAGE_DIR, prefix=f".{agent_id}.", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, separators=(",", ":")) + "\n")
+        tmp.chmod(0o644)
+        tmp.replace(USAGE_DIR / f"{agent_id}.json")
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
+def main():
+    args = sys.argv[1:]
+    force = "--force" in args
+    requested = [arg for arg in args if not arg.startswith("-")] or AGENTS + [AI_ID]
+    status = 0
+    for agent_id in requested:
+        try:
+            if agent_id == AI_ID:
+                if force or ai_stale():
+                    write_record(AI_ID, scan_ai())
+            elif agent_id in COLLECTORS:
+                write_record(agent_id, COLLECTORS[agent_id]())
+            else:
+                print(f"agents-local: unknown agent {agent_id}", file=sys.stderr)
+                status = 1
+        except Exception as exc:
+            print(f"agents-local: {agent_id} collector failed ({exc})", file=sys.stderr)
+            status = 1
+    return status
+
+
+if __name__ == "__main__":
+    sys.exit(main())
