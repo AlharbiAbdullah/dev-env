@@ -76,8 +76,9 @@ fi
 mkdir -p "$HOME/.pi/agent/extensions" "$HOME/.agents"
 ln -sfn "$RAI/AGENTS.md"                "$HOME/.pi/agent/AGENTS.md"
 ln -sfn "$RAI/harness/pi/rai-bridge.ts" "$HOME/.pi/agent/extensions/rai-bridge.ts"
+ln -sfn "$HERE/pi/models.json"         "$HOME/.pi/agent/models.json"   # Ollama cloud models
 link_skills "$HOME/.agents/skills"
-echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai"
+echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai; models.json -> dev-env"
 
 echo "  Claude config done. Run 'claude' once to authenticate (browser login),"
 echo "  then: claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud"
