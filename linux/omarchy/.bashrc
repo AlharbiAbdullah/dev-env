@@ -47,3 +47,8 @@ if [[ ${BLE_VERSION-} ]]; then
   ble-face -s command_builtin fg=green; ble-face -s command_file fg=green
   ble-face -s command_function fg=green; ble-face -s command_alias fg=green
 fi
+
+# Added by Antigravity CLI installer
+export PATH="/home/abdullah/.local/bin:$PATH"
+# Added by dbt Fusion extension
+alias dbtf=/home/abdullah/.local/bin/dbt
