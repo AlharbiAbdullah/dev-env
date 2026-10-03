@@ -1,10 +1,13 @@
 [tools]
 claude = "latest"
+codex = "latest"
+d2 = "latest"
 gcloud = "latest"
 gh = "latest"
 node = "26.7.0"
 opencode = "latest"
 pi = "latest"
+vale = "latest"
 
 [settings.upgrade]
 auto_prune = false

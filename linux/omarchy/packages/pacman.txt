@@ -61,8 +61,6 @@ atuin             # synced shell history (hosted sync; account + key in 1Passwor
 tesseract-data-ara   # Arabic OCR for omarchy-capture-text (OMARCHY_OCR_LANGS=eng+ara in hypr/hyprland.lua)
 
 # --- 3.1 both machines (two-machine audit, installed 2026-09-09) ---
-d2                 # diagrams as text, --sketch
-vale               # prose linter; style + .vale.ini live in helm/03-rai/config/vale
 harper             # harper-ls grammar server
 go-yq              # mikefarah yq (pacman `yq` is the Python one)
 typst
