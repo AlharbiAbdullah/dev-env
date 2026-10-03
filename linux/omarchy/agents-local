@@ -9,7 +9,9 @@ Omarchy's `omarchy-agent-usage-update` owns claude, codex and fireworks and
 runs from `$OMARCHY_PATH/bin`, so a user collector cannot join its glob. The
 agents panel, however, just reads one JSON record per agent from the usage
 directory, so this companion writes the harness tabs the stock collectors do
-not cover: pi, opencode and agy.
+not cover: pi, opencode and agy. agy's record also carries the Google AI Pro
+quota windows, read from agy's own `/usage` command; pi and opencode carry Ollama
+Pro's, read with the Ollama API key.
 
 Invoked by the `agents-local` systemd timer, which also refreshes the synthetic
 "AI" record: one row per model and effort across Claude Code, pi and opencode
@@ -18,12 +20,16 @@ Invoked by the `agents-local` systemd timer, which also refreshes the synthetic
 `agents-local --force 0-ai`.
 """
 
+import functools
 import json
 import os
+import shutil
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import time
+import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -39,6 +45,11 @@ AGENTS = ["pi", "opencode", "agy"]
 # ~1.5 GB of transcripts, so the record is rebuilt at most this often.
 AI_ID = "0-ai"
 AI_MAX_AGE = 1800
+
+AGY_BIN = shutil.which("agy") or str(Path.home() / ".local" / "bin" / "agy")
+# Filled by `__op_env OLLAMA_USAGE_KEY` in ~/.bashrc.local (per-boot RAM, 0700 dir).
+RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
+OLLAMA_KEY = RUNTIME / "op-OLLAMA_USAGE_KEY"
 
 
 def number(value):
@@ -80,6 +91,7 @@ class Stats:
         self.today_sessions = set()
         self.today_tokens_by_model = {}
         self.model_usage = {}
+        self.recent_model_usage = {}
         self.total_prompts = 0
         self.total_sessions = set()
         self.active_days = set()
@@ -98,6 +110,11 @@ class Stats:
         bucket["cacheCreationInputTokens"] += cache_write
         if day in self.recent:
             self.recent[day] += total
+            week = self.recent_model_usage.setdefault(model, dict.fromkeys(bucket, 0))
+            week["inputTokens"] += input_tokens
+            week["outputTokens"] += output_tokens
+            week["cacheReadInputTokens"] += cache_read
+            week["cacheCreationInputTokens"] += cache_write
         if day == TODAY:
             self.today_prompts += 1
             self.today_sessions.add(session_key)
@@ -241,11 +258,17 @@ def scan_opencode(stats=None, effort=False, io_only=False):
 
 
 def scan_claude(stats=None):
-    """Claude Code transcripts: model, effort, and input+output tokens."""
+    """Claude Code transcripts: model, effort, and input+output tokens.
+
+    Claude Code logs one line per content block (thinking, text, tool use), each
+    carrying the whole reply's usage, and a resumed session copies earlier
+    replies into its new file. One reply counts once, by message and request id.
+    """
     stats = stats or Stats()
     root = Path.home() / ".claude" / "projects"
     if not root.exists():
         return stats
+    seen = set()
     for path in root.rglob("*.jsonl"):
         try:
             handle = path.open(errors="replace")
@@ -268,6 +291,11 @@ def scan_claude(stats=None):
                 output_tokens = number(usage.get("output_tokens"))
                 if not (input_tokens or output_tokens):
                     continue
+                reply = (message.get("id"), entry.get("requestId"))
+                if reply[0]:
+                    if reply in seen:
+                        continue
+                    seen.add(reply)
                 stats.add(
                     local_day(entry.get("timestamp")), str(path),
                     label(model, entry.get("effort") or entry.get("perTurnEffort")),
@@ -283,6 +311,8 @@ def scan_ai():
     scan_opencode(stats, effort=True, io_only=True)
     scan_claude(stats)
     record = stats.record(AI_ID, "AI", "every model")
+    # The model chart covers the same seven days as the day chart above it.
+    record["modelUsage"] = stats.recent_model_usage
     return record
 
 
@@ -299,16 +329,118 @@ def scan_agy():
         for conversation_id, ts in conn.execute(
             "SELECT conversation_id, last_user_input_time FROM conversation_summaries"
         ):
-            stats.add_session(local_day(ts), "agy:" + str(conversation_id))
+            day = local_day(ts)
+            if day < "2000":  # a conversation with no input yet carries a zero time
+                continue
+            stats.add_session(day, "agy:" + str(conversation_id))
     finally:
         conn.close()
     return stats
 
 
+def carried_limits(agent_id):
+    """The last record's windows, emptied once their reset has passed."""
+    try:
+        limits = json.loads((USAGE_DIR / f"{agent_id}.json").read_text()).get("limits") or []
+    except Exception:
+        return []
+    now = datetime.now().astimezone()
+    for limit in limits:
+        try:
+            reset = datetime.fromisoformat(str(limit.get("resetsAt")).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if reset <= now:
+            limit["percent"] = 0.0
+            limit["resetsAt"] = ""
+    return limits
+
+
+def agy_limits():
+    """Google AI Pro quota from agy's own `/usage` command: four windows.
+
+    Gemini models share one pool and the partner models (Claude, GPT-OSS)
+    another, each with a 5-hour and a weekly window. `/usage` is a local slash
+    command (no turn, no tokens, no hooks), and agy refreshes its own sign-in,
+    which its token file on disk does not keep up with. Its log goes to
+    /dev/null, or every run would leave a file in agy's log folder. A failed
+    read carries the last windows forward.
+    """
+    try:
+        result = subprocess.run(
+            [AGY_BIN, "--log-file", os.devnull, "--output-format", "json", "-p", "/usage"],
+            capture_output=True, text=True, timeout=60, cwd=tempfile.gettempdir(), check=False,
+        )
+        payload = json.loads(result.stdout[result.stdout.index("{"):])
+        groups = payload["command"]["data"]["groups"]
+    except Exception:
+        return carried_limits("agy")
+    windows = []
+    for group in groups:
+        pool = "Gemini" if str(group.get("name", "")).lower().startswith("gemini") else "Claude/GPT"
+        for bucket in group.get("buckets") or []:
+            weekly = bucket.get("window") == "weekly"
+            used = round(1 - float(bucket.get("remaining_fraction", 1)), 4)
+            windows.append({
+                "label": f"{pool} {'Weekly (7-day)' if weekly else 'Session (5-hour)'}",
+                "title": f"{pool} {'week' if weekly else '5h'}",
+                "percent": max(0.0, used),
+                # An untouched window reports a reset that rolls forward with the clock.
+                "resetsAt": bucket.get("reset_time", "") if used > 0 else "",
+            })
+    # Gemini before Claude/GPT, the 5-hour window before the week, as the other tabs read.
+    windows.sort(key=lambda w: (w["title"].startswith("Claude"), "Weekly" in w["label"]))
+    return windows
+
+
+def agy_record():
+    record = scan_agy().record("agy", "agy", "Google AI Pro", has_prompt_stats=False)
+    # agy keeps no readable token counts: no day chart rather than seven empty bars.
+    record["recentDays"] = []
+    record["limits"] = agy_limits()
+    return record
+
+
+@functools.cache
+def ollama_limits():
+    """Ollama Pro's usage windows, as fractions used.
+
+    The key comes from the RAM cache a shell's `__op_env` fills; the timer never
+    calls op itself, so a locked 1Password cannot raise a prompt every run. No
+    key or no answer means no windows rather than stale ones.
+    """
+    try:
+        request = urllib.request.Request(
+            "https://ollama.com/api/usage",
+            headers={"Authorization": f"Bearer {OLLAMA_KEY.read_text().strip()}"},
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            limits = json.load(response).get("limits") or {}
+    except Exception:
+        return []
+    # Since the move to monthly credits Pro reports "monthly" alone; the session
+    # and weekly windows of the old plans still map if they come back.
+    windows = [
+        ("session", "Session (5-hour)"), ("weekly", "Weekly (7-day)"), ("monthly", "Monthly"),
+    ]
+    return [
+        {"label": label, "percent": float(limits[key]["usage"]), "resetsAt": ""}
+        for key, label in windows
+        if isinstance(limits.get(key), dict) and "usage" in limits[key]
+    ]
+
+
+def ollama_record(scan, agent_id):
+    """opencode and pi both run on the Ollama subscription, so both carry its windows."""
+    record = scan().record(agent_id, agent_id, "multi-provider")
+    record["limits"] = ollama_limits()
+    return record
+
+
 COLLECTORS = {
-    "pi": lambda: scan_pi().record("pi", "pi", "multi-provider"),
-    "opencode": lambda: scan_opencode().record("opencode", "opencode", "multi-provider"),
-    "agy": lambda: scan_agy().record("agy", "agy", "Google AI Pro", has_prompt_stats=False),
+    "pi": lambda: ollama_record(scan_pi, "pi"),
+    "opencode": lambda: ollama_record(scan_opencode, "opencode"),
+    "agy": agy_record,
 }
 
 
