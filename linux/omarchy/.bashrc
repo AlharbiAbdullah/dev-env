@@ -21,6 +21,10 @@ alias cl="claude"; alias cur="cursor"; alias lg="lazygit"
 alias gs="git status"; alias gd="git diff"; alias gco="git checkout"; alias gcb="git checkout -b"
 alias gp="git push"; alias gl="git pull"
 alias up="omarchy update"; alias ur="uv run"
+alias lt="eza --tree --level=2 --long --icons --git"
+alias c="clear"; alias oc="opencode --auto"   # Omarchy binds c=opencode; c is clear here
+alias agy="agy --dangerously-skip-permissions"   # agy yolo: no settings key, flag only
+alias la="ls -a"
 
 # atuin: synced, encrypted shell history (hosted sync, choice 2026-09-09). Needs ble.sh loaded
 # first (done above); ble.sh >= 0.4 is atuin's supported bash hook, so no bash-preexec.
