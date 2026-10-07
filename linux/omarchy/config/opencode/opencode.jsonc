@@ -1,32 +1,74 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "opencode-openai-codex-auth"
-  ],
-  "provider": {
-    "anthropic": {
-      "models": {
-        "claude-opus-4-5": {
-          "options": {
-            "thinking": {
-              "type": "enabled",
-              "budgetTokens": 128000
-            }
-          }
-        },
-        "claude-sonnet-4-5": {
-          "options": {
-            "thinking": {
-              "type": "enabled",
-              "budgetTokens": 128000
-            }
-          }
-        }
-      }
+  // mise pins the binary (config/mise/config.toml): opencode must not replace itself.
+  "autoupdate": false,
+  // No public share links: Claude Code has no share path either.
+  "share": "disabled",
+  // Only the providers he pays for: ChatGPT sign-in and Ollama Pro. This hides the free
+  // Zen models (some train on prompts) and OpenRouter, whose key his shell exports.
+  "enabled_providers": ["openai", "ollama"],
+  "model": "openai/gpt-6.1-sol",
+  // Session titles: the session model already served most of them; this keeps the title
+  // call off the Sol allowance.
+  "small_model": "ollama/deepseek-v4.1-flash:cloud",
+  // No guards, his ruling 2026-10-07: every tool runs without asking, as he works in Claude Code.
+  // The skill block only hides skills that are not Rai's.
+  "permission": {
+    "bash": "allow",
+    "edit": "allow",
+    "read": "allow",
+    "external_directory": "allow",
+    // rai:render begin skill (03-rai/harness/opencode/render_config.py rewrites this block)
+    "skill": {
+      "*": "allow",
+      "built-in-browser": "deny",
+      "chrome-browser": "deny",
+      "computer-use": "deny",
+      "db": "deny",
+      "deep-research": "deny",
+      "deploy": "deny",
+      "docs": "deny",
+      "docx": "deny",
+      "google-workspace": "deny",
+      "import-memory": "deny",
+      "morning": "deny",
+      "pdf": "deny",
+      "pptx": "deny",
+      "run-{SERVICE}": "deny",
+      "sdd": "deny",
+      "skill-creator": "deny",
+      "xlsx": "deny"
     },
+    // rai:render end skill
+    "doom_loop": "allow"
+  },
+  // Same server Claude Code registers at user scope (dev-env claude-config.sh).
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "enabled": true
+    }
+  },
+  // OpenCode turns every skill into a slash command and expands $1..$N in its body. The
+  // fusion SKILL.md has "$60", so `/fusion <question>` lost the question. A config command
+  // wins over the skill's own, and loads the skill the way Claude Code does.
+  "command": {
+    "fusion": {
+      "description": "Multi-model panel on his subscriptions (the fusion skill)",
+      "template": "Load the fusion skill with the skill tool, then follow it for this request.\n\nARGUMENTS: $ARGUMENTS"
+    }
+  },
+  // Claude Code's name for the built-in general agent, which Rai workflows name.
+  "agent": {
+    "general-purpose": {
+      "mode": "subagent",
+      "description": "General-purpose agent for researching complex questions and executing multi-step tasks."
+    }
+  },
+  "provider": {
     "openai": {
       "options": {
-        "reasoningEffort": "medium",
         "reasoningSummary": "auto",
         "textVerbosity": "medium",
         "include": [
@@ -35,247 +77,15 @@
         "store": false
       },
       "models": {
-        "gpt-5.2": {
-          "name": "GPT 5.2 (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "variants": {
-            "none": {
-              "reasoningEffort": "none",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "low": {
-              "reasoningEffort": "low",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "medium": {
-              "reasoningEffort": "medium",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            },
-            "xhigh": {
-              "reasoningEffort": "xhigh",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            }
-          }
-        },
-        "gpt-5.2-codex": {
-          "name": "GPT 5.2 Codex (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "variants": {
-            "low": {
-              "reasoningEffort": "low",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "medium": {
-              "reasoningEffort": "medium",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            },
-            "xhigh": {
-              "reasoningEffort": "xhigh",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            }
-          }
-        },
-        "gpt-5.1-codex-max": {
-          "name": "GPT 5.1 Codex Max (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "variants": {
-            "low": {
-              "reasoningEffort": "low",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            },
-            "medium": {
-              "reasoningEffort": "medium",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            },
-            "xhigh": {
-              "reasoningEffort": "xhigh",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            }
-          }
-        },
-        "gpt-5.1-codex": {
-          "name": "GPT 5.1 Codex (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "variants": {
-            "low": {
-              "reasoningEffort": "low",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "medium": {
-              "reasoningEffort": "medium",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            }
-          }
-        },
-        "gpt-5.1-codex-mini": {
-          "name": "GPT 5.1 Codex Mini (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "variants": {
-            "medium": {
-              "reasoningEffort": "medium",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "medium"
-            }
-          }
-        },
-        "gpt-5.1": {
-          "name": "GPT 5.1 (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "variants": {
-            "none": {
-              "reasoningEffort": "none",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "low": {
-              "reasoningEffort": "low",
-              "reasoningSummary": "auto",
-              "textVerbosity": "low"
-            },
-            "medium": {
-              "reasoningEffort": "medium",
-              "reasoningSummary": "auto",
-              "textVerbosity": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "reasoningSummary": "detailed",
-              "textVerbosity": "high"
-            }
-          }
-        },
-        "gpt-5.5": {
-          "name": "GPT 5.5 (OAuth)",
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
+        "gpt-6.1-sol": {
           "options": {
-            "reasoningEffort": "xhigh",
-            "reasoningSummary": "detailed",
-            "textVerbosity": "medium"
+            "reasoningEffort": "xhigh"
           }
         }
       }
     },
+    // Ollama's openai-compatible route has no models.dev entry, so each model says it
+    // reasons and carries its effort levels; with no variant picked no effort is sent.
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Ollama",
@@ -285,62 +95,85 @@
       "models": {
         "kimi-k3:cloud": {
           "name": "Kimi K3 (Ollama)",
-          "limit": {
-            "context": 1048576,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 1048576, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "kimi-k2.7-code:cloud": {
           "name": "Kimi K2.7 Code (Ollama)",
-          "limit": {
-            "context": 262144,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 262144, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "glm-5.3:cloud": {
           "name": "GLM-5.3 (Ollama)",
-          "limit": {
-            "context": 1048576,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 1048576, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "glm-5.3-flash:cloud": {
           "name": "GLM-5.3 Flash (Ollama)",
-          "limit": {
-            "context": 1048576,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 1048576, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "deepseek-v4-pro:cloud": {
           "name": "DeepSeek V4 Pro (Ollama)",
-          "limit": {
-            "context": 1048576,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 1048576, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "deepseek-v4.1-flash:cloud": {
           "name": "DeepSeek V4.1 Flash (Ollama)",
-          "limit": {
-            "context": 1048576,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 1048576, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "minimax-m3:cloud": {
           "name": "MiniMax M3 (Ollama)",
-          "limit": {
-            "context": 512000,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 512000, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         },
         "gpt-oss:120b-cloud": {
           "name": "gpt-oss 120B (Ollama)",
-          "limit": {
-            "context": 131072,
-            "output": 32768
+          "reasoning": true,
+          "limit": { "context": 131072, "output": 32768 },
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" }
           }
         }
       }
     }
-  },
-  "model": "ollama/deepseek-v4.1-flash:cloud"
+  }
 }
