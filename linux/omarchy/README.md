@@ -1,7 +1,8 @@
 # linux/omarchy — Omarchy 4 layer
 
 Personal layer on a fresh Omarchy 4 install. Omarchy owns the desktop (Quickshell bar/menu/notifications/lock,
-wallpaper, Hyprland defaults, theme generation); this layer adds the personal deltas.
+wallpaper, Hyprland defaults, themes); this layer adds the personal deltas. Themes and wallpapers are stock
+Omarchy: the custom theme system was retired 2026-10-04 (`archive/theming/`).
 
 | Path | What |
 |---|---|
@@ -11,8 +12,6 @@ wallpaper, Hyprland defaults, theme generation); this layer adds the personal de
 | `packages/{pacman,aur}.txt` | packages beyond Omarchy's base |
 | `config/hypr/*.lua` | Hyprland overrides (Lua, Omarchy 4 convention): monitor 1440p@100 scale 1, `us,ara` Alt+Shift, gaps/border/blur, personal binds, xremap autostart |
 | `config/omarchy/shell.json` | bar layout + clock format + idle 600/900 |
-| `config/omarchy/hooks/theme-set.d/rai-theme-set` | after every theme switch: Cursor + VS Code colorTheme (generated rai-themes = exact theme.lua palette, `cursor =` field; Omarchy toggles `skip-cursor-theme-changes` + `skip-vscode-theme-changes` on), tmux bar, starship palette, `~/.config/themes/current.lua` pointer |
-| `theme`, `theme-render` | switcher wrapper over `omarchy theme`; renderer `theme.lua` -> `~/.config/omarchy/themes/<n>/{colors.toml,vscode.json,backgrounds/}` |
 | `agents-local` | writes the `pi`, `opencode` and `agy` usage records the Omarchy agents bar panel reads; the stock collectors only cover `claude`, `codex` and `fireworks`. Driven by the `agents-local` timer |
 | `agents-panel-setup.sh`, `agents-panel/` | clones the Omarchy agents panel (`abdullah.agents`) so it can carry `pi`/`opencode`/`agy`/`AI` marks and give the `AI` record a model-only layout; `Main.qml`/`Agent.qml` stay symlinked to the package, `Panel.qml` is a patched copy re-applied on every run and after `omarchy update` |
 | `config/{ghostty,xremap,micro,glow,git,fastfetch,opencode}`, `mimeapps.list`, `starship.toml`, `.tmux.conf`, `.bashrc` | carried configs |
@@ -20,7 +19,7 @@ wallpaper, Hyprland defaults, theme generation); this layer adds the personal de
 | `etc/` | sudoers NOPASSWD, xremap udev, 1Password polkit, ollama expose |
 | `claude/`, `claude-config.sh` | Claude Code local files + the 5 vault symlinks + Context7 at user scope + pi/opencode edges |
 
-What Omarchy replaces from the Ubuntu layer: waybar, rofi, mako (muted: use `Super+Ctrl+,` silencing toggle), hypridle/hyprlock, swaybg, hyprpolkitagent, grim/slurp binds (kept as Ctrl+3/4 to clipboard), the theme script's Ghostty/Chrome/gsettings/VS Code/Cursor/wallpaper writers.
+What Omarchy replaces from the Ubuntu layer: waybar, rofi, mako (muted: use `Super+Ctrl+,` silencing toggle), hypridle/hyprlock, swaybg, hyprpolkitagent, grim/slurp binds (kept as Ctrl+3/4 to clipboard), all theming.
 
 Fresh box:
 

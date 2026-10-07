@@ -19,3 +19,6 @@ __pycache__/
 # Syncthing (~/dev-env is a synced folder since 2026-08-27)
 .stfolder/
 .stignore
+
+# Archived wallpapers: images were never tracked
+archive/theming/wallpapers/

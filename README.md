@@ -8,7 +8,7 @@ Personal dev environment for the Omarchy hub and the Mac, mirrored 1:1.
 |---|---|
 | `mac/` | zsh, Ghostty, tmux, AeroSpace, starship, theme system, Brewfile, `setup.sh` |
 | `linux/omarchy/` | Omarchy 4 layer: personal deltas over Omarchy defaults, `install.sh` + backup/restore (see its README) |
-| `common/themes/` | 14 shared theme definitions (`theme.lua`), consumed by mac and omarchy |
+| `archive/theming/` | the retired custom theme system (2026-10-04); the hub runs stock Omarchy |
 
 ## Usage
 
@@ -45,24 +45,11 @@ cp mac/.zshrc.local.example ~/.zshrc.local
 cp mac/.zshrc.local.example ~/.bashrc.local   # secrets resolve from 1Password via op (see the __op_env helper)
 ```
 
-## Theme system
+## Themes
 
-Same commands on both platforms:
-
-| Command | Action |
-|---|---|
-| `theme` | Show the current theme |
-| `theme <name>` | Switch to a named theme |
-| `theme cycle` | Switch to the next theme |
-| `theme pick` | Fuzzy-pick a theme |
-| `theme wallpaper next` | Switch to the next wallpaper for the current theme |
-
-Keybindings:
-
-| Action | Hub | Mac |
-|---|---|---|
-| Cycle theme | `SUPER CTRL T` | `CMD CTRL T` |
-| Next wallpaper | `SUPER CTRL W` | `CMD CTRL W` |
+The hub runs stock Omarchy themes and wallpapers (`SUPER CTRL T` theme menu,
+`SUPER CTRL W` background menu). The custom theme system was retired 2026-10-04
+and lives in `archive/theming/`. The Mac keeps its `theme` script until it is sold.
 
 ## Hub parity checklist
 
@@ -78,16 +65,8 @@ After install, smoke-test the key bindings on the hub:
 | `SUPER F` | Toggle fullscreen |
 | `ALT S` | Region screenshot to clipboard |
 | `Print` | Full screenshot to `~/Pictures` |
-| `SUPER CTRL T` / `SUPER CTRL W` | Cycle theme / next wallpaper |
+| `SUPER CTRL T` / `SUPER CTRL W` | Theme menu / background menu |
 | `Alt+Shift` | Toggle keyboard layout `us` ↔ `ara` |
-
-Theme test one-liners:
-
-```bash
-theme gruvbox
-hyprctl getoption general:col.active_border   # border recolored
-grep '^palette' ~/.config/starship.toml       # starship palette switched
-```
 
 ## Sync model
 

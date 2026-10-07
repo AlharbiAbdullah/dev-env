@@ -45,7 +45,7 @@ Where each key lives: Mac = `mac/.aerospace.toml` + `mac/hammerspoon/init.lua` (
 | Super+Shift+F / Super+Shift+N | file manager / editor | . | Omarchy |
 | Super+K | this cheat sheet | AeroSpace `keybindings-menu` (iTerm2 window) | bindings.lua `keybindings-menu` |
 | Super+Esc | system menu | . | Omarchy |
-| Super+Ctrl+T / Super+Ctrl+Shift+T | theme menu / next theme | Hammerspoon + `theme` | bindings.lua |
+| Super+Ctrl+T | theme menu | Hammerspoon + `theme` | bindings.lua (Omarchy menu) |
 | Super+Ctrl+W / Super+Ctrl+Shift+W | wallpaper menu / next | Hammerspoon + `theme` | bindings.lua |
 
 ## App launchers (Alt)

@@ -10,7 +10,24 @@ set -uo pipefail
 name="$1"
 THEMES_DIR="$HOME/.config/themes"
 src="$THEMES_DIR/$name/theme.lua"
-[[ -f "$src" ]] || exit 0
+
+# Omarchy releases its own lock before hooks run, so quick switches overlap here
+# (a stock theme's marketplace install takes seconds). Run one at a time, and
+# skip a run a newer switch has already superseded: the last theme wins.
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/rai-theme-set.lock"
+flock 9
+[[ "$(cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null)" == "$name" ]] || exit 0
+
+# Stock Omarchy theme (no theme.lua): let Omarchy's own setter theme VS Code and
+# Cursor from its generated vscode-theme.json. Its skip toggles stay on for our
+# themes, so they are bypassed here only, by shadowing the toggle check.
+if [[ ! -f "$src" ]]; then
+  (
+    omarchy-toggle-enabled() { return 1; }
+    source "$(command -v omarchy-theme-set-vscode)"
+  )
+  exit 0
+fi
 
 ln -sfn "$src" "$THEMES_DIR/current.lua"
 

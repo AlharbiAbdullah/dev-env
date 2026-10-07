@@ -104,12 +104,11 @@ hl.unbind("SUPER + CTRL + code:21")
 o.bind("SUPER + CTRL + code:20", "Narrow a little", hl.dsp.window.resize({ x = -25, y = 0, relative = true }), { repeating = true })
 o.bind("SUPER + CTRL + code:21", "Widen a little", hl.dsp.window.resize({ x = 25, y = 0, relative = true }), { repeating = true })
 
--- Theme / wallpaper (Omarchy owns both now)
+-- Theme / wallpaper: Omarchy's own menus
 hl.unbind("SUPER + CTRL + T")
 hl.unbind("SUPER + CTRL + W")
 o.bind("SUPER + CTRL + T", "Theme menu", "omarchy-menu toggle theme")
 o.bind("SUPER + CTRL + W", "Background menu", "omarchy-menu toggle background")
-o.bind("SUPER + CTRL + SHIFT + T", "Next theme", bin .. "theme cycle")
 o.bind("SUPER + CTRL + SHIFT + W", "Next background", "omarchy-theme-bg-next")
 
 -- Screenshots straight to clipboard (Mac habit); PRINT keeps Omarchy's capture flow.

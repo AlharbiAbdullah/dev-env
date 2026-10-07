@@ -2,7 +2,7 @@
 # install.sh — take a fresh Omarchy 4 box to the Ubuntu-box setup. Idempotent.
 #   ./install.sh                 # everything
 #   ENABLE_TIMERS=0 ./install.sh # stage without arming the scheduled jobs (cutover)
-# Order: guard -> sudoers -> gh + helm -> packages -> configs -> fonts -> themes
+# Order: guard -> sudoers -> gh + helm -> packages -> configs -> fonts -> themes (native)
 #        -> dev tools -> claude -> system units + /etc -> timers (last).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -73,19 +73,23 @@ cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
 cp -R "$HERE/config/." "$HOME/.config/"
 # Agents panel: clone it so it carries pi/opencode/agy marks, QML symlinked to the package (ruling 2026-10-02).
 "$HERE/agents-panel-setup.sh" || echo "!! agents panel setup failed (clone + marks)"
-chmod +x "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group" "$HOME/.config/omarchy/hooks/post-update.d/agents-panel"
+chmod +x "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group" "$HOME/.config/omarchy/hooks/post-update.d/agents-panel"
 # Omarchy agents bar panel: per-harness tabs. The stock collectors only cover claude/codex/fireworks
 # and run from $OMARCHY_PATH/bin, which a user cannot extend; agents-local writes pi/opencode/agy
 # records on its own timer instead, and agents-panel-setup.sh clones the panel to carry their
 # marks (ruling 2026-10-02). Revert: disable agents-local.timer, omarchy plugin remove abdullah.agents,
 # delete ~/.local/state/omarchy/agents/usage/{pi,opencode,agy}.json.
-cp "$HERE/theme" "$HERE/theme-render" "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$HERE/agents-local" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{theme,theme-render,new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,agents-local,keybindings-menu}
+cp "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$HERE/agents-local" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,agents-local,keybindings-menu}
 # Web page theming retired 2026-09-25: sites use their own dark mode via the OS color-scheme. Drop what older runs installed.
 systemctl --user disable --now darkreader-theme-catchup.service 2>/dev/null || true
 rm -f "$HOME/.local/bin/darkreader-theme" "$HOME/.local/bin/darkreader-theme-catchup" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/systemd/user/darkreader-theme-catchup.service"
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 ( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
+# OpenCode subagents and its skill deny list are rendered from the vault (03-rai/agents, 03-rai/skills).
+_oc_render="$HOME/helm/03-rai/harness/opencode/render_config.py"
+[ -f "$_oc_render" ] && command -v uv >/dev/null && uv run "$_oc_render" "$HOME/.config/opencode" \
+  || echo "!! opencode agents not rendered: run uv run $_oc_render once the vault and uv are in"
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code
 # (ruling 2026-09-09). Keybindings stay per editor/platform but carry the same map
 # (config/{Cursor,Code}/User/keybindings.json, already deployed by the cp -R above).
@@ -116,11 +120,17 @@ if ! fc-list | grep -qi "Cairo"; then
 fi
 
 # --- [6] themes ---
-step "[6/9] themes (theme.lua -> Omarchy user themes)"
-mkdir -p "$HOME/.config/themes"
-cp -R "$REPO_ROOT/common/themes/." "$HOME/.config/themes/"
-"$HOME/.local/bin/theme-render"
-omarchy-theme-set everbloom || true
+step "[6/9] themes (native Omarchy)"
+# Custom theming retired 2026-10-04 (archive/theming/). Drop what older runs installed.
+rm -rf "$HOME/.config/themes" "$HOME/.config/omarchy/themes/calma-dark" "$HOME/.config/omarchy/themes/calma-light"
+rm -f "$HOME/.local/bin/theme" "$HOME/.local/bin/theme-render" "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" \
+  "$HOME/.config/tmux/theme.conf" "$HOME/.config/glow/rai.json" "$HOME/.config/opencode/tui-plugins/theme-sync.ts"
+rm -rf "$HOME"/.vscode/extensions/rai.rai-themes-* "$HOME"/.cursor/extensions/rai.rai-themes-*
+omarchy-toggle skip-cursor-theme-changes off; omarchy-toggle skip-vscode-theme-changes off
+# Omarchy-only community theme, managed by the built-in theme installer.
+if [ ! -d "$HOME/.config/omarchy/themes/gruvbox-material" ]; then
+  omarchy theme install https://github.com/curbol/omarchy-gruvbox-material
+fi
 
 # --- [7] dev tools ---
 step "[7/9] dev tools"
@@ -181,5 +191,5 @@ cat <<MSG
   5. Chrome: sign in, then log in to x.com, substack.com, medium.com (collectors read the Default profile cookies)
   6. Obsidian: open ~/helm, Settings > Sync re-pair, set "cli": true in ~/.config/obsidian/obsidian.json (app closed)
   7. restore-backup.sh   (creds, repos, docker volumes, ollama models) if not done already
-  8. omarchy update; theme everbloom; verify with the checklist in helm/05-projects/completed/omarchy-migration/
+  8. omarchy update; verify with the checklist in helm/05-projects/completed/omarchy-migration/
 MSG
