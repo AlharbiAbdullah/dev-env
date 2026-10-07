@@ -10,11 +10,13 @@ runs from `$OMARCHY_PATH/bin`, so a user collector cannot join its glob. The
 agents panel, however, just reads one JSON record per agent from the usage
 directory, so this companion writes the harness tabs the stock collectors do
 not cover: pi, opencode and agy. agy's record also carries the Google AI Pro
-quota windows, read from agy's own `/usage` command; pi and opencode carry Ollama
-Pro's, read with the Ollama API key.
+quota windows, read from agy's own `/usage` command. pi and opencode carry two
+subscriptions: Ollama Pro's windows, read with the Ollama API key, and ChatGPT
+Plus's, read through the Codex CLI. Every window names its subscription (`sub`)
+and plan, so the AI tab can draw one card per subscription.
 
 Invoked by the `agents-local` systemd timer, which also refreshes the synthetic
-"AI" record: one row per model and effort across Claude Code, pi and opencode
+"AI" record: one row per model and effort across Claude Code, Codex, pi and opencode
 (input+output tokens, no cache). Pass agent ids to refresh a subset, or
 `--force` to rebuild the Claude scan before its cache ages out:
 `agents-local --force 0-ai`.
@@ -28,9 +30,10 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 STATE = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
@@ -40,16 +43,18 @@ RECENT_DATES = [
     (datetime.now() - timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(6, -1, -1)
 ]
 
-AGENTS = ["pi", "opencode", "agy"]
+AGENTS = ["pi", "opencode", "agy", "codex-cli"]
 # The AI tab aggregates every harness by model and effort. The Claude scan reads
 # ~1.5 GB of transcripts, so the record is rebuilt at most this often.
 AI_ID = "0-ai"
 AI_MAX_AGE = 1800
 
 AGY_BIN = shutil.which("agy") or str(Path.home() / ".local" / "bin" / "agy")
+CODEX_BIN = shutil.which("codex") or str(Path.home() / ".local" / "share" / "mise" / "shims" / "codex")
 # Filled by `__op_env OLLAMA_USAGE_KEY` in ~/.bashrc.local (per-boot RAM, 0700 dir).
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
 OLLAMA_KEY = RUNTIME / "op-OLLAMA_USAGE_KEY"
+OLLAMA_PRO_CREDIT_USD = 60  # Pro: $60 of usage credit a month (ollama.com/pricing, 2026-10)
 
 
 def number(value):
@@ -304,12 +309,59 @@ def scan_claude(stats=None):
     return stats
 
 
+def scan_codex(stats=None, effort=False, io_only=False):
+    """Codex CLI sessions: each turn's tokens, by model (and effort for the AI tab).
+
+    A token_count event carries the last turn's usage. Its input_tokens include
+    the cached part and its output_tokens the reasoning, so the cache is split
+    out once and nothing counts twice.
+    """
+    stats = stats or Stats()
+    root = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+    for folder in ("sessions", "archived_sessions"):
+        if not (root / folder).exists():
+            continue
+        for path in (root / folder).rglob("*.jsonl"):
+            model, level = "codex", ""
+            try:
+                lines = path.read_text(errors="replace").splitlines()
+            except OSError:
+                continue
+            for raw in lines:
+                try:
+                    entry = json.loads(raw)
+                except Exception:
+                    continue
+                payload = entry.get("payload")
+                if not isinstance(payload, dict):
+                    continue
+                if entry.get("type") == "turn_context":
+                    mode = (payload.get("collaboration_mode") or {}).get("settings") or {}
+                    model = str(payload.get("model") or model)
+                    level = str(payload.get("effort") or mode.get("reasoning_effort") or "")
+                    continue
+                if payload.get("type") != "token_count":
+                    continue
+                usage = (payload.get("info") or {}).get("last_token_usage") or {}
+                cache_read = number(usage.get("cached_input_tokens"))
+                input_tokens = max(0, number(usage.get("input_tokens")) - cache_read)
+                output_tokens = number(usage.get("output_tokens"))
+                if not (input_tokens or output_tokens or cache_read):
+                    continue
+                if io_only:
+                    cache_read = 0
+                key = label(model, level) if effort else model
+                stats.add(local_day(entry.get("timestamp")), str(path), key, input_tokens, output_tokens, cache_read, 0)
+    return stats
+
+
 def scan_ai():
     """One row per model and effort across every harness that counts tokens."""
     stats = Stats()
     scan_pi(stats, effort=True, io_only=True)
     scan_opencode(stats, effort=True, io_only=True)
     scan_claude(stats)
+    scan_codex(stats, effort=True, io_only=True)
     record = stats.record(AI_ID, "AI", "every model")
     # The model chart covers the same seven days as the day chart above it.
     record["modelUsage"] = stats.recent_model_usage
@@ -384,6 +436,8 @@ def agy_limits():
             windows.append({
                 "label": f"{pool} {'Weekly (7-day)' if weekly else 'Session (5-hour)'}",
                 "title": f"{pool} {'week' if weekly else '5h'}",
+                "sub": "Google",
+                "plan": "AI Pro",
                 "percent": max(0.0, used),
                 # An untouched window reports a reset that rolls forward with the clock.
                 "resetsAt": bucket.get("reset_time", "") if used > 0 else "",
@@ -403,44 +457,112 @@ def agy_record():
 
 @functools.cache
 def ollama_limits():
-    """Ollama Pro's usage windows, as fractions used.
+    """Ollama Pro's usage, as the fraction of its monthly credit spent.
 
-    The key comes from the RAM cache a shell's `__op_env` fills; the timer never
-    calls op itself, so a locked 1Password cannot raise a prompt every run. No
-    key or no answer means no windows rather than stale ones.
+    Since October 2026 /api/usage reports spend in USD over a range (24h, 7d or 30d), with no
+    limits or reset times, and Pro is $60 of credit a month (ollama.com/pricing). The bar is
+    the last 30 days' spend over that credit. The key comes from the RAM cache a shell's
+    `__op_env` fills; the timer never calls op itself. No key or no answer means no bar.
     """
     try:
         request = urllib.request.Request(
-            "https://ollama.com/api/usage",
+            "https://ollama.com/api/usage?range=30d",
             headers={"Authorization": f"Bearer {OLLAMA_KEY.read_text().strip()}"},
         )
         with urllib.request.urlopen(request, timeout=10) as response:
-            limits = json.load(response).get("limits") or {}
+            spent = float((json.load(response).get("totals") or {})["usage_usd"])
     except Exception:
         return []
-    # Since the move to monthly credits Pro reports "monthly" alone; the session
-    # and weekly windows of the old plans still map if they come back.
-    windows = [
-        ("session", "Session (5-hour)"), ("weekly", "Weekly (7-day)"), ("monthly", "Monthly"),
-    ]
-    return [
-        {"label": label, "percent": float(limits[key]["usage"]), "resetsAt": ""}
-        for key, label in windows
-        if isinstance(limits.get(key), dict) and "usage" in limits[key]
-    ]
+    return [{
+        "label": f"30 days: ${spent:.2f} of ${OLLAMA_PRO_CREDIT_USD}", "title": "Ollama 30d",
+        "sub": "Ollama", "plan": "Pro", "percent": spent / OLLAMA_PRO_CREDIT_USD, "resetsAt": "",
+    }]
 
 
-def ollama_record(scan, agent_id):
-    """opencode and pi both run on the Ollama subscription, so both carry its windows."""
-    record = scan().record(agent_id, agent_id, "multi-provider")
-    record["limits"] = ollama_limits()
+def codex_rpc(proc, request_id, method, params=None):
+    """One JSON-RPC call to `codex app-server`; skips notifications until the reply."""
+    message = {"id": request_id, "method": method}
+    if params is not None:
+        message["params"] = params
+    proc.stdin.write(json.dumps(message) + "\n")
+    proc.stdin.flush()
+    while True:
+        line = proc.stdout.readline()
+        if not line:
+            raise RuntimeError("codex app-server closed")
+        reply = json.loads(line)
+        if reply.get("id") == request_id:
+            return reply
+
+
+@functools.cache
+def openai_limits():
+    """ChatGPT Plus's 5-hour and weekly windows, read through the Codex CLI.
+
+    Sign in with ChatGPT gives apps no usage API, but pi and opencode draw on
+    the same Codex allowance the Codex app server reports (as Omarchy's own
+    codex collector reads it). Needs `codex login` once; no login, no windows.
+    """
+    try:
+        proc = subprocess.Popen(
+            [CODEX_BIN, "-s", "read-only", "-a", "on-request", "app-server"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, cwd=tempfile.gettempdir(),
+        )
+    except OSError:
+        return []
+    timer = threading.Timer(20, proc.kill)
+    timer.start()
+    try:
+        codex_rpc(proc, 1, "initialize", {"clientInfo": {"name": "agents-local", "version": "1"}})
+        proc.stdin.write(json.dumps({"method": "initialized", "params": {}}) + "\n")
+        proc.stdin.flush()
+        limits = (codex_rpc(proc, 2, "account/rateLimits/read").get("result") or {}).get("rateLimits") or {}
+    except Exception:
+        return []
+    finally:
+        timer.cancel()
+        proc.kill()
+        proc.wait()
+    plan = str(limits.get("planType") or "").replace("_", " ").title()
+    windows = []
+    for window in (limits.get("primary"), limits.get("secondary")):
+        if not isinstance(window, dict) or window.get("usedPercent") is None:
+            continue
+        weekly = number(window.get("windowDurationMins")) >= 7 * 24 * 60
+        reset = window.get("resetsAt")
+        windows.append({
+            "label": "Weekly (7-day)" if weekly else "Session (5-hour)",
+            "title": f"OpenAI {'week' if weekly else '5h'}",
+            "sub": "OpenAI",
+            "plan": plan,
+            "percent": float(window["usedPercent"]) / 100,
+            "resetsAt": datetime.fromtimestamp(number(reset), timezone.utc).isoformat() if reset else "",
+        })
+    return windows
+
+
+def codex_record():
+    record = scan_codex().record("codex-cli", "Codex", "ChatGPT Plus")
+    record["limits"] = openai_limits()
+    return record
+
+
+def subscription_record(scan, agent_id):
+    """opencode and pi run on two subscriptions, Ollama Pro and ChatGPT Plus, so
+    both carry both sets of windows; each window names its subscription."""
+    record = scan().record(agent_id, agent_id, "Ollama Pro · ChatGPT Plus")
+    record["limits"] = ollama_limits() + openai_limits()
     return record
 
 
 COLLECTORS = {
-    "pi": lambda: ollama_record(scan_pi, "pi"),
-    "opencode": lambda: ollama_record(scan_opencode, "opencode"),
+    "pi": lambda: subscription_record(scan_pi, "pi"),
+    "opencode": lambda: subscription_record(scan_opencode, "opencode"),
     "agy": agy_record,
+    # Omarchy's own codex record counts every ChatGPT-plan harness (opencode and
+    # pi too), so it stays off; this tab is the Codex CLI alone.
+    "codex-cli": codex_record,
 }
 
 

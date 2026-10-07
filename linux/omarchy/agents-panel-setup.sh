@@ -68,6 +68,24 @@ patch(
     "                text: modelData.providerName",
     "chip width",
 )
+# A wider panel on every tab (the same width everywhere, so nothing jumps), so
+# four subscription cards sit two by two with room for a meter on each line.
+patch(
+    "    contentWidth: panel.fittedContentWidth(Style.space(380))",
+    "    contentWidth: panel.fittedContentWidth(Style.space(480))",
+    "panel width",
+)
+# A limit carries the subscription and plan it belongs to through to the cards.
+patch(
+    "      if (percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title))",
+    "      if (percent >= 0) {\n"
+    "        var w = limitWindow(entry.label, percent, entry.resetsAt, entry.title)\n"
+    "        w.sub = String(entry.sub || \"\")\n"
+    "        w.plan = String(entry.plan || \"\")\n"
+    "        out.push(w)\n"
+    "      }",
+    "limit subscription",
+)
 # One height for every tab: the tallest content the panel has shown this
 # session, never less than the stock 640. Switching tabs then never moves the
 # bottom edge (ruling 2026-10-03: no jumping between tabs).
@@ -119,53 +137,50 @@ patch(
 )
 patch(
     "  function resetMsFor(w) {\n",
-    '''  // One card per subscription for the AI tab: Claude, Google, Ollama. opencode
-  // and pi both run on Ollama and carry its windows, so it shows once. Google's
-  // partner pool (Claude and GPT through agy) folds into one line under Gemini,
-  // showing its fuller window.
+    '''  // One card per subscription for the AI tab, in a fixed order: Claude, OpenAI,
+  // Google, Ollama. A window names its subscription (`sub`) when its record runs
+  // on more than one (opencode and pi run on Ollama and ChatGPT), and a
+  // subscription two records share is read from the first. Google's windows
+  // split into its two pools, Gemini and the partner models.
   function quotaCards(list) {
     var names = { "claude": "Claude", "agy": "Google", "opencode": "Ollama", "pi": "Ollama" }
-    var rank = { "claude": 0, "agy": 1, "opencode": 2, "pi": 3 }
-    function rankOf(p) { return p.providerId in rank ? rank[p.providerId] : 9 }
+    var order = ["Claude", "OpenAI", "Google", "Ollama"]
     function shortTitle(title) {
-      var text = String(title || "").replace(/^(Gemini|Claude\\/GPT)\\s+/, "")
+      var text = String(title || "").replace(/^(Gemini|Claude\\/GPT|OpenAI|Ollama)\\s+/, "")
       if (text === "Session") return "5h"
       if (text === "Weekly") return "week"
       if (text === "Monthly") return "month"
-      return text.replace(/\\s*Weekly$/, " wk")
+      return text.replace(/\\s*Weekly$/, "")
     }
-    var ordered = list.slice().sort(function(a, b) { return rankOf(a) - rankOf(b) })
-    var cards = []
-    var seen = {}
-    for (var i = 0; i < ordered.length; i++) {
-      var name = names[ordered[i].providerId] || ordered[i].providerName
-      var windows = limitWindows(ordered[i])
-      if (seen[name] || windows.length === 0) continue
-      seen[name] = true
-      var card = { name: name, windows: [], noteTitle: "", noteValue: "", noteAlarming: false, resetAt: "" }
-      var partner = []
-      var fullest = null
+    var cards = {}
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i]
+      var windows = limitWindows(p)
+      var mine = {}
       for (var j = 0; j < windows.length; j++) {
-        var w = {
-          title: shortTitle(windows[j].title),
-          used: clamp(windows[j].percent, 0, 1),
-          resetAt: windows[j].resetAt
+        var w = windows[j]
+        var name = w.sub || names[p.providerId] || p.providerName
+        if (cards[name] && !mine[name]) continue
+        if (!cards[name]) {
+          cards[name] = { name: name, plan: w.plan || String(p.tierLabel || ""), groups: [] }
+          mine[name] = true
         }
-        if (String(windows[j].title).indexOf("Claude/GPT") === 0) partner.push(w)
-        else card.windows.push(w)
-        if (w.resetAt !== "" && (!fullest || w.used > fullest.used)) fullest = w
+        var pool = name !== "Google" ? ""
+          : (String(w.title).indexOf("Claude/GPT") === 0 ? "Claude · GPT" : "Gemini")
+        var groups = cards[name].groups
+        var group = null
+        for (var k = 0; k < groups.length; k++) if (groups[k].title === pool) group = groups[k]
+        if (!group) {
+          group = { title: pool, windows: [] }
+          groups.push(group)
+        }
+        group.windows.push({ title: shortTitle(w.title), used: clamp(w.percent, 0, 1), resetAt: w.resetAt })
       }
-      if (partner.length > 0) {
-        card.noteTitle = "Claude/GPT"
-        // One number, the fuller of its two windows: "0% · 0%" overran a narrow card.
-        var partnerUsed = Math.max.apply(null, partner.map(function(w) { return w.used }))
-        card.noteValue = Math.round(partnerUsed * 100) + "%"
-        card.noteAlarming = partnerUsed >= 0.9
-      }
-      if (fullest) card.resetAt = fullest.resetAt
-      cards.push(card)
     }
-    return cards
+    var out = []
+    for (var n = 0; n < order.length; n++) if (cards[order[n]]) out.push(cards[order[n]])
+    for (var key in cards) if (order.indexOf(key) < 0) out.push(cards[key])
+    return out
   }
 
   function weekTotal(p) {
@@ -183,15 +198,17 @@ patch(
     "          // ---------- Usage ----------\n",
     '''          // ---------- Subscription cards (AI tab) ----------
           PanelSeparator {
-            visible: cardRow.visible
+            visible: cardGrid.visible
             foreground: root.foreground
           }
 
-          RowLayout {
-            id: cardRow
+          GridLayout {
+            id: cardGrid
             visible: root.cards.length > 0
             width: parent.width
-            spacing: Style.spacing.md
+            columns: 2
+            columnSpacing: Style.spacing.lg
+            rowSpacing: Style.spacing.lg
 
             Repeater {
               model: root.cards
@@ -304,18 +321,17 @@ patch(
 )
 patch(
     "  // Rounded track showing the percentage of the allowance used.\n",
-    '''  // One subscription: each window's share used over a meter, the partner pool on
-  // one line, and the reset of the fullest window pinned to the foot.
+    '''  // One subscription: its name and plan, then one line per window, grouped by
+  // pool where a plan has two (Google: Gemini, and Claude and GPT).
   component QuotaCard: BorderSurface {
     id: card
     property var entry: null
-    readonly property real pad: Style.space(8)
+    readonly property real pad: Style.space(10)
 
     radius: Style.cornerRadius
     color: root.alpha(root.foreground, 0.04)
     borderSpec: Border.controlSpec("normal", root.foreground, Color.accent)
-    implicitHeight: cardColumn.implicitHeight + (cardReset.text !== "" ? cardReset.implicitHeight + Style.spacing.md : 0)
-      + pad * 2
+    implicitHeight: cardColumn.implicitHeight + pad * 2
 
     Column {
       id: cardColumn
@@ -323,100 +339,129 @@ patch(
       anchors.right: parent.right
       anchors.top: parent.top
       anchors.margins: card.pad
-      spacing: Style.spacing.md
-
-      Text {
-        textFormat: Text.PlainText
-        text: card.entry ? card.entry.name : ""
-        color: root.foreground
-        font.family: root.fontFamily
-        font.pixelSize: Style.font.bodySmall
-        font.bold: true
-      }
-
-      Repeater {
-        model: card.entry ? card.entry.windows : []
-
-        Column {
-          required property var modelData
-          width: cardColumn.width
-          spacing: Style.spacing.xs
-
-          Item {
-            width: parent.width
-            implicitHeight: windowUsed.implicitHeight
-
-            Text {
-              textFormat: Text.PlainText
-              text: modelData.title
-              color: root.dim
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
-              anchors.left: parent.left
-              anchors.baseline: windowUsed.baseline
-            }
-
-            Text {
-              id: windowUsed
-              textFormat: Text.PlainText
-              text: Math.round(modelData.used * 100) + "%"
-              color: modelData.used >= 0.9 ? root.urgent : root.foreground
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.body
-              font.bold: true
-              anchors.right: parent.right
-            }
-          }
-
-          Meter {
-            width: parent.width
-            value: modelData.used
-            alarming: modelData.used >= 0.9
-          }
-        }
-      }
+      spacing: Style.spacing.lg
 
       Item {
-        visible: !!card.entry && card.entry.noteTitle !== ""
         width: parent.width
-        implicitHeight: noteValue.implicitHeight
+        implicitHeight: cardName.implicitHeight
+
+        Text {
+          id: cardName
+          textFormat: Text.PlainText
+          text: card.entry ? card.entry.name : ""
+          color: root.foreground
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.bodySmall
+          font.bold: true
+          anchors.left: parent.left
+        }
 
         Text {
           textFormat: Text.PlainText
-          text: card.entry ? card.entry.noteTitle : ""
+          text: card.entry ? card.entry.plan : ""
           color: root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption
-          anchors.left: parent.left
-          anchors.baseline: noteValue.baseline
-        }
-
-        Text {
-          id: noteValue
-          textFormat: Text.PlainText
-          text: card.entry ? card.entry.noteValue : ""
-          color: card.entry && card.entry.noteAlarming ? root.urgent : root.foreground
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
-          font.bold: true
           anchors.right: parent.right
+          anchors.baseline: cardName.baseline
+        }
+      }
+
+      Repeater {
+        model: card.entry ? card.entry.groups : []
+
+        Column {
+          id: groupColumn
+          required property var modelData
+          readonly property var group: modelData
+          width: cardColumn.width
+          spacing: Style.spacing.md
+
+          Text {
+            visible: groupColumn.group.title !== ""
+            textFormat: Text.PlainText
+            text: groupColumn.group.title
+            color: root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            font.bold: true
+          }
+
+          Repeater {
+            model: groupColumn.group.windows
+
+            QuotaLine {
+              required property var modelData
+              width: groupColumn.width
+              line: modelData
+            }
+          }
         }
       }
     }
+  }
+
+  // One window: label, a meter filling toward the cap, the share used, and the
+  // time to its reset, in fixed columns so every card lines up.
+  component QuotaLine: Item {
+    id: quotaLine
+    property var line: null
+    readonly property bool alarming: !!line && line.used >= 0.9
+
+    implicitHeight: Math.max(lineLabel.implicitHeight, lineUsed.implicitHeight)
 
     Text {
-      id: cardReset
+      id: lineLabel
+      textFormat: Text.PlainText
+      text: quotaLine.line ? quotaLine.line.title : ""
+      color: root.dim
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      elide: Text.ElideRight
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      width: Style.space(40)
+    }
+
+    Meter {
+      anchors.left: lineLabel.right
+      anchors.right: lineUsed.left
+      anchors.leftMargin: Style.space(6)
+      anchors.rightMargin: Style.space(8)
+      anchors.verticalCenter: parent.verticalCenter
+      value: quotaLine.line ? quotaLine.line.used : -1
+      alarming: quotaLine.alarming
+    }
+
+    Text {
+      id: lineUsed
+      textFormat: Text.PlainText
+      text: quotaLine.line ? Math.round(quotaLine.line.used * 100) + "%" : ""
+      color: quotaLine.alarming ? root.urgent : root.foreground
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      font.bold: true
+      horizontalAlignment: Text.AlignRight
+      anchors.right: lineReset.left
+      anchors.rightMargin: Style.space(6)
+      anchors.verticalCenter: parent.verticalCenter
+      width: Style.space(30)
+    }
+
+    Text {
+      id: lineReset
       textFormat: Text.PlainText
       text: {
-        var remainingMs = card.entry ? root.resetMsFor(card.entry) : -1
-        return remainingMs > 0 ? "resets " + root.formatDuration(remainingMs) : ""
+        var remainingMs = root.resetMsFor(quotaLine.line)
+        return remainingMs > 0 ? root.formatDuration(remainingMs) : ""
       }
       color: root.dim
       font.family: root.fontFamily
       font.pixelSize: Style.font.caption
-      anchors.left: parent.left
-      anchors.bottom: parent.bottom
-      anchors.margins: card.pad
+      horizontalAlignment: Text.AlignRight
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      width: Style.space(40)
     }
   }
 
@@ -526,6 +571,9 @@ path.write_text(source)
 PY
 
 install -m 0644 "$HERE"/agents-panel/*.svg "$CLONE/assets/"
+# The Codex CLI tab (codex-cli) wears the stock Codex mark.
+install -m 0644 "$STOCK/assets/codex.svg" "$CLONE/assets/codex-cli.svg"
+install -m 0644 "$STOCK/assets/codex-light.svg" "$CLONE/assets/codex-cli-light.svg"
 
 omarchy plugin enable "${USERNAME}.agents" >/dev/null 2>&1 || true
 omarchy bar set "${USERNAME}.agents" providers \
