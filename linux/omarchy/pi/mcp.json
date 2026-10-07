@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "exposure": "deferred",
+      "description": "Current documentation for any library, framework, SDK, API, CLI tool or cloud service. Use it for API syntax, configuration, version migration and setup, even for well-known libraries, and prefer it over web search for library docs."
+    }
+  }
+}

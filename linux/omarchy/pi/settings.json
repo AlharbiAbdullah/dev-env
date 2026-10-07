@@ -1,0 +1,12 @@
+{
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-6.1-sol",
+  "defaultThinkingLevel": "xhigh",
+  "enabledModels": [
+    "openai/gpt-6.1-sol",
+    "ollama/*"
+  ],
+  "skills": [
+    "!**/.pi/agent/skills/**"
+  ]
+}

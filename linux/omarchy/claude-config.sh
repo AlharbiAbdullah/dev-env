@@ -78,8 +78,23 @@ ln -sfn "$RAI/AGENTS.md"                "$HOME/.pi/agent/AGENTS.md"
 ln -sfn "$RAI/harness/pi/rai-bridge.ts" "$HOME/.pi/agent/extensions/rai-bridge.ts"
 ln -sfn "$RAI/harness/pi/prompts"      "$HOME/.pi/agent/prompts"        # /recall, /remember
 ln -sfn "$HERE/pi/models.json"         "$HOME/.pi/agent/models.json"   # Ollama cloud models
+ln -sfn "$HERE/pi/mcp.json"            "$HOME/.pi/agent/mcp.json"      # Context7, as in ~/.claude.json
+# Merge portable defaults: model, the Ctrl+P scope (sol + Ollama, no pay-per-use OpenRouter) and
+# a filter that hides everything in ~/.pi/agent/skills. Omarchy migrations drop stock omarchy and
+# diagnose-crash links there; pi loads that dir before ~/.agents/skills, so they shadowed Rai's
+# /omarchy router. Rai's skills live only in ~/.agents/skills, as ~/.claude/skills for Claude.
+# Keep this machine's packages, theme and device ID.
+PI_SETTINGS="$HOME/.pi/agent/settings.json"
+if [ -f "$PI_SETTINGS" ]; then
+    PI_SETTINGS_TMP="$(mktemp "$HOME/.pi/agent/settings.XXXXXX")"
+    jq --slurpfile defaults "$HERE/pi/settings.json" '. * $defaults[0]' \
+        "$PI_SETTINGS" > "$PI_SETTINGS_TMP"
+    mv "$PI_SETTINGS_TMP" "$PI_SETTINGS"
+else
+    install -m 0600 "$HERE/pi/settings.json" "$PI_SETTINGS"
+fi
 link_skills "$HOME/.agents/skills"
-echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai; models.json -> dev-env"
+echo "  ~/.pi/agent/{AGENTS.md,extensions/rai-bridge.ts}, ~/.agents/skills -> helm/03-rai; {models,mcp}.json -> dev-env"
 mkdir -p "$HOME/.config/opencode/plugin"
 ln -sfn "$RAI/AGENTS.md"                "$HOME/.config/opencode/AGENTS.md"
 ln -sfn "$RAI/harness/opencode/rai.ts"  "$HOME/.config/opencode/plugin/rai.ts"
