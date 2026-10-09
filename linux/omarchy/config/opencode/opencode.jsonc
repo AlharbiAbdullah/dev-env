@@ -7,7 +7,7 @@
   // Only the providers he pays for: ChatGPT sign-in and Ollama Pro. This hides the free
   // Zen models (some train on prompts) and OpenRouter, whose key his shell exports.
   "enabled_providers": ["openai", "ollama"],
-  "model": "openai/gpt-6.1-sol",
+  "model": "ollama/deepseek-v4-pro:cloud",
   // Session titles: the session model already served most of them; this keeps the title
   // call off the Sol allowance.
   "small_model": "ollama/deepseek-v4.1-flash:cloud",
@@ -50,13 +50,13 @@
       "enabled": true
     }
   },
-  // OpenCode turns every skill into a slash command and expands $1..$N in its body. The
-  // fusion SKILL.md has "$60", so `/fusion <question>` lost the question. A config command
-  // wins over the skill's own, and loads the skill the way Claude Code does.
+  // OpenCode turns every skill into a slash command and expands $1..$N and !`cmd` in its
+  // body, which can swallow the question. A config command wins over the skill's own, and
+  // loads the council skill the way Claude Code does, so `/council <question>` keeps it.
   "command": {
-    "fusion": {
-      "description": "Multi-model panel on his subscriptions (the fusion skill)",
-      "template": "Load the fusion skill with the skill tool, then follow it for this request.\n\nARGUMENTS: $ARGUMENTS"
+    "council": {
+      "description": "Multi-model panel on his subscriptions (the council skill)",
+      "template": "Load the council skill with the skill tool, then follow it for this request.\n\nARGUMENTS: $ARGUMENTS"
     }
   },
   // Claude Code's name for the built-in general agent, which Rai workflows name.
@@ -136,6 +136,8 @@
         "deepseek-v4-pro:cloud": {
           "name": "DeepSeek V4 Pro (Ollama)",
           "reasoning": true,
+          // The default model: opens at Ollama's top effort with no variant picked.
+          "options": { "reasoningEffort": "high" },
           "limit": { "context": 1048576, "output": 32768 },
           "variants": {
             "low": { "reasoningEffort": "low" },

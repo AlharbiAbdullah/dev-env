@@ -39,7 +39,7 @@ North star: `thmanyah.com/articles`. Try hard to match its voice. Other style mo
 
 ## Panel workflow (serious Arabic)
 
-Serious Arabic runs the `/fusion → write-arabic` panel. Its steps are written once, in
+Serious Arabic runs the `/council → write` (`write-arabic`) panel. Its steps are written once, in
 [[20-arabic-piece-pipeline]] (`~/helm/11-workflows/20-arabic-piece-pipeline.md`):
 read it before the first draft and follow it.
 
