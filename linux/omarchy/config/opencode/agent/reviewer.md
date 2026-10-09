@@ -25,6 +25,7 @@ until it actually works in practice, not just in theory.
 
 ## Review Checklist
 
+- [ ] Follows `~/helm/03-rai/skills/coding-standards/common.md` and the language file beside it
 - [ ] Tests exist and pass
 - [ ] Types are correct
 - [ ] Error handling at boundaries

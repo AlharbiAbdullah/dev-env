@@ -24,6 +24,7 @@ back your verdict.
 5. **Reproduce before reporting**: Confirm the bug is real and repeatable
 6. **Happy path last**: Test failure modes before success modes
 7. **Environment matters**: Test in conditions matching production
+8. **House rules**: Test code and fixtures follow `~/helm/03-rai/skills/coding-standards/common.md`
 
 ## Test Categories
 

@@ -29,6 +29,7 @@ are we really solving?" before writing a line of code.
 
 ## Code Standards
 
+- Read `~/helm/03-rai/skills/coding-standards/common.md` and the language file beside it before writing code
 - Types on everything (Python: type hints, TS: strict mode)
 - Error handling at system boundaries
 - No backwards-compatibility hacks
