@@ -107,6 +107,9 @@ ln -sfn "$RAI/harness/agy/hooks.json"   "$AGY_PLUGIN/hooks.json"
 ln -sfn "$RAI/skills"                   "$AGY_PLUGIN/skills"
 "$RAI/harness/agy/agy-hook.py" render-rules "$AGY_PLUGIN" || true   # agy re-renders at its first turn anyway
 echo "  ~/.gemini/{GEMINI.md,config/plugins/rai} -> helm/03-rai"
+mkdir -p "$HOME/.codex"
+ln -sfn "$RAI/harness/codex/hooks.json" "$HOME/.codex/hooks.json"
+echo "  ~/.codex/hooks.json -> helm/03-rai (the coding rules; trust the hook once in codex)"
 
 echo "  Claude config done. Run 'claude' once to authenticate (browser login),"
 echo "  then: claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud"
