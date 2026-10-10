@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # claude-config.sh — Claude Code config for this machine (mirrors the live layout).
-# Reality: ~/.claude is a thin edge over the helm vault. Six symlinks point into
-# ~/helm/03-rai; the only real local files are keybindings.json, themes/, the
+# Reality: ~/.claude is a thin edge over the helm vault. Five symlinks point into
+# ~/helm/03-rai, and agents/ holds rendered links; the only real local files are keybindings.json, themes/, the
 # credentials, and settings.local.json. The Context7 MCP server is registered at user
 # scope in ~/.claude.json, and the status line is the claude-hud plugin.
 set -euo pipefail
@@ -36,12 +36,14 @@ if [ ! -d "$RAI" ]; then
 fi
 
 # Symlinks into the vault (live layout, 2026-08).
-ln -sfn "$RAI/agents"                 "$CLAUDE/agents"
+# agents is a real folder of links to the agents a session may spawn: never the router
+# or the tutor (03-rai/harness/claude-code/render_agents.py replaces an old folder link).
+uv run "$RAI/harness/claude-code/render_agents.py"
 ln -sfn "$RAI/hooks"                  "$CLAUDE/hooks"
 link_skills "$CLAUDE/skills"
 ln -sfn "$RAI/harness/claude-code/user-instructions.md"              "$CLAUDE/CLAUDE.md"
 ln -sfn "$RAI/config/settings.json"   "$CLAUDE/settings.json"
-echo "  ~/.claude/{agents,hooks,skills,CLAUDE.md,settings.json} -> helm/03-rai"
+echo "  ~/.claude/{hooks,skills,CLAUDE.md,settings.json} -> helm/03-rai; agents rendered"
 
 # Auto-memory store: Claude Code keys it by project path (~/helm -> -home-abdullah-helm). The notes
 # live in the vault (2026-09-26) so git backs them up and every machine shares one store. A real
