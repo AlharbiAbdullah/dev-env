@@ -68,6 +68,7 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 - [[27-data-pipeline]] step 10: One operator surface
 - [[29-air-gapped-delivery]] step 2: Build the bundle
 - [[32-work-engagement]] step 7: Package and hand over
+- [[37-infrastructure-build]] step 5: Script it, one layer per folder
 <!-- /rai:workflows -->
 
 ## Return

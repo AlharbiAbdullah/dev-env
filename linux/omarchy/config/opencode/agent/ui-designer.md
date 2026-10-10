@@ -48,6 +48,7 @@ together. You also make images and diagrams. You think in systems, not screens.
 
 <!-- rai:workflows -->
 - [[34-diagrams]] step 4: Draw the architecture
+- [[38-ui-ux-build]] step 4: Run the design panel
 <!-- /rai:workflows -->
 
 ## Return

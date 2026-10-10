@@ -44,6 +44,7 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 <!-- rai:workflows -->
 - [[27-data-pipeline]] step 7: Model the layer
 - [[28-data-platform]] step 5: Target design
+- [[39-presenting-data]] step 6: Build the view
 <!-- /rai:workflows -->
 
 ## Return

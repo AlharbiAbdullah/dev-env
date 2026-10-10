@@ -84,6 +84,9 @@ Non-blocking issues noted for future iteration.
 - [[31-ai-system-build]] step 6: Prod-mimic proof
 - [[32-work-engagement]] step 5: Demo
 - [[32-work-engagement]] step 6: Prove on a copy of prod
+- [[36-performance]] step 9: Verify live, end to end
+- [[37-infrastructure-build]] step 6: Prove it from a clean start
+- [[39-presenting-data]] step 7: Prove the numbers
 <!-- /rai:workflows -->
 
 ## Return

@@ -41,7 +41,7 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-On request only.
+- [[36-performance]] step 4: Investigate in parallel, read-only
 <!-- /rai:workflows -->
 
 ## Return

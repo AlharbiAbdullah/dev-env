@@ -43,7 +43,8 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-On request only.
+- [[38-ui-ux-build]] step 4: Run the design panel
+- [[38-ui-ux-build]] step 7: Build inside the product's system
 <!-- /rai:workflows -->
 
 ## Return

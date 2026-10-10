@@ -42,6 +42,7 @@ keep the peace.
 
 <!-- rai:workflows -->
 - [[23-audit]] step 3: Research, read-only
+- [[36-performance]] step 4: Investigate in parallel, read-only
 <!-- /rai:workflows -->
 
 ## Return
