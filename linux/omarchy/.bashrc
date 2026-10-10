@@ -25,6 +25,55 @@ alias lt="eza --tree --level=2 --long --icons --git"
 alias c="clear"; alias oc="opencode --auto"   # Omarchy binds c=opencode; c is clear here
 alias agy="agy --dangerously-skip-permissions"   # agy yolo: no settings key, flag only
 alias la="ls -a"
+alias cx="codex"   # Omarchy binds cx=claude; cx is codex here
+
+# Rai's orchestrator (helm 03-rai/agents/orchestrator.md) is the main agent of every interactive
+# Claude Code session, appended to the built-in system prompt, which stays. Not exported: scripts,
+# `claude -p` jobs and script-started tmux workers run the plain binary. Subcommands and runs that
+# set their own system prompt or agent pass through. It runs only while helm's
+# 03-rai/agents/rollout.json turns it on for claude; RAI_ORCHESTRATOR=0 turns it off for a shell.
+claude() {
+  local orch="$HOME/helm/03-rai/agents/orchestrator.md" a
+  if [[ "${RAI_ORCHESTRATOR:-1}" == 0 || ! -r "$orch" ]] \
+     || ! grep -q '"claude": *true' "$HOME/helm/03-rai/agents/rollout.json" 2>/dev/null; then
+    command claude "$@"; return
+  fi
+  case "${1:-}" in
+    agents|attach|auth|auto-mode|doctor|gateway|import|install|logs|mcp|plugin|plugins|purge|\
+    respawn|rm|setup-token|stop|kill|ultrareview|update|upgrade) command claude "$@"; return ;;
+  esac
+  for a in "$@"; do
+    case "$a" in
+      -p|--print|-v|--version|-h|--help|--agent|--agent=*|--system-prompt|--system-prompt=*|\
+      --system-prompt-file|--system-prompt-file=*|--append-system-prompt|--append-system-prompt=*|\
+      --append-system-prompt-file|--append-system-prompt-file=*) command claude "$@"; return ;;
+    esac
+  done
+  command claude --append-system-prompt-file "$orch" "$@"
+}
+
+# The same orchestrator for interactive codex sessions, as developer_instructions on top of codex's
+# own prompt (a custom agent or ~/.codex/AGENTS.md would reach the specialists too). `exec` and
+# every other subcommand pass through, so scripts and council voices never get it. rollout.json
+# turns it on for codex.
+codex() {
+  local orch="$HOME/helm/03-rai/agents/orchestrator.md" a
+  if [[ "${RAI_ORCHESTRATOR:-1}" == 0 || ! -r "$orch" ]] \
+     || ! grep -q '"codex": *true' "$HOME/helm/03-rai/agents/rollout.json" 2>/dev/null; then
+    command codex "$@"; return
+  fi
+  case "${1:-}" in
+    agents|exec|e|review|login|logout|mcp|plugin|app-server|remote-control|completion|update|doctor|\
+    sandbox|debug|apply|a|queue|archive|delete|migrate-rollouts|unarchive|cloud|exec-server|features|\
+    help) command codex "$@"; return ;;
+  esac
+  for a in "$@"; do
+    case "$a" in
+      -h|--help|-V|--version|*developer_instructions=*) command codex "$@"; return ;;
+    esac
+  done
+  command codex -c "developer_instructions=$(cat "$orch")" "$@"
+}
 
 # atuin: synced, encrypted shell history (hosted sync, choice 2026-09-09). Needs ble.sh loaded
 # first (done above); ble.sh >= 0.4 is atuin's supported bash hook, so no bash-preexec.
