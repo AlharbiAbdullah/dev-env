@@ -111,7 +111,8 @@ ln -sfn "$RAI/skills"                   "$AGY_PLUGIN/skills"
 echo "  ~/.gemini/{GEMINI.md,config/plugins/rai} -> helm/03-rai"
 mkdir -p "$HOME/.codex"
 ln -sfn "$RAI/harness/codex/hooks.json" "$HOME/.codex/hooks.json"
-echo "  ~/.codex/hooks.json -> helm/03-rai (the coding rules; trust the hook once in codex)"
+uv run "$RAI/harness/codex/render_agents.py"   # ~/.codex/agents/*.toml, rendered from 03-rai/agents
+echo "  ~/.codex/hooks.json -> helm/03-rai (Rai's hooks: start codex once and trust them), ~/.codex/agents rendered"
 
 echo "  Claude config done. Run 'claude' once to authenticate (browser login),"
 echo "  then: claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud"
