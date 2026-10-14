@@ -112,6 +112,8 @@ echo "  ~/.gemini/{GEMINI.md,config/plugins/rai} -> helm/03-rai"
 mkdir -p "$HOME/.codex"
 ln -sfn "$RAI/harness/codex/hooks.json" "$HOME/.codex/hooks.json"
 uv run "$RAI/harness/codex/render_agents.py"   # ~/.codex/agents/*.toml, rendered from 03-rai/agents
+grep -q '^\[mcp_servers.context7\]' "$HOME/.codex/config.toml" 2>/dev/null \
+  || codex mcp add context7 -- npx -y @upstash/context7-mcp@latest   # context7 in every harness
 echo "  ~/.codex/hooks.json -> helm/03-rai (Rai's hooks: start codex once and trust them), ~/.codex/agents rendered"
 
 echo "  Claude config done. Run 'claude' once to authenticate (browser login),"
