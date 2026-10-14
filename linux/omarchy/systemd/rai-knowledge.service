@@ -1,0 +1,8 @@
+[Unit]
+Description=Weekly knowledge drafts (Tier A council)
+OnFailure=alert@%N.service
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/helm/03-rai/skills/knowledge/scripts/run-weekly.sh

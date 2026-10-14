@@ -171,7 +171,7 @@ UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
 systemctl --user daemon-reload
 systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
-TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio gold-skim backup-drive obsidian-sync-watch agents-local"
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance rai-knowledge paper-portfolio gold-skim backup-drive obsidian-sync-watch agents-local"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
   systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)
