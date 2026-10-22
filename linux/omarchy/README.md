@@ -6,7 +6,7 @@ Omarchy: the custom theme system was retired 2026-10-04 (`archive/theming/`).
 
 | Path | What |
 |---|---|
-| `install.sh` | one-shot bootstrap, idempotent; `ENABLE_TIMERS=0` for cutover staging |
+| `install.sh` | one-shot bootstrap, idempotent; `RAI_ROLE=producer` or `consumer` is required; `ENABLE_TIMERS=0` for cutover staging |
 | `backup-ubuntu.sh` | run ON THE UBUNTU BOX before the wipe; backs up to `mac:~/backups/linux-<date>/` |
 | `backup-drive` | weekly encrypted home and machine-state snapshots in the existing restic repository |
 | `restore-backup.sh` | verify and stage both snapshot types in a new private folder, without the Mac |
@@ -28,7 +28,7 @@ Fresh box:
 
 ```bash
 gh auth login && git clone https://github.com/AlharbiAbdullah/dev-env.git ~/dev-env
-cd ~/dev-env/linux/omarchy && ENABLE_TIMERS=0 ./install.sh
+cd ~/dev-env/linux/omarchy && RAI_ROLE=producer ENABLE_TIMERS=0 ./install.sh
 ```
 
 Recover the backup credentials, stage the restore below, and review it before applying files.

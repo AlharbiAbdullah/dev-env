@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 # install.sh — provision the x86_64 Omarchy hub. Idempotent.
-#   RAI_ROLE=producer ./install.sh # hub, including scheduled jobs
-#   ENABLE_TIMERS=0 ./install.sh # stage without arming the scheduled jobs (cutover)
+#   RAI_ROLE=producer ./install.sh                 # hub, including scheduled jobs
+#   RAI_ROLE=consumer ./install.sh                 # no scheduled jobs
+#   RAI_ROLE=producer ENABLE_TIMERS=0 ./install.sh # stage without arming the jobs (cutover)
+# RAI_ROLE is required: the installer refuses to run without it.
 # Order: guard -> sudoers -> gh + helm -> packages -> configs -> fonts -> themes (native)
 #        -> dev tools -> claude -> system units + /etc -> timers (last).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
-MACHINE_ROLE="${RAI_ROLE:-producer}"
-case "$MACHINE_ROLE" in producer|consumer) ;; *) echo "RAI_ROLE must be producer or consumer"; exit 1;; esac
+# No default role: a second box must never become a second producer by accident.
+MACHINE_ROLE="${RAI_ROLE:-}"
+case "$MACHINE_ROLE" in producer|consumer) ;; *)
+  echo "Name this machine's role first: RAI_ROLE=producer ./install.sh (the hub)" \
+       "or RAI_ROLE=consumer ./install.sh (no scheduled jobs)." >&2; exit 1;; esac
 ENABLE_TIMERS="${ENABLE_TIMERS:-1}"
 if [ "$MACHINE_ROLE" = consumer ]; then ENABLE_TIMERS=0; fi
 step() { echo; echo "== $*"; }
