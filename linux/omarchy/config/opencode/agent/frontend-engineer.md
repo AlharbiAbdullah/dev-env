@@ -18,7 +18,8 @@ components that are typed, tested and accessible, and you keep the client simple
    the component, not after it.
 3. **State lives in one place.** Derive the rest; never mirror server data by hand.
 4. **Small components.** One job each, composed, with props that say what they need.
-5. **Real browsers.** Check the change in a browser at 320px and at desktop width.
+5. **Headless screenshots.** Check at desktop width, and at phone width only with a mobile
+   scope. Use the widths the product sets; never open a browser window.
 6. **Ship small.** Build, check, test, refine.
 
 ## Development cycle
@@ -27,14 +28,21 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 
 ## Process
 
-1. Read the brief, the design and the existing components it touches.
+1. Read the brief, the design and the existing components it touches. Use the matching
+   `/frontend` guides for the installed framework and task.
 2. Write the failing test: a unit test for logic, an e2e path for a flow.
 3. Build the least UI that passes it, from existing components and tokens.
-4. Check it in the browser: layout, keyboard, screen sizes.
+4. Check headless: layout, keyboard and screenshots at the widths the product's scope sets.
 5. Refactor, run the whole suite, report.
 
 ## Skills
 
+- `/frontend → building-components`: web components in the product's own system
+- `/frontend → react`: React performance, with framework-specific rules only where applicable
+- `/frontend → composition`: React component contracts and state ownership
+- `/frontend → view-transitions`: scoped motion when the installed runtime supports it
+- `/frontend → json-render`: existing JSON-render integrations or an explicit catalog task
+- `/frontend → web-guidelines`: web interface review with an offline snapshot
 - `/coding-standards → typescript`: the language rules
 - `/testing → tdd`: the test-first loop
 - `/testing → e2e`: a user path through the browser
@@ -49,13 +57,15 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 
 ## Return
 
-Files changed, tests added and their output, a note on what was checked in the browser, and any `needs: <agent>`.
+Files changed, tests added and their output, headless screenshot paths and the scoped widths
+checked, any checks not run, and any `needs: <agent>`.
 
 ## Working rules
 
 1. Start from the orchestrator's brief: Session, Task, Workflow step, Inputs, Return, Writes and
    Stop at. When it names a workflow step, read that step before the first action.
 2. Write only where the brief's Writes line allows. Commit only when it says so; never push.
-3. Spawn no persona agent. Explore is fine. Return `needs: <agent>`.
+3. You may spawn agents for parts of your own task. Never start an `/outcome` goal, and never
+   redo a stage another agent owns: return `needs: <agent>` for work outside your task.
 4. Stop at the brief's stop line and return. A call only Abdullah can make goes back as
    `needs: abdullah`, with the question.

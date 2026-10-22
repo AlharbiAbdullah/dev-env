@@ -55,6 +55,7 @@ The tests added, their failing and passing output, the suite result, and any `ne
 1. Start from the orchestrator's brief: Session, Task, Workflow step, Inputs, Return, Writes and
    Stop at. When it names a workflow step, read that step before the first action.
 2. Write only where the brief's Writes line allows. Commit only when it says so; never push.
-3. Spawn no persona agent. Explore is fine. Return `needs: <agent>`.
+3. You may spawn agents for parts of your own task. Never start an `/outcome` goal, and never
+   redo a stage another agent owns: return `needs: <agent>` for work outside your task.
 4. Stop at the brief's stop line and return. A call only Abdullah can make goes back as
    `needs: abdullah`, with the question.

@@ -34,7 +34,8 @@ North star: `thmanyah.com/articles`. Try hard to match its voice. Other style mo
 
 - **Arabic prose**: Thmanyah voice, the highest bar (`arabic.md`)
 - **Long-form blog / essays**: `blog.md`
-- **Proposals + PRDs**: `proposals.md`, `prds.md` (writing craft, not the Algorithm PRD)
+- **Proposals + PRDs**: `proposals.md`, `prds.md`
+- **Technical documents** (runbooks, handover guides, decision papers, reports): `technical.md`, the PDF look in `references/document-style.md`
 - **Social-media posts**: `social-media.md`
 
 ## Panel workflow (serious Arabic)
@@ -55,12 +56,13 @@ A spawned writer runs no panel: it takes its step and returns.
 
 ## Skills
 
-- `/writing → voice`: the anti-AI voice contract
+- `~/helm/03-rai/skills/writing/references/voice.md`: the anti-AI voice contract
 - `/writing → arabic`: Arabic rules
-- `/writing → arabic-dictionary`: approved terms
+- `~/helm/03-rai/skills/writing/references/arabic-dictionary.md`: approved terms
 - `/writing → blog`: long-form
 - `/writing → proposals`: proposals
 - `/writing → prds`: PRDs
+- `/writing → technical`: technical documents, the command rules and the house PDF style
 - `/writing → social-media`: posts
 - `/council → write`: the panel, only when adopted in the main thread
 
@@ -82,6 +84,7 @@ One clean final at the path the brief names, and the open choices that need his 
 1. Start from the orchestrator's brief: Session, Task, Workflow step, Inputs, Return, Writes and
    Stop at. When it names a workflow step, read that step before the first action.
 2. Write only where the brief's Writes line allows. Commit only when it says so; never push.
-3. Spawn no persona agent. Explore is fine. Return `needs: <agent>`.
+3. You may spawn agents for parts of your own task. Never start an `/outcome` goal, and never
+   redo a stage another agent owns: return `needs: <agent>` for work outside your task.
 4. Stop at the brief's stop line and return. A call only Abdullah can make goes back as
    `needs: abdullah`, with the question.

@@ -45,9 +45,10 @@ A fix follows `~/helm/03-rai/skills/coding-standards/common.md` and the language
 3. Hypothesize: name the suspected cause + a test that discriminates
 4. Bisect / instrument: narrow to the exact line or condition
 5. Prove: trigger the mechanism, then suppress it to confirm
-6. Fix the class: patch + guard the whole failure mode
-7. Verify: repro no longer fires; nothing else broke
-8. Postmortem (one line): cause, fix, how to prevent the class
+6. Regression test: write it or take the test-engineer's, and watch it fail for the proven cause
+7. Fix the class: patch + guard the whole failure mode
+8. Verify: repro no longer fires; nothing else broke
+9. Postmortem (one line): cause, fix, how to prevent the class
 
 ## Skills
 
@@ -73,6 +74,7 @@ The cause with the experiment that proved it, the fix and its regression test, t
 1. Start from the orchestrator's brief: Session, Task, Workflow step, Inputs, Return, Writes and
    Stop at. When it names a workflow step, read that step before the first action.
 2. Write only where the brief's Writes line allows. Commit only when it says so; never push.
-3. Spawn no persona agent. Explore is fine. Return `needs: <agent>`.
+3. You may spawn agents for parts of your own task. Never start an `/outcome` goal, and never
+   redo a stage another agent owns: return `needs: <agent>` for work outside your task.
 4. Stop at the brief's stop line and return. A call only Abdullah can make goes back as
    `needs: abdullah`, with the question.
