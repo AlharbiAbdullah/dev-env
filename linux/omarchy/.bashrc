@@ -39,7 +39,7 @@ claude() {
     command claude "$@"; return
   fi
   case "${1:-}" in
-    agents|attach|auth|auto-mode|doctor|gateway|import|install|logs|mcp|plugin|plugins|purge|\
+    agents|attach|auth|auto-mode|doctor|gateway|import|install|logs|mcp|plugin|plugins|purge|remote-control|\
     respawn|rm|setup-token|stop|kill|ultrareview|update|upgrade) command claude "$@"; return ;;
   esac
   for a in "$@"; do
