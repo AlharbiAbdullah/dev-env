@@ -23,7 +23,7 @@ Terminal is `Super+Return` (foot until step 3 installs Ghostty).
 
 3. **Install the layer** (10 to 20 min; AUR builds Chrome, Cursor, VS Code, ble.sh, xremap)
    ```bash
-   cd ~/dev-env/linux/omarchy && ENABLE_TIMERS=0 ./install.sh
+   cd ~/dev-env/linux/omarchy && RAI_ROLE=producer ENABLE_TIMERS=0 ./install.sh
    ```
    Clones helm, installs packages, drops the Hyprland/Ghostty/theme configs, wires `~/.claude` to the vault, installs the timers without arming them.
 

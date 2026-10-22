@@ -25,7 +25,7 @@ cd mac && ./setup.sh
 **Omarchy hub:**
 
 ```bash
-cd linux/omarchy && ./install.sh   # see linux/omarchy/README.md
+cd linux/omarchy && RAI_ROLE=producer ./install.sh   # see linux/omarchy/README.md
 ```
 
 ## Shells

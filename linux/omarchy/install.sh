@@ -210,5 +210,5 @@ cat <<MSG
   5. Chrome: sign in, then log in to x.com, substack.com, medium.com (collectors read the Default profile cookies)
   6. Obsidian: open ~/helm, Settings > Sync re-pair, set "cli": true in ~/.config/obsidian/obsidian.json (app closed)
   7. restore-backup.sh --target /absolute/new/target   (staging only; inspect before applying)
-  8. omarchy update; verify with the checklist in helm/05-projects/completed/omarchy-migration/
+  8. omarchy update; then finish with workflow 16 steps 10-13 (helm/11-workflows/16-machines.md) and restore-backup.sh
 MSG
