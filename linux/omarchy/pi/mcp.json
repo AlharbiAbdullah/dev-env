@@ -5,6 +5,13 @@
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "exposure": "deferred",
       "description": "Current documentation for any library, framework, SDK, API, CLI tool or cloud service. Use it for API syntax, configuration, version migration and setup, even for well-known libraries, and prefer it over web search for library docs."
+    },
+    "ollama-web": {
+      "command": "uv",
+      "args": ["run", "~/helm/03-rai/harness/pi/web-search-mcp.py"],
+      "env": {"OLLAMA_API_KEY": "${OLLAMA_USAGE_KEY}"},
+      "exposure": "deferred",
+      "description": "Web search and page fetch through Ollama's hosted API."
     }
   }
 }
