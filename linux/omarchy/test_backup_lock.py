@@ -46,7 +46,10 @@ def sandbox(tmp_path: Path) -> Iterator[Sandbox]:
     (config / "excludes.txt").touch()
     (tmp_path / "helm").mkdir()
     stubs = {
-        "uv": '#!/bin/bash\nwhile [ "$1" != python ]; do shift; done\nshift\nexec python3 "$@"\n',
+        # Maintenance asks machine.py for its role first; the hub is the producer.
+        "uv": '#!/bin/bash\n[ "${*: -1}" != role ] || { echo producer; exit 0; }\n'
+        + 'while [ $# -gt 0 ] && [ "$1" != python ]; do shift; done\n'
+        + '[ $# -gt 0 ] || exit 64\nshift\nexec python3 "$@"\n',
         "restic": '#!/bin/bash\nif [ "$1" = "${BLOCK_STAGE:-backup}" ]; then\n'
         + GATE
         + '\nfi\n[ "$1" != "${FAIL_STAGE:-}" ] || exit 9\n'
