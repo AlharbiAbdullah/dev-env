@@ -1,0 +1,62 @@
+# restic exclude list for backup-drive (mirrors Syncthing .stignore + big rebuildable artifacts)
+# --- OS noise
+.DS_Store
+Thumbs.db
+._*
+# --- python
+.venv
+venv
+env
+new_env
+site-packages
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.tox
+# --- node / web builds
+node_modules
+.next
+dist
+dist-app
+# --- compiled / platform binaries
+binaries
+binaries-win
+target
+.terraform
+# --- runtime caches
+.cache
+dagster_home
+# --- machine state / secrets
+common/themes/current.lua
+?*.local
+.env
+# --- Mirsad rebuildable artifacts (container images, models, map tiles, offline bundles)
+$HOME/work/mirsad/bundle
+$HOME/work/mirsad/tiles
+$HOME/work/mirsad-demo/bundle
+$HOME/work/mirsad-demo/tiles
+$HOME/work/mirsad-joint/tiles
+$HOME/work/mirsad-lab/repo/tiles
+$HOME/work/mirsad-lab/*.tar
+$HOME/work/mirsad-lab/*.tar.gz
+hf_cache
+ollama
+*.gguf
+*.safetensors
+# --- editor indexes inside repos (Cursor Instant Grep, rebuildable)
+.git/cursor
+# --- rai state: the chromadb backup is a temporary copy; runtime is per-session scratch
+$HOME/.local/state/rai/chromadb-backup-*
+$HOME/.local/state/rai/runtime
+# --- rebuildable browser and editor caches (retain settings and session state)
+$HOME/.config/google-chrome/**/Cache
+$HOME/.config/google-chrome/**/Code Cache
+$HOME/.config/google-chrome/**/GPUCache
+$HOME/.config/Code/Cache
+$HOME/.config/Code/CachedData
+$HOME/.config/Code/GPUCache
+$HOME/.config/Cursor/Cache
+$HOME/.config/Cursor/CachedData
+$HOME/.config/Cursor/GPUCache

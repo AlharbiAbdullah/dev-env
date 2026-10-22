@@ -3,21 +3,11 @@
 
 The short version. Every verify command lives in `checklist.md`; this is the order of operations.
 
-## Before the wipe (on Ubuntu)
+## Before replacing the hub
 
-1. `~/dev-env/linux/omarchy/quiesce-ubuntu.sh` (disables the 5 timers, pushes helm + dev-env, final incremental backup to the Mac). Last command on Ubuntu.
-2. `sudo reboot`, press F7, pick the SanDisk USB.
-3. Installer answers, in the order it asks:
-   - Keyboard: `English (US)`
-   - Username: `abdullah`
-   - Password: your choice (user + root)
-   - Full name / email: `Abdullah Alharbi` / `alharbi.s.abdullah@gmail.com`
-   - Hostname: `linux`
-   - Timezone: `Asia/Riyadh`
-   - Disk: the KINGSTON 1 TB NVMe (not the SanDisk)
-   - Mode: `Full disk install`
-   - Confirm screen: press **Ctrl+C** to flip to `Yes, install without encryption` (recommended: unattended timers, dirty shutdowns). Keeping LUKS is fine too; it means a passphrase at every boot.
-   - "Everything will be overwritten": yes.
+Verify a recent encrypted backup and the staged restore before changing a disk.
+Use the recovery procedure below. Confirm the target disk and follow the installer for that
+machine's architecture. Keep scheduled jobs disabled on a replacement until the old hub is stopped.
 
 ## After logging into Omarchy
 
@@ -37,12 +27,14 @@ Terminal is `Super+Return` (foot until step 3 installs Ghostty).
    ```
    Clones helm, installs packages, drops the Hyprland/Ghostty/theme configs, wires `~/.claude` to the vault, installs the timers without arming them.
 
-4. **Pull the backup** from the Mac (Mac awake)
+4. **Stage the encrypted backup** without the Mac. Recover the repository password and rclone
+   configuration from the 1Password item "restic backup Google Drive" first.
    ```bash
-   ./restore-backup.sh
-   ollama pull gpt-oss:20b && ollama pull bge-m3
-   sudo reboot
+   ./restore-backup.sh --target "$HOME/restore-review"
    ```
+   Review the staged home and system trees before applying them. The command verifies restored
+   content and never overwrites the live machine. See `README.md` for snapshot selection and the
+   separate steps for root-owned files and Tailscale identity.
 
 5. **Logins** (no script can do these)
    - `tailscale up --ssh --hostname linux`
@@ -85,12 +77,12 @@ itself:
 
 1. If the hub (`linux`, this Omarchy desktop) is reachable over Tailscale, it clones `linux:helm`
    directly at LAN speed over the tailnet, then repoints `origin` at GitHub.
-2. Otherwise it clones `--depth=1` from GitHub (small, rarely dies), then runs `git fetch --unshallow`
-   in a bounded retry loop (5 attempts, 10s apart) so a dropped deepen just retries instead of
-   restarting the whole clone from zero.
+2. Otherwise it clones `--depth=1` from GitHub (small, rarely dies).
+   It then runs `git fetch --unshallow` in a bounded retry loop (5 attempts, 10s apart).
+   A dropped deepen retries instead of restarting the whole clone from zero.
 
 If all 5 unshallow attempts fail (no usable network at all), fix the network and re-run
 `git -C ~/helm fetch --unshallow` by hand. On Ethernet with a flaky HTTP/2 middlebox, try
 `git config --global http.version HTTP/1.1` first. Do not `--filter=blob:none` or sparse-checkout
-the vault: Obsidian Sync and the hooks walk the full tree, and a lazy fetch on every `git log -p`
-is worse than one slow clone.
+the vault: Obsidian Sync and the hooks walk the full tree.
+A lazy fetch on every `git log -p` is worse than one slow clone.

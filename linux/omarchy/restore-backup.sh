@@ -1,47 +1,49 @@
 #!/usr/bin/env bash
-# restore-backup.sh — pull the pre-wipe backup back from the Mac onto the fresh Omarchy box.
-#   ./restore-backup.sh            # creds + dotfiles + repos + system state
-#   ./restore-backup.sh --heavy    # also ollama models (otherwise: ollama pull gpt-oss:20b bge-m3)
-# Never restores: Chrome cookies (keyring-bound, re-login), OAuth tokens for opencode/codex (re-login per machine).
-set -uo pipefail
-SRC_HOST="${SRC_HOST:-mac}"; STAMP="${STAMP:-2026-08-25}"; SRC="backups/linux-$STAMP"
-HEAVY=0; [ "${1:-}" = "--heavy" ] && HEAVY=1
-R="rsync -aH --info=progress2"
-log(){ echo "[$(date +%H:%M:%S)] $*"; }
+# Restore encrypted snapshots into a NEW staging directory. Never apply to live paths.
+# Usage: restore-backup.sh --target /absolute/new/target [--home-snapshot ID] [--machine-snapshot ID]
+set -euo pipefail
+umask 077
+fail(){ echo "FAIL: $*" >&2; exit 1; }
+usage(){ fail "usage: $0 --target /absolute/new/target [--home-snapshot ID] [--machine-snapshot ID]"; }
+TARGET=""; HOME_SNAPSHOT=""; MACHINE_SNAPSHOT=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --target) [ "$#" -ge 2 ] || usage; TARGET="$2"; shift 2 ;;
+    --home-snapshot) [ "$#" -ge 2 ] || usage; HOME_SNAPSHOT="$2"; shift 2 ;;
+    --machine-snapshot) [ "$#" -ge 2 ] || usage; MACHINE_SNAPSHOT="$2"; shift 2 ;;
+    *) usage ;;
+  esac
+done
+[[ "$TARGET" = /* ]] || usage
+[ ! -e "$TARGET" ] && [ ! -L "$TARGET" ] || fail "target already exists"
+# Resolve aliases and symlinked parents before creating anything or reading the repo.
+[ "$(realpath -m -- "$TARGET")" = "$TARGET" ] || fail "target must be an absolute path without aliases or symlinks"
+[ -d "$(dirname -- "$TARGET")" ] || fail "target parent directory must exist"
+for id in "$HOME_SNAPSHOT" "$MACHINE_SNAPSHOT"; do
+  [ -z "$id" ] || [[ "$id" =~ ^[[:xdigit:]]{8,64}$ ]] || fail "snapshot ID must be 8 to 64 hex characters"
+done
+source "$HOME/.config/restic/env" || fail "cannot read restic environment"
 
-log "home: credentials, dotfiles, app state"
-$R --exclude '.config/google-chrome' --exclude '.local/share/opencode/auth.json' --exclude '.codex/auth.json' \
-   "$SRC_HOST:$SRC/home/" "$HOME/"
-# Chrome: profile without cookies/logins (extensions + prefs survive; sessions need re-login)
-$R --exclude 'Default/Cookies*' --exclude 'Default/Login Data*' --exclude 'Default/Web Data*' \
-   "$SRC_HOST:$SRC/home/.config/google-chrome/" "$HOME/.config/google-chrome/"
-
-# The home rsync brings back Ubuntu-era versions of the files install.sh manages
-# (ghostty/fastfetch configs, .bashrc); re-apply the Omarchy layer on top.
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-log "re-apply Omarchy layer over restored dotfiles"
-cp "$HERE/.bashrc" "$HOME/.bashrc"; cp "$HERE/.tmux.conf" "$HOME/.tmux.conf"; cp "$HERE/starship.toml" "$HOME/.config/starship.toml"
-cp -R "$HERE/config/." "$HOME/.config/"
-cp "$HERE/new-window" "$HERE/focus-mode" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{new-window,focus-mode}
-
-log "repos + work dirs"
-for d in helm projects dev-env playground work staging; do
-  $R "$SRC_HOST:$SRC/repos/$d/" "$HOME/$d/"
+for kind in home machine; do
+  if { [ "$kind" = home ] && [ -z "$HOME_SNAPSHOT" ]; } \
+     || { [ "$kind" = machine ] && [ -z "$MACHINE_SNAPSHOT" ]; }; then
+    selected=$(restic snapshots --tag "$kind-state" --json | uv run --no-project --python 3.12 python -c '
+import datetime, json, sys
+snapshots = json.load(sys.stdin)
+newest = max(snapshots, key=lambda s: datetime.datetime.fromisoformat(s["time"].replace("Z", "+00:00")), default=None)
+print(newest["id"] if newest else "")
+') || fail "cannot select $kind-state snapshot"
+    [[ "$selected" =~ ^[[:xdigit:]]{8,64}$ ]] || fail "no $kind-state snapshot; specify an explicit snapshot ID if available"
+    if [ "$kind" = home ]; then HOME_SNAPSHOT="$selected"; else MACHINE_SNAPSHOT="$selected"; fi
+  fi
 done
 
-log "system state (/etc bits, tailscale identity, wifi)"
-ssh "$SRC_HOST" "cat ~/$SRC/system/etc-and-state.tgz" > /tmp/etc-and-state.tgz
-sudo systemctl stop tailscaled 2>/dev/null
-sudo tar xzf /tmp/etc-and-state.tgz -C / var/lib/tailscale etc/NetworkManager/system-connections 2>/dev/null
-sudo chmod 600 /etc/NetworkManager/system-connections/* 2>/dev/null
-sudo systemctl start tailscaled NetworkManager 2>/dev/null
-rm -f /tmp/etc-and-state.tgz
-mkdir -p "$HOME/.ssh"; chmod 700 "$HOME/.ssh"; chmod 600 "$HOME/.ssh"/id_* "$HOME/.ssh"/spot-bot "$HOME/.ssh"/google_compute_engine 2>/dev/null
-
-[ "$HEAVY" = 1 ] || { log "done (light). --heavy also restores ollama models"; exit 0; }
-
-log "ollama models"
-ssh "$SRC_HOST" "cat ~/$SRC/heavy/ollama-models.tar" | sudo tar xf - -C /tmp usr/share/ollama/.ollama/models 2>/dev/null \
-  && sudo rsync -a /tmp/usr/share/ollama/.ollama/models/ /var/lib/ollama/models/ && sudo chown -R ollama:ollama /var/lib/ollama && sudo rm -rf /tmp/usr
-log "done (heavy)."
+mkdir -m 0700 -- "$TARGET" || fail "cannot create new target"
+mkdir -- "$TARGET/home" "$TARGET/archive" "$TARGET/system"
+restic restore "$HOME_SNAPSHOT" --verify --target "$TARGET/home" || fail "home restore failed; partial data remains in $TARGET"
+restic restore "$MACHINE_SNAPSHOT" --verify --target "$TARGET/archive" || fail "machine-state restore failed; partial data remains in $TARGET"
+ARCHIVE="$TARGET/archive/machine-state.tar"
+[ -f "$ARCHIVE" ] && [ ! -L "$ARCHIVE" ] || fail "machine-state.tar missing from selected snapshot"
+tar --extract --file "$ARCHIVE" --directory "$TARGET/system" --no-same-owner --same-permissions --acls --xattrs \
+  || fail "machine-state extraction failed; partial data remains in $TARGET"
+echo "restore OK: $TARGET"

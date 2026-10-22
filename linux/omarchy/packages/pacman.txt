@@ -24,6 +24,8 @@ zoxide
 glow
 unzip
 rsync
+restic
+rclone
 bash-completion
 # Dev
 base-devel
