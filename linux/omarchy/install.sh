@@ -1,20 +1,28 @@
 #!/usr/bin/env bash
-# install.sh — take a fresh Omarchy 4 box to the Ubuntu-box setup. Idempotent.
-#   ./install.sh                 # everything
+# install.sh — provision the x86_64 Omarchy hub. Idempotent.
+#   RAI_ROLE=producer ./install.sh # hub, including scheduled jobs
 #   ENABLE_TIMERS=0 ./install.sh # stage without arming the scheduled jobs (cutover)
 # Order: guard -> sudoers -> gh + helm -> packages -> configs -> fonts -> themes (native)
 #        -> dev tools -> claude -> system units + /etc -> timers (last).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
+MACHINE_ROLE="${RAI_ROLE:-producer}"
+case "$MACHINE_ROLE" in producer|consumer) ;; *) echo "RAI_ROLE must be producer or consumer"; exit 1;; esac
 ENABLE_TIMERS="${ENABLE_TIMERS:-1}"
+if [ "$MACHINE_ROLE" = consumer ]; then ENABLE_TIMERS=0; fi
 step() { echo; echo "== $*"; }
 
 # --- guard: Omarchy 4 only ---
 [ "$(uname -s)" = "Linux" ] || { echo "Linux only."; exit 1; }
+[ "$(uname -m)" = x86_64 ] || { echo "This package bootstrap is x86_64 only; use the ARM replica procedure."; exit 1; }
 command -v pacman >/dev/null || { echo "pacman not found: this targets Omarchy (Arch)."; exit 1; }
 [ -d /usr/share/omarchy ] || { echo "/usr/share/omarchy missing: not an Omarchy 4 install."; exit 1; }
 [ "$USER" = "abdullah" ] || echo "!! user is $USER, several units hardcode /home/abdullah"
+
+# Declare the role before any timer or brain mount can run.
+mkdir -p "$HOME/.config/rai"
+printf '{"role":"%s"}\n' "$MACHINE_ROLE" > "$HOME/.config/rai/machine.json"
 
 # --- [1] sudoers ---
 step "[1/9] sudoers"
@@ -81,6 +89,8 @@ chmod +x "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group" "$HOME/.
 # delete ~/.local/state/omarchy/agents/usage/{pi,opencode,agy}.json.
 cp "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$HERE/agents-local" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
 chmod +x "$HOME/.local/bin"/{new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,agents-local,keybindings-menu}
+mkdir -p "$HOME/.config/restic"
+install -m 0644 "$HERE/restic-excludes.txt" "$HOME/.config/restic/excludes.txt"
 # Web page theming retired 2026-09-25: sites use their own dark mode via the OS color-scheme. Drop what older runs installed.
 systemctl --user disable --now darkreader-theme-catchup.service 2>/dev/null || true
 rm -f "$HOME/.local/bin/darkreader-theme" "$HOME/.local/bin/darkreader-theme-catchup" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/systemd/user/darkreader-theme-catchup.service"
@@ -166,9 +176,13 @@ grep -q '^WIRELESS_REGDOM=' /etc/conf.d/wireless-regdom 2>/dev/null || echo 'WIR
 sudo systemctl daemon-reload
 sudo systemctl enable --now docker tailscaled sshd ollama 2>/dev/null || true
 sudo systemctl enable --now paccache.timer 2>/dev/null || true   # weekly pacman cache prune (keeps 3 versions); ruling 2026-09-09
-sudo ufw allow 22/tcp >/dev/null 2>&1 || true; sudo ufw allow 11434/tcp >/dev/null 2>&1 || true   # sshd (Mac sync) + ollama on the tailnet
+sudo ufw allow 22/tcp >/dev/null 2>&1 || true; sudo ufw allow 11434/tcp >/dev/null 2>&1 || true   # replica SSH + cloud-model client on the tailnet
 UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
-install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
+if [ "$MACHINE_ROLE" = producer ]; then
+  install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
+else
+  install -m 0644 "$HERE/systemd/obsidian-quit-guard.service" "$UNIT_DST/"
+fi
 systemctl --user daemon-reload
 systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
 TIMERS="news-daily news-weekly news-x-collect rai-maintenance rai-knowledge paper-portfolio gold-skim backup-drive obsidian-sync-watch agents-local"
@@ -185,11 +199,11 @@ cat <<MSG
 
 == Done. Manual steps (logins cannot be scripted):
   1. Reboot once (groups, uinput, i2c-dev, xremap).
-  2. tailscale up --ssh --hostname linux      (Mac pushes to linux:helm over Tailscale SSH)
+  2. tailscale up --ssh --hostname linux      (the hub keeps the linux tailnet identity)
   3. claude          -> browser login; then: claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud
   4. 1Password app sign-in, then Settings > Developer > SSH agent; gh auth status; opencode auth login
   5. Chrome: sign in, then log in to x.com, substack.com, medium.com (collectors read the Default profile cookies)
   6. Obsidian: open ~/helm, Settings > Sync re-pair, set "cli": true in ~/.config/obsidian/obsidian.json (app closed)
-  7. restore-backup.sh   (creds, repos, docker volumes, ollama models) if not done already
+  7. restore-backup.sh --target /absolute/new/target   (staging only; inspect before applying)
   8. omarchy update; verify with the checklist in helm/05-projects/completed/omarchy-migration/
 MSG
