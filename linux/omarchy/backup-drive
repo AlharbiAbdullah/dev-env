@@ -11,10 +11,12 @@ fail(){ log "FAIL: $*"; echo "$(date +%F) FAIL $*" > "$STATE/status"; notify-sen
 
 # Share the coordinator's lock for the whole job, including check and prune.
 # Keep the file: unlinking it would let another process lock a different inode.
+# Wait at most 4 hours (a maintenance run is far shorter), then fail loudly: a holder hangs.
 LOCK_STATE="$HOME/.local/state/rai-maintenance"
+LOCK_WAIT="${BACKUP_LOCK_WAIT_SEC:-14400}"
 mkdir -p "$LOCK_STATE" || fail "cannot create maintenance lock directory"
 exec 9>"$LOCK_STATE/.run.lock" || fail "cannot open maintenance lock"
-flock 9 || fail "cannot acquire maintenance lock"
+flock -w "$LOCK_WAIT" 9 || fail "maintenance lock still held after ${LOCK_WAIT}s, or flock failed"
 
 : > "$LOG" || fail "cannot open backup log"
 log "backup start" || fail "cannot write backup log"

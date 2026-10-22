@@ -135,6 +135,19 @@ def test_backup_waits_for_maintenance_then_acquires(sandbox: Sandbox) -> None:
     assert (home / ".local/state/rai-maintenance/.run.lock").is_file()
 
 
+def test_backup_gives_up_after_a_bounded_wait_and_fails_loudly(sandbox: Sandbox) -> None:
+    home, _ = sandbox
+    holder = start(sandbox, "maintenance", "holder")
+    wait_for(lambda: entered(home, "holder"))
+    contender = start(sandbox, "backup", "contender", BACKUP_LOCK_WAIT_SEC="1")
+    assert contender.wait(timeout=6) != 0, "backup must stop waiting at its limit"
+    assert not entered(home, "contender")
+    assert "FAIL" in (home / ".local/state/backup-drive/status").read_text()
+    assert holder.poll() is None
+    release(home, "holder")
+    assert holder.wait(timeout=4) == 0
+
+
 def test_live_old_lock_is_never_evicted(sandbox: Sandbox) -> None:
     home, _ = sandbox
     holder = start(sandbox, "maintenance", "holder")
