@@ -17,9 +17,8 @@ and plan, so the AI tab can draw one card per subscription.
 
 Invoked by the `agents-local` systemd timer, which also refreshes the synthetic
 "AI" record: one row per model and effort across Claude Code, Codex, pi and opencode
-(input+output tokens, no cache). Pass agent ids to refresh a subset, or
-`--force` to rebuild the Claude scan before its cache ages out:
-`agents-local --force 0-ai`.
+(every token: input, output, cache reads and cache writes, as on the Claude Code tab).
+opencode counts /council voices' private databases too. Pass agent ids to refresh a subset.
 """
 
 import functools
@@ -31,7 +30,6 @@ import subprocess
 import sys
 import tempfile
 import threading
-import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -44,10 +42,9 @@ RECENT_DATES = [
 ]
 
 AGENTS = ["pi", "opencode", "agy", "codex-cli"]
-# The AI tab aggregates every harness by model and effort. The Claude scan reads
-# ~1.5 GB of transcripts, so the record is rebuilt at most this often.
+# The AI tab aggregates every harness by model and effort. It is rebuilt on every
+# timer run (~5 s for ~1.8 GB of Claude transcripts), so its seven days stay current.
 AI_ID = "0-ai"
-AI_MAX_AGE = 1800
 
 AGY_BIN = shutil.which("agy") or str(Path.home() / ".local" / "bin" / "agy")
 CODEX_BIN = shutil.which("codex") or str(Path.home() / ".local" / "share" / "mise" / "shims" / "codex")
@@ -55,6 +52,7 @@ CODEX_BIN = shutil.which("codex") or str(Path.home() / ".local" / "share" / "mis
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
 OLLAMA_KEY = RUNTIME / "op-OLLAMA_USAGE_KEY"
 OLLAMA_PRO_CREDIT_USD = 60  # Pro: $60 of usage credit a month (ollama.com/pricing, 2026-10)
+OLLAMA_PRO_RENEWAL_DAY = 1  # Pro renews on the 1st of each month (02-ana/financial/subscriptions.md)
 
 
 def number(value):
@@ -168,11 +166,11 @@ def usage_from_parts(usage):
     return input_tokens, output_tokens, cache_read, cache_write
 
 
-def scan_pi(stats=None, effort=False, io_only=False):
+def scan_pi(stats=None, effort=False):
     """Every pi (and omp) assistant message, whatever provider it ran on.
 
     With effort=True the model key carries the session's thinking level, for
-    the AI tab. io_only drops cache tokens so the rows stay comparable.
+    the AI tab.
     """
     stats = stats or Stats()
     seen = set()
@@ -214,19 +212,28 @@ def scan_pi(stats=None, effort=False, io_only=False):
                 model = str(message.get("model") or "unknown")
                 if effort:
                     model = label(model, level)
-                if io_only:
-                    cache_read = cache_write = 0
                 day = local_day(entry.get("timestamp") or message.get("timestamp"))
                 stats.add(day, str(path), model, input_tokens, output_tokens, cache_read, cache_write)
     return stats
 
 
-def scan_opencode(stats=None, effort=False, io_only=False):
+def opencode_databases():
+    """His opencode database, plus the private one each /council voice keeps
+    under the Rai state folder: those voices run on the same subscriptions."""
+    main = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "opencode" / "opencode.db"
+    voices = sorted(STATE.glob("rai/*/opencode/*/data/opencode/opencode.db"))
+    return [db for db in [main, *voices] if db.is_file()]
+
+
+def scan_opencode(stats=None, effort=False):
     """Every opencode assistant message, whatever provider it ran on."""
     stats = stats or Stats()
-    db = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "opencode" / "opencode.db"
-    if not db.is_file():
-        return stats
+    for db in opencode_databases():
+        scan_opencode_db(db, stats, effort)
+    return stats
+
+
+def scan_opencode_db(db, stats, effort):
     conn = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
     try:
         conn.execute("PRAGMA query_only = ON")
@@ -252,35 +259,34 @@ def scan_opencode(stats=None, effort=False, io_only=False):
                 model = str(entry.get("modelID") or "unknown").rstrip("/").split("/")[-1]
                 if effort:
                     model = label(model, entry.get("variant"))
-                if io_only:
-                    cache_read = cache_write = 0
             except Exception:
                 continue
             stats.add(day, "opencode:" + str(session_id), model, input_tokens, output_tokens, cache_read, cache_write)
     finally:
         conn.close()
-    return stats
 
 
 def scan_claude(stats=None):
-    """Claude Code transcripts: model, effort, and input+output tokens.
+    """Claude Code transcripts: model, effort, and every token (input, output,
+    cache reads and cache writes).
 
     Claude Code logs one line per content block (thinking, text, tool use), each
-    carrying the whole reply's usage, and a resumed session copies earlier
-    replies into its new file. One reply counts once, by message and request id.
+    carrying the reply's usage as it stood then, so an early block's output count
+    is partial. A resumed session copies earlier replies into its new file. One
+    reply counts once, by message and request id, at its final (largest) count.
     """
     stats = stats or Stats()
     root = Path.home() / ".claude" / "projects"
     if not root.exists():
         return stats
-    seen = set()
+    replies = {}
     for path in root.rglob("*.jsonl"):
         try:
             handle = path.open(errors="replace")
         except OSError:
             continue
         with handle:
-            for raw in handle:
+            for line, raw in enumerate(handle):
                 try:
                     entry = json.loads(raw)
                 except Exception:
@@ -292,29 +298,38 @@ def scan_claude(stats=None):
                 model = str(message.get("model") or "")
                 if not usage or model in ("", "<synthetic>"):
                     continue
-                input_tokens = number(usage.get("input_tokens"))
-                output_tokens = number(usage.get("output_tokens"))
-                if not (input_tokens or output_tokens):
+                counts = [
+                    number(usage.get("input_tokens")),
+                    number(usage.get("output_tokens")),
+                    number(usage.get("cache_read_input_tokens")),
+                    number(usage.get("cache_creation_input_tokens")),
+                ]
+                if not any(counts):
                     continue
                 reply = (message.get("id"), entry.get("requestId"))
-                if reply[0]:
-                    if reply in seen:
-                        continue
-                    seen.add(reply)
-                stats.add(
-                    local_day(entry.get("timestamp")), str(path),
-                    label(model, entry.get("effort") or entry.get("perTurnEffort")),
-                    input_tokens, output_tokens, 0, 0,
-                )
+                if not reply[0]:
+                    reply = (str(path), line)
+                row = replies.get(reply)
+                if row is None:
+                    replies[reply] = [
+                        local_day(entry.get("timestamp")), str(path),
+                        label(model, entry.get("effort") or entry.get("perTurnEffort")),
+                        *counts,
+                    ]
+                else:
+                    row[3:] = [max(old, new) for old, new in zip(row[3:], counts)]
+    for day, session, model, *counts in replies.values():
+        stats.add(day, session, model, *counts)
     return stats
 
 
-def scan_codex(stats=None, effort=False, io_only=False):
+def scan_codex(stats=None, effort=False):
     """Codex CLI sessions: each turn's tokens, by model (and effort for the AI tab).
 
     A token_count event carries the last turn's usage. Its input_tokens include
     the cached part and its output_tokens the reasoning, so the cache is split
-    out once and nothing counts twice.
+    out once and nothing counts twice. Codex repeats an event with an unchanged
+    running total, so a repeat is skipped.
     """
     stats = stats or Stats()
     root = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
@@ -322,7 +337,7 @@ def scan_codex(stats=None, effort=False, io_only=False):
         if not (root / folder).exists():
             continue
         for path in (root / folder).rglob("*.jsonl"):
-            model, level = "codex", ""
+            model, level, running = "codex", "", None
             try:
                 lines = path.read_text(errors="replace").splitlines()
             except OSError:
@@ -342,14 +357,17 @@ def scan_codex(stats=None, effort=False, io_only=False):
                     continue
                 if payload.get("type") != "token_count":
                     continue
-                usage = (payload.get("info") or {}).get("last_token_usage") or {}
+                info = payload.get("info") or {}
+                if info.get("total_token_usage") is not None:
+                    if info["total_token_usage"] == running:
+                        continue
+                    running = info["total_token_usage"]
+                usage = info.get("last_token_usage") or {}
                 cache_read = number(usage.get("cached_input_tokens"))
                 input_tokens = max(0, number(usage.get("input_tokens")) - cache_read)
                 output_tokens = number(usage.get("output_tokens"))
                 if not (input_tokens or output_tokens or cache_read):
                     continue
-                if io_only:
-                    cache_read = 0
                 key = label(model, level) if effort else model
                 stats.add(local_day(entry.get("timestamp")), str(path), key, input_tokens, output_tokens, cache_read, 0)
     return stats
@@ -358,10 +376,10 @@ def scan_codex(stats=None, effort=False, io_only=False):
 def scan_ai():
     """One row per model and effort across every harness that counts tokens."""
     stats = Stats()
-    scan_pi(stats, effort=True, io_only=True)
-    scan_opencode(stats, effort=True, io_only=True)
+    scan_pi(stats, effort=True)
+    scan_opencode(stats, effort=True)
     scan_claude(stats)
-    scan_codex(stats, effort=True, io_only=True)
+    scan_codex(stats, effort=True)
     record = stats.record(AI_ID, "AI", "every model")
     # The model chart covers the same seven days as the day chart above it.
     record["modelUsage"] = stats.recent_model_usage
@@ -455,6 +473,19 @@ def agy_record():
     return record
 
 
+def ollama_reset_at():
+    """The date Ollama Pro's monthly credit renews: the 1st of next month.
+
+    The usage API reports no reset time, so the panel's countdown would sit
+    empty while every other card counts down. His billing date is fixed (the
+    1st), so compute it locally.
+    """
+    now = datetime.now().astimezone()
+    if now.month == 12:
+        return datetime(now.year + 1, 1, OLLAMA_PRO_RENEWAL_DAY, tzinfo=now.tzinfo).isoformat()
+    return datetime(now.year, now.month + 1, OLLAMA_PRO_RENEWAL_DAY, tzinfo=now.tzinfo).isoformat()
+
+
 @functools.cache
 def ollama_limits():
     """Ollama Pro's usage, as the fraction of its monthly credit spent.
@@ -475,7 +506,7 @@ def ollama_limits():
         return []
     return [{
         "label": f"30 days: ${spent:.2f} of ${OLLAMA_PRO_CREDIT_USD}", "title": "Ollama 30d",
-        "sub": "Ollama", "plan": "Pro", "percent": spent / OLLAMA_PRO_CREDIT_USD, "resetsAt": "",
+        "sub": "Ollama", "plan": "Pro", "percent": spent / OLLAMA_PRO_CREDIT_USD, "resetsAt": ollama_reset_at(),
     }]
 
 
@@ -495,6 +526,29 @@ def codex_rpc(proc, request_id, method, params=None):
             return reply
 
 
+def last_openai_windows(reason):
+    """The last good OpenAI windows, so one failed read does not drop the card.
+
+    A window past its reset no longer holds, so it goes. The reason lands in the
+    journal, so the next hang shows its cause.
+    """
+    print(f"agents-local: OpenAI limits read failed ({reason}); kept the last reading", file=sys.stderr)
+    try:
+        record = json.loads((USAGE_DIR / "codex-cli.json").read_text())
+    except (OSError, ValueError):
+        return []
+    now = datetime.now(timezone.utc)
+    kept = []
+    for window in record.get("limits") or []:
+        try:
+            live = datetime.fromisoformat(window["resetsAt"]) > now
+        except (KeyError, TypeError, ValueError):
+            live = False
+        if window.get("sub") == "OpenAI" and live:
+            kept.append(window)
+    return kept
+
+
 @functools.cache
 def openai_limits():
     """ChatGPT Plus's 5-hour and weekly windows, read through the Codex CLI.
@@ -503,14 +557,15 @@ def openai_limits():
     the same Codex allowance the Codex app server reports (as Omarchy's own
     codex collector reads it). Needs `codex login` once; no login, no windows.
     """
+    errors = tempfile.TemporaryFile("w+")
     try:
         proc = subprocess.Popen(
             [CODEX_BIN, "-s", "read-only", "-a", "on-request", "app-server"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors,
             text=True, cwd=tempfile.gettempdir(),
         )
-    except OSError:
-        return []
+    except OSError as error:
+        return last_openai_windows(error)
     timer = threading.Timer(20, proc.kill)
     timer.start()
     try:
@@ -518,12 +573,17 @@ def openai_limits():
         proc.stdin.write(json.dumps({"method": "initialized", "params": {}}) + "\n")
         proc.stdin.flush()
         limits = (codex_rpc(proc, 2, "account/rateLimits/read").get("result") or {}).get("rateLimits") or {}
-    except Exception:
-        return []
+    except Exception as error:
+        reason = "timed out after 20 s" if timer.finished.is_set() else error
+        proc.kill()
+        proc.wait()
+        errors.seek(0)
+        return last_openai_windows(f"{reason}; codex stderr: {errors.read()[-500:].strip()}")
     finally:
         timer.cancel()
         proc.kill()
         proc.wait()
+        errors.close()
     plan = str(limits.get("planType") or "").replace("_", " ").title()
     windows = []
     for window in (limits.get("primary"), limits.get("secondary")):
@@ -566,13 +626,6 @@ COLLECTORS = {
 }
 
 
-def ai_stale():
-    path = USAGE_DIR / f"{AI_ID}.json"
-    if not path.exists():
-        return True
-    return time.time() - path.stat().st_mtime > AI_MAX_AGE
-
-
 def write_record(agent_id, record):
     USAGE_DIR.mkdir(parents=True, exist_ok=True)
     handle_fd, tmp_name = tempfile.mkstemp(dir=USAGE_DIR, prefix=f".{agent_id}.", suffix=".tmp")
@@ -589,14 +642,12 @@ def write_record(agent_id, record):
 
 def main():
     args = sys.argv[1:]
-    force = "--force" in args
     requested = [arg for arg in args if not arg.startswith("-")] or AGENTS + [AI_ID]
     status = 0
     for agent_id in requested:
         try:
             if agent_id == AI_ID:
-                if force or ai_stale():
-                    write_record(AI_ID, scan_ai())
+                write_record(AI_ID, scan_ai())
             elif agent_id in COLLECTORS:
                 write_record(agent_id, COLLECTORS[agent_id]())
             else:
