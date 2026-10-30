@@ -40,11 +40,11 @@ real target and its real load, and you write down why a choice was made.
 ## Workflows
 
 <!-- rai:workflows -->
-- [[01-project]] step 5: Tech stack
-- [[07-learning-tech]] step 4: Decision
-- [[30-architecture-decision]] step 5: Paths
-- [[31-ai-system-build]] step 3: Harness, tools, retrieval
-- [[32-work-engagement]] step 1: Frame
+- [01-project](../../11-maze/inventory/playbooks/01-project.md) step 5: Tech stack
+- [07-learning-tech](../../11-maze/inventory/playbooks/07-learning-tech.md) step 4: Decision
+- [30-architecture-decision](../../11-maze/inventory/playbooks/30-architecture-decision.md) step 5: Paths
+- [31-ai-system-build](../../11-maze/inventory/playbooks/31-ai-system-build.md) step 3: Harness, tools, retrieval
+- [32-work-engagement](../../11-maze/inventory/playbooks/32-work-engagement.md) step 1: Frame
 <!-- /rai:workflows -->
 
 ## Return

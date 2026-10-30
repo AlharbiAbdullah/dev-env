@@ -51,8 +51,8 @@ Check usability within the product's scope; the web guidelines alone do not cert
 ## Workflows
 
 <!-- rai:workflows -->
-- [[38-ui-ux-build]] step 4: Run the design panel
-- [[38-ui-ux-build]] step 9: Accessibility
+- [38-ui-ux-build](../../11-maze/inventory/playbooks/38-ui-ux-build.md) step 4: Run the design panel
+- [38-ui-ux-build](../../11-maze/inventory/playbooks/38-ui-ux-build.md) step 9: Accessibility
 <!-- /rai:workflows -->
 
 ## Return

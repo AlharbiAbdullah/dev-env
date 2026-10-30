@@ -51,19 +51,19 @@ searchable sub-queries, check sources, and combine findings with citations.
 ## Workflows
 
 <!-- rai:workflows -->
-- [[01-project]] step 4: Mission first
-- [[07-learning-tech]] step 2: Evaluate (30 minutes max)
-- [[13-capture-sweep]] step 2: Research the inbox
-- [[18-deep-research-to-home]] step 2: Research
-- [[23-audit]] step 3: Research, writing nothing
-- [[24-changing-rai]] step 3: Research how others do it
-- [[26-purchase]] step 4: Search
-- [[28-data-platform]] step 5: Target design
-- [[30-architecture-decision]] step 5: Paths
-- [[31-ai-system-build]] step 2: Model and serving
-- [[33-career]] step 4: Apply for a role (stub)
-- [[42-fork-and-merge]] step 1: Learn the upstream first
-- [[43-subscriptions]] step 2: Compare with real numbers (a start or a switch)
+- [01-project](../../11-maze/inventory/playbooks/01-project.md) step 4: Mission first
+- [07-learning-tech](../../11-maze/inventory/playbooks/07-learning-tech.md) step 2: Evaluate (30 minutes max)
+- [13-capture-sweep](../../11-maze/inventory/playbooks/13-capture-sweep.md) step 2: Research the inbox
+- [18-deep-research-to-home](../../11-maze/inventory/playbooks/18-deep-research-to-home.md) step 2: Research
+- [23-audit](../../11-maze/inventory/playbooks/23-audit.md) step 3: Research, writing nothing
+- [24-changing-rai](../../11-maze/inventory/playbooks/24-changing-rai.md) step 3: Research how others do it
+- [26-purchase](../../11-maze/inventory/playbooks/26-purchase.md) step 4: Search
+- [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 5: Target design
+- [30-architecture-decision](../../11-maze/inventory/playbooks/30-architecture-decision.md) step 5: Paths
+- [31-ai-system-build](../../11-maze/inventory/playbooks/31-ai-system-build.md) step 2: Model and serving
+- [33-career](../../11-maze/inventory/playbooks/33-career.md) step 4: Apply for a role (stub)
+- [42-fork-and-merge](../../11-maze/inventory/playbooks/42-fork-and-merge.md) step 1: Learn the upstream first
+- [43-subscriptions](../../11-maze/inventory/playbooks/43-subscriptions.md) step 2: Compare with real numbers (a start or a switch)
 <!-- /rai:workflows -->
 
 ## Return

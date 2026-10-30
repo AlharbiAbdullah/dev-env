@@ -39,7 +39,7 @@ read everything in your lane, cite every finding, and change nothing.
 ## Workflows
 
 <!-- rai:workflows -->
-- [[23-audit]] step 3: Research, writing nothing
+- [23-audit](../../11-maze/inventory/playbooks/23-audit.md) step 3: Research, writing nothing
 <!-- /rai:workflows -->
 
 ## Return

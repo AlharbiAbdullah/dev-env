@@ -29,6 +29,8 @@ back your verdict.
 
 - **Functional**: Does it do what the spec says?
 - **Edge cases**: Empty, null, negative, max, min, unicode, special chars
+- **Stateful**: Beside hostile single inputs, clashing calls fired at once and steps run out of order or skipped.
+  Copy first: a test that writes, clashes or loads state runs on a scratch copy, never live or shared state
 - **Error handling**: Bad input, network failure, timeout, missing data
 - **Integration**: Do components work together correctly?
 - **Reconciliation**: Fields as well as rows, received against stored
@@ -58,6 +60,10 @@ For screenshot evidence, try the headless browser CLI against the test target.
 Never launch a GUI app, browser window or web app. If headless capture is unavailable,
 record NOT RUN with the cause for the screenshot case; do not claim visual proof.
 
+Briefed for `/testing → first-time-user`, you are a stranger: the URL and the user goal are all
+you know. Never read the app's source, HTML, JS, config, repo or docs. Report what confused you,
+each point with its step and screenshot path.
+
 ## Output
 
 | Test | Status | Evidence |
@@ -74,26 +80,31 @@ Non-blocking issues noted for future iteration.
 ## Skills
 
 - `/testing → e2e`: user paths
+- `/testing → first-time-user`: the cold pass, as a stranger
 - `/testing → api-test`: endpoints
 - `/testing → verify-completion`: is it really done
 
 ## Workflows
 
 <!-- rai:workflows -->
-- [[04-debugging]] step 6: Verify
-- [[06-shipping]] step 5: Post-Deploy Verification
-- [[10-news-digest-recovery]] step 5: Verify the digest is real
-- [[16-machines]] step 5: Change: verify without stealing focus
-- [[16-machines]] step 9: Mirror: work on the laptop over SSH
-- [[24-changing-rai]] step 7: Prove it
-- [[27-data-pipeline]] step 8: Prove it by reconciliation
-- [[29-air-gapped-delivery]] step 3: Rehearse in a sealed lab
-- [[31-ai-system-build]] step 6: Prod-mimic proof
-- [[32-work-engagement]] step 5: Demo
-- [[32-work-engagement]] step 6: Prove on a copy of prod
-- [[36-performance]] step 9: Verify live, end to end
-- [[37-infrastructure-build]] step 6: Prove it from a clean start
-- [[39-presenting-data]] step 7: Prove the numbers
+- [04-debugging](../../11-maze/inventory/playbooks/04-debugging.md) step 6: Verify
+- [06-shipping](../../11-maze/inventory/playbooks/06-shipping.md) step 1: Pre-Ship Checklist
+- [06-shipping](../../11-maze/inventory/playbooks/06-shipping.md) step 5: Post-Deploy Verification
+- [10-news-digest-recovery](../../11-maze/inventory/playbooks/10-news-digest-recovery.md) step 5: Verify the digest is real
+- [16-machines](../../11-maze/inventory/playbooks/16-machines.md) step 5: Change: verify without stealing focus
+- [16-machines](../../11-maze/inventory/playbooks/16-machines.md) step 9: Mirror: work on the laptop over SSH
+- [21-project-init](../../11-maze/inventory/playbooks/21-project-init.md)
+- [24-changing-rai](../../11-maze/inventory/playbooks/24-changing-rai.md) step 7: Prove it
+- [27-data-pipeline](../../11-maze/inventory/playbooks/27-data-pipeline.md) step 8: Prove it by reconciliation
+- [29-air-gapped-delivery](../../11-maze/inventory/playbooks/29-air-gapped-delivery.md) step 3: Rehearse in a sealed lab
+- [31-ai-system-build](../../11-maze/inventory/playbooks/31-ai-system-build.md) step 6: Prod-mimic proof
+- [32-work-engagement](../../11-maze/inventory/playbooks/32-work-engagement.md) step 5: Demo
+- [32-work-engagement](../../11-maze/inventory/playbooks/32-work-engagement.md) step 6: Prove on a copy of prod
+- [36-performance](../../11-maze/inventory/playbooks/36-performance.md) step 9: Verify live, end to end
+- [37-infrastructure-build](../../11-maze/inventory/playbooks/37-infrastructure-build.md) step 6: Prove it from a clean start
+- [38-ui-ux-build](../../11-maze/inventory/playbooks/38-ui-ux-build.md) step 10: Rai looks before he does
+- [39-presenting-data](../../11-maze/inventory/playbooks/39-presenting-data.md) step 7: Prove the numbers
+- [44-mvp](../../11-maze/inventory/playbooks/44-mvp.md) step 4: Check from scratch
 <!-- /rai:workflows -->
 
 ## Return

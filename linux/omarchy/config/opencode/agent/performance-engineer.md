@@ -32,7 +32,7 @@ passes, then clean up while it stays green. Code follows
 1. Reproduce the slowness and record the baseline.
 2. Profile and find the dominant cost.
 3. Rank costs with evidence, proposed fixes and expected gains. Return them without edits.
-4. Change one proven cause only after his go in [[36-performance]] step 5, and only
+4. Change one proven cause only after his go in [36-performance](../../11-maze/inventory/playbooks/36-performance.md) step 5. Stay
    inside the brief's Writes line. A read-only brief never authorizes a fix.
 5. Measure again at the situation's real volume, on the same machine and load.
    Report before and after numbers; the next cause waits for its own go.
@@ -46,7 +46,9 @@ passes, then clean up while it stays green. Code follows
 ## Workflows
 
 <!-- rai:workflows -->
-- [[36-performance]] step 4: Investigate in parallel, writing nothing
+- [06-shipping](../../11-maze/inventory/playbooks/06-shipping.md) step 1: Pre-Ship Checklist
+- [21-project-init](../../11-maze/inventory/playbooks/21-project-init.md)
+- [36-performance](../../11-maze/inventory/playbooks/36-performance.md) step 4: Investigate in parallel, writing nothing
 <!-- /rai:workflows -->
 
 ## Return

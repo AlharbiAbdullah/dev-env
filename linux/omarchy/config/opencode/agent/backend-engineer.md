@@ -44,7 +44,8 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[07-learning-tech]] step 3: Spike (2-4 hours max)
+- [07-learning-tech](../../11-maze/inventory/playbooks/07-learning-tech.md) step 3: Spike (2-4 hours max)
+- [44-mvp](../../11-maze/inventory/playbooks/44-mvp.md) step 3: Build throwaway
 <!-- /rai:workflows -->
 
 ## Return

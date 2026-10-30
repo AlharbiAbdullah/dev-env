@@ -44,9 +44,9 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[27-data-pipeline]] step 7: Model the layer
-- [[28-data-platform]] step 5: Target design
-- [[39-presenting-data]] step 6: Build the view
+- [27-data-pipeline](../../11-maze/inventory/playbooks/27-data-pipeline.md) step 7: Model the layer
+- [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 5: Target design
+- [39-presenting-data](../../11-maze/inventory/playbooks/39-presenting-data.md) step 6: Build the view
 <!-- /rai:workflows -->
 
 ## Return

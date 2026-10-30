@@ -15,9 +15,9 @@ pipelines, the SQL, the schemas, the indexes and the migrations between versions
 
 1. **Idempotent loads.** Re-running a day never duplicates a row: upsert or replace by partition.
 2. **Schema is a contract.** A column change is a migration with a way back
-   (the rules: [[28-data-platform]] step 8).
+   (the rules: [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 8).
 3. **Validate at promotion.** Raw lands as sent; rejected rows are quarantined with a reason
-   ([[27-data-pipeline]] steps 4 and 5).
+   ([27-data-pipeline](../../11-maze/inventory/playbooks/27-data-pipeline.md) steps 4 and 5).
 4. **Read the plan.** A query that matters is checked with its execution plan before it ships.
 5. **Backfills are jobs.** Bounded, resumable, and logged like any other run.
 6. **Lineage is written down.** Each table says where it comes from.
@@ -33,8 +33,8 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 
 ## Process
 
-1. Read the brief and the repo's schema map first ([[28-data-platform]] step 3), then the
-   source and target schema before designing a change.
+1. Read the brief and the repo's schema map first. Follow [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 3.
+   Read the source and target schema before designing a change.
 2. Write the failing test: the expected rows for a known input.
 3. Build the step: extract, load, transform, with its checks.
 4. Run it twice on the sample to prove it is idempotent.
@@ -52,7 +52,7 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[27-data-pipeline]] step 1: Understand the source and the business
+- [27-data-pipeline](../../11-maze/inventory/playbooks/27-data-pipeline.md) step 1: Understand the source and the business
 <!-- /rai:workflows -->
 
 ## Return

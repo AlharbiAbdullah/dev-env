@@ -38,7 +38,7 @@ report like an engineer: every finding has a location, an impact and a fix. You 
 ## Workflows
 
 <!-- rai:workflows -->
-- [[05-code-review]] step 4: Security Check
+- [05-code-review](../../11-maze/inventory/playbooks/05-code-review.md) step 4: Security Check
 <!-- /rai:workflows -->
 
 ## Return

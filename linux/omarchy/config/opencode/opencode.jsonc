@@ -4,13 +4,13 @@
   "autoupdate": false,
   // No public share links: Claude Code has no share path either.
   "share": "disabled",
-  // Only the providers he pays for: ChatGPT sign-in and Ollama Pro. This hides the free
-  // Zen models (some train on prompts) and OpenRouter, whose key his shell exports.
-  "enabled_providers": ["openai", "ollama"],
-  "model": "ollama/deepseek-v4-pro:cloud",
-  // Session titles: the session model already served most of them; this keeps the title
-  // call off the Sol allowance.
-  "small_model": "ollama/deepseek-v4.1-flash:cloud",
+  // Only ChatGPT sign-in: Ollama is out of the system for now (his ruling 2026-10-23), and its
+  // provider block below stays for a later return. This also hides the free Zen models (some
+  // train on prompts) and OpenRouter, whose key his shell exports.
+  "enabled_providers": ["openai"],
+  "model": "openai/gpt-6.1-sol",
+  // Session titles run on the same model: Sol is the only enabled one.
+  "small_model": "openai/gpt-6.1-sol",
   // No guards, his ruling 2026-10-07: every tool runs without asking, as he works in Claude Code.
   // The skill block only hides skills that are not Rai's.
   "permission": {
@@ -21,6 +21,7 @@
     // rai:render begin skill (03-rai/harness/opencode/render_config.py rewrites this block)
     "skill": {
       "*": "allow",
+      "artifact-emulator": "deny",
       "built-in-browser": "deny",
       "chrome-browser": "deny",
       "computer-use": "deny",
@@ -79,7 +80,7 @@
       "models": {
         "gpt-6.1-sol": {
           "options": {
-            "reasoningEffort": "xhigh"
+            "reasoningEffort": "high"
           }
         }
       }

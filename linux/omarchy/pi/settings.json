@@ -1,10 +1,9 @@
 {
-  "defaultProvider": "ollama",
-  "defaultModel": "deepseek-v4-pro:cloud",
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-6.1-sol",
   "defaultThinkingLevel": "high",
   "enabledModels": [
-    "openai/gpt-6.1-sol",
-    "ollama/*"
+    "openai/gpt-6.1-sol"
   ],
   "skills": [
     "!**/.pi/agent/skills/**",

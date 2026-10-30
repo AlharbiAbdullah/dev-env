@@ -67,19 +67,19 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[06-shipping]] step 4: Deploy
-- [[06-shipping]] step 7: Rollback Plan
-- [[10-news-digest-recovery]] step 1: Triage: timer, run or source
-- [[10-news-digest-recovery]] step 2: Find the failed source
-- [[10-news-digest-recovery]] step 6: Fix it forward
-- [[16-machines]] step 5: Change: verify without stealing focus
-- [[16-machines]] step 13: Stand up: day 2
-- [[17-brain-healthcheck]] step 2: BROKEN stops everything
-- [[25-incident]] step 3: Look where the evidence is
-- [[27-data-pipeline]] step 10: One operator surface
-- [[29-air-gapped-delivery]] step 2: Build the bundle
-- [[32-work-engagement]] step 7: Package and hand over
-- [[37-infrastructure-build]] step 5: Script it, one layer per folder
+- [06-shipping](../../11-maze/inventory/playbooks/06-shipping.md) step 4: Deploy
+- [06-shipping](../../11-maze/inventory/playbooks/06-shipping.md) step 7: Rollback Plan
+- [10-news-digest-recovery](../../11-maze/inventory/playbooks/10-news-digest-recovery.md) step 1: Triage: timer, run or source
+- [10-news-digest-recovery](../../11-maze/inventory/playbooks/10-news-digest-recovery.md) step 2: Find the failed source
+- [10-news-digest-recovery](../../11-maze/inventory/playbooks/10-news-digest-recovery.md) step 6: Fix it forward
+- [16-machines](../../11-maze/inventory/playbooks/16-machines.md) step 5: Change: verify without stealing focus
+- [16-machines](../../11-maze/inventory/playbooks/16-machines.md) step 13: Stand up: day 2
+- [17-brain-healthcheck](../../11-maze/inventory/playbooks/17-brain-healthcheck.md) step 2: BROKEN stops everything
+- [25-incident](../../11-maze/inventory/playbooks/25-incident.md) step 3: Look where the evidence is
+- [27-data-pipeline](../../11-maze/inventory/playbooks/27-data-pipeline.md) step 10: One operator surface
+- [29-air-gapped-delivery](../../11-maze/inventory/playbooks/29-air-gapped-delivery.md) step 2: Build the bundle
+- [32-work-engagement](../../11-maze/inventory/playbooks/32-work-engagement.md) step 7: Package and hand over
+- [37-infrastructure-build](../../11-maze/inventory/playbooks/37-infrastructure-build.md) step 5: Script it, one layer per folder
 <!-- /rai:workflows -->
 
 ## Return

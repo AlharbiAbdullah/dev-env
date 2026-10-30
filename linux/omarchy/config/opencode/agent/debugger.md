@@ -59,10 +59,10 @@ A fix follows `~/helm/03-rai/skills/coding-standards/common.md` and the language
 ## Workflows
 
 <!-- rai:workflows -->
-- [[04-debugging]] step 4: Diagnose
-- [[17-brain-healthcheck]] step 2: BROKEN stops everything
-- [[25-incident]] step 3: Look where the evidence is
-- [[29-air-gapped-delivery]] step 7: It failed on site
+- [04-debugging](../../11-maze/inventory/playbooks/04-debugging.md) step 4: Diagnose
+- [17-brain-healthcheck](../../11-maze/inventory/playbooks/17-brain-healthcheck.md) step 2: BROKEN stops everything
+- [25-incident](../../11-maze/inventory/playbooks/25-incident.md) step 3: Look where the evidence is
+- [29-air-gapped-delivery](../../11-maze/inventory/playbooks/29-air-gapped-delivery.md) step 7: It failed on site
 <!-- /rai:workflows -->
 
 ## Return

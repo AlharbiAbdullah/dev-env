@@ -36,7 +36,7 @@ contracts and tests, and report issues with evidence.
 - [ ] Security smells are reported and routed to `security-reviewer`
 - [ ] Code follows existing project patterns
 
-Scope the review and its test evidence to the diff. For [[22-starter-kit-export]]
+Scope the review and its test evidence to the diff. For [22-starter-kit-export](../../11-maze/inventory/playbooks/22-starter-kit-export.md)
 step 5, preserve the explicit privacy review over the whole kit tree.
 
 ## Output Format
@@ -59,11 +59,11 @@ Summary: PASS / PASS WITH NOTES / FAIL (with blocking issues listed)
 ## Workflows
 
 <!-- rai:workflows -->
-- [[05-code-review]] step 2: Architecture Check
-- [[21-project-init]]
-- [[22-starter-kit-export]] step 5: The privacy check (the whole kit tree, not just the diff)
-- [[24-changing-rai]] step 10: Land it
-- [[42-fork-and-merge]] step 6: Prove it
+- [05-code-review](../../11-maze/inventory/playbooks/05-code-review.md) step 2: Architecture Check
+- [21-project-init](../../11-maze/inventory/playbooks/21-project-init.md)
+- [22-starter-kit-export](../../11-maze/inventory/playbooks/22-starter-kit-export.md) step 5: The privacy check (the whole kit tree, not just the diff)
+- [24-changing-rai](../../11-maze/inventory/playbooks/24-changing-rai.md) step 10: Land it
+- [42-fork-and-merge](../../11-maze/inventory/playbooks/42-fork-and-merge.md) step 6: Prove it
 <!-- /rai:workflows -->
 
 ## Return

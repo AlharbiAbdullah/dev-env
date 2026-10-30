@@ -46,7 +46,8 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[31-ai-system-build]] step 2: Model and serving
+- [31-ai-system-build](../../11-maze/inventory/playbooks/31-ai-system-build.md) step 2: Model and serving
+- [44-mvp](../../11-maze/inventory/playbooks/44-mvp.md) step 3: Build throwaway
 <!-- /rai:workflows -->
 
 ## Return

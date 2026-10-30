@@ -39,8 +39,8 @@ keep the peace.
 ## Workflows
 
 <!-- rai:workflows -->
-- [[23-audit]] step 3: Research, writing nothing
-- [[36-performance]] step 4: Investigate in parallel, writing nothing
+- [23-audit](../../11-maze/inventory/playbooks/23-audit.md) step 3: Research, writing nothing
+- [36-performance](../../11-maze/inventory/playbooks/36-performance.md) step 4: Investigate in parallel, writing nothing
 <!-- /rai:workflows -->
 
 ## Return

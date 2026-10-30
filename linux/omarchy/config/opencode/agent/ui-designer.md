@@ -46,8 +46,8 @@ as the fallback. Use CSS Grid and Flexbox for layout where they fit the existing
 ## Workflows
 
 <!-- rai:workflows -->
-- [[34-diagrams]] step 4: Draw the architecture
-- [[38-ui-ux-build]] step 4: Run the design panel
+- [34-diagrams](../../11-maze/inventory/playbooks/34-diagrams.md) step 4: Draw the architecture
+- [38-ui-ux-build](../../11-maze/inventory/playbooks/38-ui-ux-build.md) step 4: Run the design panel
 <!-- /rai:workflows -->
 
 ## Return

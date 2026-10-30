@@ -39,7 +39,7 @@ and how it changes without breaking its callers.
 ## Workflows
 
 <!-- rai:workflows -->
-- [[30-architecture-decision]] step 5: Paths
+- [30-architecture-decision](../../11-maze/inventory/playbooks/30-architecture-decision.md) step 5: Paths
 <!-- /rai:workflows -->
 
 ## Return

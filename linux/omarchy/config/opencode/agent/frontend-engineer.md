@@ -51,8 +51,9 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[38-ui-ux-build]] step 4: Run the design panel
-- [[38-ui-ux-build]] step 7: Build inside the product's system
+- [38-ui-ux-build](../../11-maze/inventory/playbooks/38-ui-ux-build.md) step 4: Run the design panel
+- [38-ui-ux-build](../../11-maze/inventory/playbooks/38-ui-ux-build.md) step 7: Build inside the product's system
+- [44-mvp](../../11-maze/inventory/playbooks/44-mvp.md) step 3: Build throwaway
 <!-- /rai:workflows -->
 
 ## Return

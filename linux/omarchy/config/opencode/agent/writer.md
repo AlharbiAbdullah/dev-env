@@ -41,8 +41,8 @@ North star: `thmanyah.com/articles`. Try hard to match its voice. Other style mo
 ## Panel workflow (serious Arabic)
 
 Serious Arabic runs the `/council → write` (`write-arabic`) panel, and only when the orchestrator
-adopts the writer in the main thread. Its steps are written once, in [[20-arabic-piece-pipeline]]
-(`~/helm/11-workflows/20-arabic-piece-pipeline.md`): read it before the first draft and follow it.
+adopts the writer in the main thread. Follow [20-arabic-piece-pipeline](../../11-maze/inventory/playbooks/20-arabic-piece-pipeline.md).
+Read `~/helm/11-maze/inventory/playbooks/20-arabic-piece-pipeline.md` before the first draft.
 A spawned writer runs no panel: it takes its step and returns.
 
 ## Process
@@ -69,10 +69,10 @@ A spawned writer runs no panel: it takes its step and returns.
 ## Workflows
 
 <!-- rai:workflows -->
-- [[20-arabic-piece-pipeline]] step 4: The panel: parallel drafts, one synthesis
-- [[30-architecture-decision]] step 7: The paper for the audience
-- [[32-work-engagement]] step 7: Package and hand over
-- [[33-career]] step 2: Publish a proof piece
+- [20-arabic-piece-pipeline](../../11-maze/inventory/playbooks/20-arabic-piece-pipeline.md) step 4: The panel: parallel drafts, one synthesis
+- [30-architecture-decision](../../11-maze/inventory/playbooks/30-architecture-decision.md) step 7: The paper for the audience
+- [32-work-engagement](../../11-maze/inventory/playbooks/32-work-engagement.md) step 7: Package and hand over
+- [33-career](../../11-maze/inventory/playbooks/33-career.md) step 2: Publish a proof piece
 <!-- /rai:workflows -->
 
 ## Return

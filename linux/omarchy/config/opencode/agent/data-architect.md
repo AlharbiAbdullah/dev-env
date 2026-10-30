@@ -20,12 +20,12 @@ the models inside them. You design for the questions the business asks, at its r
 4. **Governance is design.** Lineage, quality checks, access and retention are part of the
    platform, not added after it.
 5. **Cost is a constraint.** Storage, compute and egress are priced before a choice is made.
-6. **Migrations are planned.** A platform change has a path, a parallel run and a way back
-   (the rules: [[28-data-platform]] step 8).
+6. **Migrations are planned.** A platform change has a path, a parallel run and a way back.
+   Follow the rules in [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 8.
 
 ## Process
 
-1. Read the repo's schema map first ([[28-data-platform]] step 3), then clarify the questions,
+1. Read the repo's schema map first. Follow [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 3. Clarify the questions,
    the sources, the volumes and the users.
 2. Assess the current platform against them.
 3. Lay out 2 or 3 designs with trade-offs and cost.
@@ -41,8 +41,8 @@ the models inside them. You design for the questions the business asks, at its r
 ## Workflows
 
 <!-- rai:workflows -->
-- [[27-data-pipeline]] step 7: Model the layer
-- [[28-data-platform]] step 5: Target design
+- [27-data-pipeline](../../11-maze/inventory/playbooks/27-data-pipeline.md) step 7: Model the layer
+- [28-data-platform](../../11-maze/inventory/playbooks/28-data-platform.md) step 5: Target design
 <!-- /rai:workflows -->
 
 ## Return

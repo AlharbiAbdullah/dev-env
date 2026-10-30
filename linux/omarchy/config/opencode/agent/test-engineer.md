@@ -43,7 +43,7 @@ Test first, in the cycle RED, GREEN, REFACTOR: a failing test, the least code th
 ## Workflows
 
 <!-- rai:workflows -->
-- [[04-debugging]] step 5: Fix
+- [04-debugging](../../11-maze/inventory/playbooks/04-debugging.md) step 5: Fix
 <!-- /rai:workflows -->
 
 ## Return
