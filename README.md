@@ -1,12 +1,11 @@
 # dev-env
 
-Personal dev environment for the Omarchy hub and the Mac, mirrored 1:1.
+Personal dev environment for the Omarchy hub and replica.
 
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `mac/` | zsh, Ghostty, tmux, AeroSpace, starship, theme system, Brewfile, `setup.sh` |
 | `linux/omarchy/` | Omarchy 4 layer: personal deltas over Omarchy defaults, `install.sh` + backup/restore (see its README) |
 | `archive/theming/` | the retired custom theme system (2026-10-04); the hub runs stock Omarchy |
 
@@ -14,12 +13,6 @@ Personal dev environment for the Omarchy hub and the Mac, mirrored 1:1.
 
 ```bash
 git clone https://github.com/AlharbiAbdullah/dev-env.git
-```
-
-**macOS:**
-
-```bash
-cd mac && ./setup.sh
 ```
 
 **Omarchy hub:**
@@ -30,26 +23,22 @@ cd linux/omarchy && RAI_ROLE=producer ./install.sh   # see linux/omarchy/README.
 
 ## Shells
 
-Mac = **zsh**. Linux = **bash**. The rc files mirror the same tools and aliases
-(starship, zoxide, fzf, eza, git shortcuts) — only the shell differs.
+Both machines use **bash** with starship, zoxide, fzf, eza and git shortcuts.
 
 ## Secrets
 
-API keys live in a gitignored machine-local file the rc file sources on startup:
-`~/.zshrc.local` on Mac, `~/.bashrc.local` on the hub.
+Secrets live in 1Password and load through `__op_env`. The shell sources the
+machine-local `~/.bashrc.local` file. Its tracked example contains only 1Password references.
 
 ```bash
-# Mac
-cp mac/.zshrc.local.example ~/.zshrc.local
-# Omarchy hub
-cp mac/.zshrc.local.example ~/.bashrc.local   # secrets resolve from 1Password via op (see the __op_env helper)
+cp linux/omarchy/.bashrc.local.example ~/.bashrc.local
 ```
 
 ## Themes
 
 The hub runs stock Omarchy themes and wallpapers (`SUPER CTRL T` theme menu,
 `SUPER CTRL W` background menu). The custom theme system was retired 2026-10-04
-and lives in `archive/theming/`. The Mac keeps its `theme` script until it is sold.
+and lives in `archive/theming/`.
 
 ## Hub parity checklist
 
