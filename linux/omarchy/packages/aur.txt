@@ -4,9 +4,10 @@ visual-studio-code-bin    # /usr/bin/code (theme switcher targets it explicitly)
 cursor-bin                # /usr/bin/cursor; ~/.local/bin/code -> /usr/bin/cursor shim
 1password-cli             # 1password app itself ships with Omarchy
 blesh-git                 # ble.sh -> /usr/share/blesh
-xremap-hypr-bin           # Mac-style Super clipboard in GUI apps (hypr backend for app exclusions)
+xremap-hypr-bin           # Super clipboard in GUI apps (hypr backend for app exclusions)
 ttf-material-design-icons-extended   # AUR-only, not in official repos
 
 # --- 3.1 both machines (two-machine audit, installed 2026-09-09) ---
 ttf-amiri          # Naskh body font
 ttf-readex-pro     # Arabic headings
+docker-sbx        # Docker Sandboxes microVM runtime; installation status in docker-sbx.md

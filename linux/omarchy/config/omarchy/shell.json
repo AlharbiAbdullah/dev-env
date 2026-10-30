@@ -16,6 +16,10 @@
         },
         {
           "id": "abdullah.workspaces"
+        },
+        {
+          "id": "abdullah.active-window",
+          "maxWidth": 1440
         }
       ],
       "center": [

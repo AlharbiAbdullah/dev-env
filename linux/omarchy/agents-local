@@ -427,14 +427,14 @@ def carried_limits(agent_id):
 
 
 def agy_limits():
-    """Google AI Pro quota from agy's own `/usage` command: four windows.
+    """Google AI Pro quota from agy's own `/usage` command: five windows.
 
-    Gemini models share one pool and the partner models (Claude, GPT-OSS)
-    another, each with a 5-hour and a weekly window. `/usage` is a local slash
-    command (no turn, no tokens, no hooks), and agy refreshes its own sign-in,
-    which its token file on disk does not keep up with. Its log goes to
-    /dev/null, or every run would leave a file in agy's log folder. A failed
-    read carries the last windows forward.
+    Gemini models share one pool (`5h`, `week`, and `Argon` for Argon's separate
+    Pro weekly bucket) and the partner models (Claude, GPT-OSS) another (`5h`,
+    `week`). `/usage` is a local slash command (no turn, no tokens, no hooks),
+    and agy refreshes its own sign-in, which its token file on disk does not
+    keep up with. Its log goes to /dev/null, or every run would leave a file in
+    agy's log folder. A failed read carries the last windows forward.
     """
     try:
         result = subprocess.run(
@@ -447,26 +447,31 @@ def agy_limits():
         return carried_limits("agy")
     windows = []
     for group in groups:
-        pool = "Gemini" if str(group.get("name", "")).lower().startswith("gemini") else "Claude/GPT"
+        gname = str(group.get("name", ""))
+        pool = "Gemini" if gname.lower().startswith("gemini") else "Claude/GPT"
+        argon = "argon" in gname.lower()
         for bucket in group.get("buckets") or []:
             weekly = bucket.get("window") == "weekly"
-            used = round(1 - float(bucket.get("remaining_fraction", 1)), 4)
+            used = max(0.0, round(1 - float(bucket.get("remaining_fraction", 1)), 4))
+            span = "Weekly (7-day)" if weekly else "Session (5-hour)"
+            title = "Gemini Argon" if argon else f"{pool} {'week' if weekly else '5h'}"
+            label = "Gemini Argon Weekly (7-day)" if argon else f"{pool} {span}"
             windows.append({
-                "label": f"{pool} {'Weekly (7-day)' if weekly else 'Session (5-hour)'}",
-                "title": f"{pool} {'week' if weekly else '5h'}",
+                "label": label,
+                "title": title,
                 "sub": "Google",
-                "plan": "AI Pro",
-                "percent": max(0.0, used),
+                "plan": "AI Ultra",
+                "percent": used,
                 # An untouched window reports a reset that rolls forward with the clock.
                 "resetsAt": bucket.get("reset_time", "") if used > 0 else "",
             })
-    # Gemini before Claude/GPT, the 5-hour window before the week, as the other tabs read.
-    windows.sort(key=lambda w: (w["title"].startswith("Claude"), "Weekly" in w["label"]))
+    # Gemini (5h, week, Argon) before Claude/GPT (5h, week), as the other tabs read.
+    windows.sort(key=lambda w: (w["title"].startswith("Claude"), w["title"] == "Gemini Argon", "Weekly" in w["label"]))
     return windows
 
 
 def agy_record():
-    record = scan_agy().record("agy", "agy", "Google AI Pro", has_prompt_stats=False)
+    record = scan_agy().record("agy", "agy", "Google AI Ultra", has_prompt_stats=False)
     # agy keeps no readable token counts: no day chart rather than seven empty bars.
     record["recentDays"] = []
     record["limits"] = agy_limits()

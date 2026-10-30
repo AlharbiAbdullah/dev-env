@@ -13,8 +13,7 @@ success_symbol = "[\u279c](bold fg:cyan)"
 error_symbol = "[\u2717](bold fg:red)"
 
 # Remote-session OS icon: one quiet glyph, shown ONLY over SSH (ssh_only keys
-# off $SSH_CONNECTION/$SSH_TTY). This config runs on Linux, so it shows the Tux
-# glyph; the Mac's own starship.toml uses the Apple glyph (\uf179). Local = none.
+# off $SSH_CONNECTION/$SSH_TTY). It shows the Tux glyph over SSH. Local = none.
 [hostname]
 ssh_only = true
 format = "[\uf17c](fg:cyan) "

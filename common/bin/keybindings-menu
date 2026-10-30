@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# Keybindings cheat sheet (SUPER+K on Linux, CMD+K on the Mac, 2026-09-08): only
-# the bindings Abdullah actually uses, parsed live from the canonical map in
-# ~/dev-env/KEYBINDINGS.md. Shown as a type-to-filter fzf list (like the stock
-# Omarchy menu) in a floating themed terminal: type to search, arrows/wheel to
-# move, Esc or Enter to close. One script for both machines (common/bin): the
-# Mac reads the Mac column, Linux the Linux column, and the launcher differs.
+# Keybindings cheat sheet (SUPER+K) for both Omarchy machines. Reads the
+# canonical map in ~/dev-env/KEYBINDINGS.md into a type-to-filter fzf list:
+# type to search, arrows/wheel to move, Esc or Enter to close.
 #
 #   (no args)  launch the floating terminal with the searchable sheet
 #   --view     run the fzf sheet in the current terminal
@@ -15,7 +12,7 @@
 # Not the full Omarchy dump: that stays on `omarchy-menu-keybindings`.
 
 doc="$HOME/dev-env/KEYBINDINGS.md"
-case "$(uname)" in Darwin) col=4 ;; *) col=5 ;; esac   # table column: Mac | Linux
+col=4   # table column: Key | Action | Linux
 
 rows() {
   local color="$1" width="$2"
@@ -71,37 +68,15 @@ case "${1:-}" in
     # The float rule resizes the window just after launch; wait it out so
     # tput reports the final column count.
     sleep 0.3
-    export PATH="/opt/homebrew/bin:$PATH"   # Mac: fzf lives in Homebrew, and the window is launched without a login shell
     width=$(tput cols 2>/dev/null || echo 100)
     rows 1 $((width - 8)) | fzf --ansi --no-sort --layout=reverse \
       --border=rounded --margin=1,1 --info=hidden --prompt='search ❯ ' \
       --pointer='' --marker='' --no-scrollbar --bind="start:pos(2),load:pos(2)" \
       --color=16,hl:2,hl+:2,prompt:2,border:2,gutter:-1,bg+:8 \
       >/dev/null
-    if [ "$(uname)" = Darwin ]; then
-      # iTerm2 keeps a finished session open ("Session Ended"); close this one by its tty.
-      tty=$(tty)
-      osascript -e "tell application \"iTerm\"
-        repeat with w in windows
-          repeat with t in tabs of w
-            repeat with s in sessions of t
-              if tty of s is \"$tty\" then close s
-            end repeat
-          end repeat
-        end repeat
-      end tell" >/dev/null 2>&1
-    fi
     exit 0
     ;;
   *)
-    if [ "$(uname)" = Darwin ]; then
-      # New iTerm2 window in the running instance (same as iterm2-window), running the sheet.
-      osascript -e "tell application \"iTerm\"
-        create window with default profile command \"/bin/zsh -lc '$HOME/.local/bin/keybindings-menu --view'\"
-        activate
-      end tell" >/dev/null
-    else
-      exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.omarchy.keybindings --title=Keybindings -e "$0" --view
-    fi
+    exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.omarchy.keybindings --title=Keybindings -e "$0" --view
     ;;
 esac

@@ -159,5 +159,40 @@ def test_openai_read_failure_without_a_last_reading_is_empty(agents, tmp_path, m
     assert agents.openai_limits() == []
 
 
+def test_agy_keeps_general_gemini_week_and_argon_week_separate(agents, tmp_path, monkeypatch):
+    # Google AI Pro splits Gemini 4 Argon into its own weekly group alongside Gemini Models;
+    # the Gemini pool shows 5h, week (general) and Argon (like Fable on Claude).
+    payload = {"command": {"name": "usage", "data": {"groups": [
+        {"name": "Gemini Models", "buckets": [
+            {"id": "gemini-weekly", "window": "weekly", "remaining_fraction": 0.9973,
+             "reset_time": "2026-11-02T16:29:49Z"},
+            {"id": "gemini-5h", "window": "5h", "remaining_fraction": 0.9970,
+             "reset_time": "2026-10-27T11:36:23Z"},
+        ]},
+        {"name": "Claude and GPT models", "buckets": [
+            {"id": "3p-weekly", "window": "weekly", "remaining_fraction": 0.5047,
+             "reset_time": "2026-10-31T19:52:57Z"},
+            {"id": "3p-5h", "window": "5h", "remaining_fraction": 1.0,
+             "reset_time": "2026-10-27T14:13:57Z"},
+        ]},
+        {"name": "Gemini 4 Argon", "buckets": [
+            {"id": "gemini-argon-wtu-weekly", "window": "weekly", "remaining_fraction": 0.7199,
+             "reset_time": "2026-11-02T16:09:39Z"},
+        ]},
+    ]}}}
+    fake = tmp_path / "agy"
+    fake.write_text(f"#!/bin/sh\nprintf '%s\\n' '{json.dumps(payload)}'\n")
+    fake.chmod(0o755)
+    monkeypatch.setattr(agents, "AGY_BIN", str(fake))
+    windows = agents.agy_limits()
+    assert [(w["title"], w["percent"], w["resetsAt"]) for w in windows] == [
+        ("Gemini 5h", 0.003, "2026-10-27T11:36:23Z"),
+        ("Gemini week", 0.0027, "2026-11-02T16:29:49Z"),
+        ("Gemini Argon", 0.2801, "2026-11-02T16:09:39Z"),
+        ("Claude/GPT 5h", 0.0, ""),
+        ("Claude/GPT week", 0.4953, "2026-10-31T19:52:57Z"),
+    ]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Put the Omarchy agents panel on a cloned copy so it can carry marks for the
 # harnesses beyond claude/codex/fireworks (pi, opencode, agy) and give the
-# synthetic "AI" record its own model-only layout. The QML data logic stays
-# symlinked to the packaged files so Omarchy updates still land; Panel.qml is a
-# patched copy, re-applied here on every run (and by the post-update hook), so
+# synthetic "AI" record its own model-only layout. Agent.qml stays symlinked to
+# the packaged file so Omarchy updates still land; Panel.qml and Main.qml are
+# patched copies, re-applied here on every run (and by the post-update hook), so
 # an update cannot strand the patch.
 # Ruling 2026-10-02. Revert: omarchy plugin remove <user>.agents.
 set -euo pipefail
@@ -19,9 +19,30 @@ if [ ! -d "$CLONE" ]; then
   omarchy plugin clone omarchy.agents >/dev/null
 fi
 
-ln -sfn "$STOCK/Main.qml" "$CLONE/Main.qml"
 ln -sfn "$STOCK/Agent.qml" "$CLONE/Agent.qml"
+rm -f "$CLONE/Main.qml"
+install -m 0644 "$STOCK/Main.qml" "$CLONE/Main.qml"
 install -m 0644 "$STOCK/Panel.qml" "$CLONE/Panel.qml"
+
+# Every refresh (timer, opening the panel, `r`) also runs agents-local for the
+# AI record, so the AI tab is current whenever it is looked at. `wait` keeps
+# queued refreshes collapsing into one instead of stacking scans.
+python3 - "$CLONE/Main.qml" <<'PY'
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+source = path.read_text()
+old = "    return command\n  }\n\n  function runUpdate("
+new = (
+    "    return [\"sh\", \"-c\", \"\\\"$HOME/.local/bin/agents-local\\\" 0-ai & \\\"$@\\\"; wait\", \"sh\"].concat(command)\n"
+    "  }\n\n  function runUpdate("
+)
+if old in source:
+    path.write_text(source.replace(old, new, 1))
+else:
+    print("agents-panel-setup: patch anchor 'update command' missing; leaving that bit unpatched", file=sys.stderr)
+PY
 
 python3 - "$CLONE/Panel.qml" <<'PY'
 import pathlib

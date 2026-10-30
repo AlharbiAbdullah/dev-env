@@ -86,14 +86,14 @@ BarWidget {
         }
         // Full opacity throughout; the dimming lives in the colors below so
         // the box does not fade along with its label.
-        opacity: isSep ? 0.35 : 1
+        opacity: isSep ? 0.8 : 1
         interactive: !isSep
         pressable: !isSep
         horizontalMargin: isSep ? 2 : 4
         verticalPadding: 6
         fixedWidth: root.vertical
           ? root.barSize
-          : (isSep ? Style.space(6) : root.numberSlot)
+          : (isSep ? Style.space(12) : root.numberSlot)
         fixedHeight: root.barSize
         onPressed: function() { if (!isSep) root.focusWorkspace(modelData.id) }
 

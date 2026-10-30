@@ -1,0 +1,26 @@
+#!/bin/bash
+# Wake the monitor when a wayshare connection arrives.
+# wayshare 0.1.3 drops every connection while DP-1 is in DPMS off ("creating frame source:
+# no frame from compositor within 5 s") and has no option or hook for it, so this follows
+# its journal and turns DPMS on at each "connection accepted". Goes with the wayshare trial.
+# ExecStart of wayshare-wake.service.
+
+# uwsm puts the signature in the user manager's environment; derive it if a run lacks it.
+: "${HYPRLAND_INSTANCE_SIGNATURE:=$(ls "/run/user/$(id -u)/hypr/" | head -1)}"
+export HYPRLAND_INSTANCE_SIGNATURE
+
+journalctl --user -u wayshare.service -f -n 0 -o cat | while IFS= read -r line; do
+  case $line in
+    *"connection accepted"*)
+      # Table form is idempotent. The string form dpms("on") ignores its argument and
+      # TOGGLES (Hyprland 0.56.2, seen 2026-10-17), which blanks a monitor that is on.
+      if out=$(hyprctl eval 'hl.dispatch(hl.dsp.dpms({ action = "on" }))' 2>&1); then
+        peer=${line#*peer=}; echo "dpms on for ${peer%%\}*}"
+      else
+        echo "dpms on FAILED: $out" >&2
+      fi ;;
+  esac
+done
+
+echo "journalctl follow ended" >&2
+exit 1   # never ends on its own: fail so Restart= and OnFailure= see it

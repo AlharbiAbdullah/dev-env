@@ -1,0 +1,14 @@
+[Unit]
+Description=Wake the monitor when a wayshare connection arrives (wayshare drops it while DPMS is off)
+# Same session tie as wayshare.service; follows its journal, so start after it.
+PartOf=graphical-session.target
+After=graphical-session.target wayshare.service
+OnFailure=alert@%N.service
+
+[Service]
+ExecStart=%h/.local/bin/wayshare-wake
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target
