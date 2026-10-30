@@ -1,0 +1,12 @@
+[[ssh-keys]]
+item = "nryt5rizgdpdrzlqqxcr72nywe"
+vault = "Abdullah"
+
+[[ssh-keys]]
+vault = "Personal"
+
+[[ssh-keys]]
+vault = "Private"
+
+[[ssh-keys]]
+vault = "Employee"

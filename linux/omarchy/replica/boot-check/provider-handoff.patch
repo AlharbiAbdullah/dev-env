@@ -1,0 +1,36 @@
+--- /usr/bin/omarchy-apple-silicon-boot-check
++++ /usr/bin/omarchy-apple-silicon-boot-check
+@@ -105,9 +105,13 @@
+ [[ -n ${bootloaders[$kernel]:-} ]] ||
+   fail "$kernel is not a kernel this check knows; it checks linux-aurora with m1n1-aurora and linux-asahi with m1n1"
+ bootloader=${bootloaders[$kernel]}
+-for package in "$kernel" "$bootloader"; do
+-  is_installed "$package" || fail "$kernel boots with $bootloader, but $package is not installed"
+-done
++is_installed "$kernel" || fail "$kernel boots with $bootloader, but $kernel is not installed"
++# Bootloader names may be provided by another package (aura provides m1n1-aurora).
++# Resolve that capability once, then verify the actual package's mtree and files.
++bootloader=$(pacman -Qq "$bootloader" 2>/dev/null) ||
++  fail "$kernel boots with ${bootloaders[$kernel]}, but it is not installed"
++[[ -n $bootloader && $bootloader != *$'\n'* ]] ||
++  fail "cannot resolve ${bootloaders[$kernel]} to one installed package"
+ rivals=(linux-aurora m1n1-aurora linux-asahi m1n1)
+ (( ! boot_chain )) || rivals=()
+ for package in "${rivals[@]}"; do
+@@ -670,7 +674,15 @@
+ m1n1_file=$(realpath -e "$root$M1N1")
+ root_real=$(realpath -m "${root:-/}")
+ [[ $root_real == / ]] || m1n1_file=${m1n1_file#"$root_real"}
+-grep -Fxq -- "$m1n1_file" "$workdir/bootloader-files" || fail "M1N1 $M1N1 is not owned by $bootloader"
++if ! grep -Fxq -- "$m1n1_file" "$workdir/bootloader-files"; then
++  # This machine's verified J514S handoff build is intentionally not package-owned.
++  # Pin both its path and bytes; every later boot-image comparison still applies.
++  [[ $m1n1_file == /usr/local/lib/omarchy-m3-handoff/m1n1.bin ]] ||
++    fail "M1N1 $M1N1 is not owned by $bootloader"
++  handoff_hash=$(sha256sum <"$root$M1N1")
++  [[ ${handoff_hash%% *} == 396cf3ec1774ca9d15ca1b6f71b5e8a3639b27f80b95d530722b35a5ea35141d ]] ||
++    fail "M1N1 $M1N1 does not match the verified J514S handoff build"
++fi
+ 
+ # Split and globbed the way update-m1n1's unquoted $DTBS is, in the C collation
+ # /etc/default/update-m1n1 pins.

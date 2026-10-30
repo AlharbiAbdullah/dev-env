@@ -1,0 +1,15 @@
+[Unit]
+Description=Syncthing SSH connection to the Linux replica
+OnFailure=alert@%N.service
+ConditionPathExists=%h/.config/rai/machine.json
+
+[Service]
+Type=simple
+ExecCondition=/usr/bin/jq --exit-status '.role == "producer"' %h/.config/rai/machine.json
+ExecStart=/usr/bin/ssh -NT -o BatchMode=yes -o ConnectTimeout=8 -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:22200:127.0.0.1:22000 replica
+Restart=always
+RestartSec=30
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,12 @@
+# ARM64 replica installation receipt, verified 2026-10-20.
+# This machine uses native aarch64 tools and runs no hub timers.
+# The system Omarchy declaration keeps its normal update policy.
+# These versions record the tested install; they do not replace global settings.
+[tools]
+node = "26.12.0"
+claude = "2.1.304"
+codex = "0.163.0"
+opencode = "2.1.1"
+antigravity-cli = "1.4.3"
+pi = "1.3.0"
+"aqua:syncthing/syncthing" = "2.1.6"
