@@ -92,8 +92,8 @@ chmod +x "$HOME/.config/omarchy/hooks/post-update.d/xremap-input-group" "$HOME/.
 # records on its own timer instead, and agents-panel-setup.sh clones the panel to carry their
 # marks (ruling 2026-10-02). Revert: disable agents-local.timer, omarchy plugin remove abdullah.agents,
 # delete ~/.local/state/omarchy/agents/usage/{pi,opencode,agy}.json.
-cp "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/obsidian-quit-guard" "$HERE/obsidian-sync-watch" "$HERE/agents-local" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
-chmod +x "$HOME/.local/bin"/{new-window,focus-mode,backup-drive,obsidian-quit-guard,obsidian-sync-watch,agents-local,keybindings-menu}
+cp "$HERE/new-window" "$HERE/focus-mode" "$HERE/backup-drive" "$HERE/agents-local" "$REPO_ROOT/common/bin/keybindings-menu" "$HOME/.local/bin/"
+chmod +x "$HOME/.local/bin"/{new-window,focus-mode,backup-drive,agents-local,keybindings-menu}
 mkdir -p "$HOME/.config/restic"
 install -m 0644 "$HERE/restic-excludes.txt" "$HOME/.config/restic/excludes.txt"
 # Web page theming retired 2026-09-25: sites use their own dark mode via the OS color-scheme. Drop what older runs installed.
@@ -172,8 +172,6 @@ sudo install -m 0644 "$HERE/etc/polkit-1/rules.d/99-1password-unlock.rules" /etc
 sudo install -d /etc/systemd/system/ollama.service.d
 sudo install -m 0644 "$HERE/etc/systemd/system/ollama.service.d/expose.conf" /etc/systemd/system/ollama.service.d/expose.conf
 sudo install -d /etc/systemd/system/ollama.service.d && printf '[Service]\nEnvironment="OLLAMA_IGPU_ENABLE=1"\n' | sudo tee /etc/systemd/system/ollama.service.d/igpu.conf >/dev/null
-sudo install -d /etc/systemd/system/user@.service.d   # 30s session stop so obsidian-quit-guard can finish (Omarchy default 5s)
-sudo install -m 0644 "$HERE/etc/systemd/system/user@.service.d/20-obsidian-quit-guard.conf" /etc/systemd/system/user@.service.d/20-obsidian-quit-guard.conf
 echo uinput | sudo tee /etc/modules-load.d/uinput.conf >/dev/null; sudo modprobe uinput || true
 echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null; sudo modprobe i2c-dev || true
 for g in input i2c docker ollama; do getent group "$g" >/dev/null && ! id -nG "$USER" | grep -qw "$g" && sudo usermod -aG "$g" "$USER"; done
@@ -184,13 +182,12 @@ sudo systemctl enable --now paccache.timer 2>/dev/null || true   # weekly pacman
 sudo ufw allow 22/tcp >/dev/null 2>&1 || true; sudo ufw allow 11434/tcp >/dev/null 2>&1 || true   # replica SSH + cloud-model client on the tailnet
 UNIT_DST="$HOME/.config/systemd/user"; mkdir -p "$UNIT_DST"
 if [ "$MACHINE_ROLE" = producer ]; then
-  install -m 0644 "$HERE"/systemd/*.service "$HERE"/systemd/*.timer "$UNIT_DST/"
-else
-  install -m 0644 "$HERE/systemd/obsidian-quit-guard.service" "$UNIT_DST/"
+  for _unit in "$HERE"/systemd/*.service "$HERE"/systemd/*.timer; do
+    install -m 0644 "$_unit" "$UNIT_DST/"
+  done
 fi
 systemctl --user daemon-reload
-systemctl --user enable obsidian-quit-guard.service   # quits Obsidian before the compositor stops (Sync pairing)
-TIMERS="news-daily news-weekly news-x-collect rai-maintenance rai-knowledge paper-portfolio gold-skim backup-drive obsidian-sync-watch agents-local"
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance rai-knowledge paper-portfolio gold-skim backup-drive agents-local"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
   systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)
@@ -208,7 +205,6 @@ cat <<MSG
   3. claude          -> browser login; then: claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud
   4. 1Password app sign-in, then Settings > Developer > SSH agent; gh auth status; opencode auth login
   5. Chrome: sign in, then log in to x.com, substack.com, medium.com (collectors read the Default profile cookies)
-  6. Obsidian: open ~/helm, Settings > Sync re-pair, set "cli": true in ~/.config/obsidian/obsidian.json (app closed)
-  7. restore-backup.sh --target /absolute/new/target   (staging only; inspect before applying)
-  8. omarchy update; then finish with workflow 16 steps 10-13 (helm/11-workflows/16-machines.md) and restore-backup.sh
+  6. restore-backup.sh --target /absolute/new/target   (staging only; inspect before applying)
+  7. omarchy update; then finish with workflow 16 steps 10-13 (helm/11-maze/inventory/playbooks/16-machines.md) and restore-backup.sh
 MSG

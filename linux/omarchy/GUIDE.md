@@ -41,7 +41,6 @@ Terminal is `Super+Return` (foot until step 3 installs Ghostty).
    - `claude` (browser login), then `claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud`
    - 1Password app: sign in, enable the SSH agent
    - Chrome: Google sign-in, then log in to x.com, substack.com, medium.com (news collectors read these cookies)
-   - Obsidian: open `~/helm`, re-pair Sync, then with the app closed set `"cli": true` in `~/.config/obsidian/obsidian.json`
    - `opencode auth login`
 
 6. **Quick checks**
@@ -84,5 +83,5 @@ itself:
 If all 5 unshallow attempts fail (no usable network at all), fix the network and re-run
 `git -C ~/helm fetch --unshallow` by hand. On Ethernet with a flaky HTTP/2 middlebox, try
 `git config --global http.version HTTP/1.1` first. Do not `--filter=blob:none` or sparse-checkout
-the vault: Obsidian Sync and the hooks walk the full tree.
+the vault: the hooks walk the full tree.
 A lazy fetch on every `git log -p` is worse than one slow clone.

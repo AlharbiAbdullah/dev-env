@@ -26,10 +26,6 @@ o.bind("SUPER + CTRL + SPACE", "Omarchy menu", "omarchy-menu toggle root")
 hl.unbind("SUPER + B")
 hl.unbind("SUPER + O")
 o.bind("ALT + B", "Chrome", { launch = "google-chrome-stable" })
--- Obsidian is the one exception: single-instance, so a second launch hands
--- off to the running copy and Wayland will not let it raise itself. Without
--- the matcher the key does nothing once Obsidian is open.
-o.bind("ALT + O", "Obsidian", { launch = "obsidian", focus = "^obsidian$" })
 -- Herdr: terminal workspace manager for AI coding agents. Omarchy binds it
 -- on SUPER+CTRL+RETURN, but that sits inside the preinstalled-bindings block
 -- this file turns off, so it gets a launch letter like every other app.
