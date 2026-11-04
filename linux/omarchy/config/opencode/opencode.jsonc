@@ -19,27 +19,7 @@
     "read": "allow",
     "external_directory": "allow",
     // rai:render begin skill (03-rai/harness/opencode/render_config.py rewrites this block)
-    "skill": {
-      "*": "allow",
-      "artifact-emulator": "deny",
-      "built-in-browser": "deny",
-      "chrome-browser": "deny",
-      "computer-use": "deny",
-      "db": "deny",
-      "deep-research": "deny",
-      "deploy": "deny",
-      "docs": "deny",
-      "docx": "deny",
-      "google-workspace": "deny",
-      "import-memory": "deny",
-      "morning": "deny",
-      "pdf": "deny",
-      "pptx": "deny",
-      "run-{SERVICE}": "deny",
-      "sdd": "deny",
-      "skill-creator": "deny",
-      "xlsx": "deny"
-    },
+    "skill": {"*": "allow"},
     // rai:render end skill
     "doom_loop": "allow"
   },
@@ -49,15 +29,6 @@
       "type": "local",
       "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
       "enabled": true
-    }
-  },
-  // OpenCode turns every skill into a slash command and expands $1..$N and !`cmd` in its
-  // body, which can swallow the question. A config command wins over the skill's own, and
-  // loads the council skill the way Claude Code does, so `/council <question>` keeps it.
-  "command": {
-    "council": {
-      "description": "Multi-model panel on his subscriptions (the council skill)",
-      "template": "Load the council skill with the skill tool, then follow it for this request.\n\nARGUMENTS: $ARGUMENTS"
     }
   },
   // Claude Code's name for the built-in general agent, which Rai workflows name.
