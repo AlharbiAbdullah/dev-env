@@ -87,21 +87,22 @@ Copy the hub's `~/.local/bin/rai` wrapper to the same path, and the hub's
 `~/.cache/chroma/onnx_models` to the same path. Hooks and `rai` run uv with `--offline`, so their
 dependencies must be cached first.
 
-## 8. Personal layer
+## 8. Mirror the desktop
 
-Back up the laptop's files first. Copy from `config/`: `atuin bat fastfetch ghostty glow micro tmux
-xremap git`, the backgrounds and `hooks/post-update.d/xremap-input-group`. Copy `.bashrc`,
-`starship.toml`, the hub's `.bashrc.local`, and `new-window focus-mode keybindings-menu`.
+The desktop's live setup is the source of truth. Copy from its live files, which can be newer than
+this repo: `~/.bashrc`, `~/.bashrc.local`, `~/.config` (theme, shell, editors, `mise`, Chrome flags,
+`mimeapps.list`), web apps, scripts, packages and editor extensions. Remove apps the desktop does not
+have, and enable `docker`, `ollama`, `paccache.timer` and `agents-local.timer`.
 
-From `config/hypr/`, copy everything except `monitors.lua`, which is set for the hub's monitor.
-Leave these out too:
+The laptop differs only here:
 
-- The island bar (`omarchy/shell.json`, `shell.toml`, `abdullah.*` plugins): its center island sits
-  where the notch is, so the laptop keeps Omarchy's Mac bar.
-- `chrome-flags.conf` and `mimeapps.list`: keep the laptop's, and set Chrome as default with
-  `xdg-settings`.
-- `mise/config.toml`: Omarchy's own tool list covers the harnesses.
-
-xremap has no ARM AUR package. Install the `aarch64-hypr` binary from the official release to
-`/usr/local/bin/xremap`, and `systemd/xremap.service` here to `~/.config/systemd/user/`. It also
-needs `etc/udev/rules.d/99-xremap.rules`, the `uinput` module and the `input` group, then a new login.
+| Item | Laptop |
+|---|---|
+| Kernel, firmware, Mesa, Mac packages | Keep the installed ARM set |
+| `hypr/monitors.lua` | Keep the laptop's |
+| Hub jobs (news, maintenance, backup, portfolio) | Off: the hub is the sole producer |
+| Sign-ins | Per machine |
+| Island bar | In `shell.json`: move `center` to the start of `right`, set `centerAnchor` to `""` and the active window's `maxWidth` to 480, so nothing sits under the notch |
+| xremap | No ARM AUR package: official `aarch64-hypr` binary at `/usr/local/bin/xremap`, with `systemd/xremap.service` here. Also needs `etc/udev/rules.d/99-xremap.rules`, the `uinput` module, the `input` group and a new login |
+| `pipewire-jack` | Skipped: conflicts with `jack2` |
+| `dbeaver`, `harper`, `docker-sbx` | Not in the ARM repos |
