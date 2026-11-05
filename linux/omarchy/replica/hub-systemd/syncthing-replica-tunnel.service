@@ -1,6 +1,5 @@
 [Unit]
 Description=Syncthing SSH connection to the Linux replica
-OnFailure=alert@%N.service
 ConditionPathExists=%h/.config/rai/machine.json
 
 [Service]
