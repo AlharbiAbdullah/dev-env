@@ -83,5 +83,25 @@ uv sync --script 12-system/engine/cli/rai
 03-rai/semantic-memory/scripts/py-chroma.sh -c "import chromadb"
 ```
 
-Copy the hub's `~/.local/bin/rai` wrapper to the same path. Hooks and `rai` run uv with
-`--offline`, so their dependencies must be cached first.
+Copy the hub's `~/.local/bin/rai` wrapper to the same path, and the hub's
+`~/.cache/chroma/onnx_models` to the same path. Hooks and `rai` run uv with `--offline`, so their
+dependencies must be cached first.
+
+## 8. Personal layer
+
+Back up the laptop's files first. Copy from `config/`: `atuin bat fastfetch ghostty glow micro tmux
+xremap git`, the backgrounds and `hooks/post-update.d/xremap-input-group`. Copy `.bashrc`,
+`starship.toml`, the hub's `.bashrc.local`, and `new-window focus-mode keybindings-menu`.
+
+From `config/hypr/`, copy everything except `monitors.lua`, which is set for the hub's monitor.
+Leave these out too:
+
+- The island bar (`omarchy/shell.json`, `shell.toml`, `abdullah.*` plugins): its center island sits
+  where the notch is, so the laptop keeps Omarchy's Mac bar.
+- `chrome-flags.conf` and `mimeapps.list`: keep the laptop's, and set Chrome as default with
+  `xdg-settings`.
+- `mise/config.toml`: Omarchy's own tool list covers the harnesses.
+
+xremap has no ARM AUR package. Install the `aarch64-hypr` binary from the official release to
+`/usr/local/bin/xremap`, and `systemd/xremap.service` here to `~/.config/systemd/user/`. It also
+needs `etc/udev/rules.d/99-xremap.rules`, the `uinput` module and the `input` group, then a new login.

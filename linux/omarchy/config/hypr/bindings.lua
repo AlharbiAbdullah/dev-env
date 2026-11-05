@@ -30,6 +30,10 @@ o.bind("ALT + B", "Chrome", { launch = "google-chrome-stable" })
 -- on SUPER+CTRL+RETURN, but that sits inside the preinstalled-bindings block
 -- this file turns off, so it gets a launch letter like every other app.
 o.bind("ALT + H", "Herdr", { omarchy = "terminal-herdr" })
+-- Terminal always opens in ~ (2026-09-19). Omarchy's default passes
+-- --dir=<focused terminal's cwd>, which overrides Ghostty's working-directory.
+hl.unbind("SUPER + RETURN")
+o.bind("SUPER + RETURN", "Terminal", "uwsm-app -- xdg-terminal-exec")
 o.bind("ALT + X", "X", { webapp = "https://x.com/" })
 o.bind("ALT + M", "Medium", { webapp = "https://medium.com/" })
 o.bind("ALT + S", "Substack", { webapp = "https://substack.com/home" })
@@ -128,3 +132,10 @@ o.bind("SUPER + CTRL + R", "Reload Hyprland", "hyprctl reload")
 -- SUPER+L is the address bar (xremap -> CTRL+L in GUI apps); lock = SUPER+CTRL+L
 -- (Omarchy default). Unbound here so a stray SUPER+L in a terminal does nothing.
 hl.unbind("SUPER + L")
+
+-- Dictation keys from before Alt + Space and Right Alt became the defaults.
+-- Remove these lines to give the keys back to applications.
+if o.dictation_installed and o.dictation_installed() then
+  o.bind("SUPER + CTRL + X", "Toggle dictation", "omarchy-dictation toggle")
+  o.bind_hold("F9", "Start dictation (push-to-talk)", "omarchy-dictation start", "Stop dictation (push-to-talk)", "omarchy-dictation stop")
+end
