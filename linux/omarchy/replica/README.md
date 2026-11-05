@@ -102,7 +102,7 @@ The laptop differs only here:
 | `hypr/monitors.lua` | Keep the laptop's |
 | Hub jobs (news, maintenance, backup, portfolio) | Off: the hub is the sole producer |
 | Sign-ins | Per machine |
-| Island bar | In `shell.json`: move `center` to the start of `right`, set `centerAnchor` to `""` and the active window's `maxWidth` to 480, so nothing sits under the notch |
+| Island bar | In `shell.json`: move `center` to the start of `right`, set `centerAnchor` to `""`, the clock `format` to `ddd d  h:mm AP` and the active window's `maxWidth` to 480, so nothing sits under the notch |
 | xremap | No ARM AUR package: official `aarch64-hypr` binary at `/usr/local/bin/xremap`, with `systemd/xremap.service` here. Also needs `etc/udev/rules.d/99-xremap.rules`, the `uinput` module, the `input` group and a new login |
 | `pipewire-jack` | Skipped: conflicts with `jack2` |
 | `dbeaver`, `harper`, `docker-sbx` | Not in the ARM repos |
