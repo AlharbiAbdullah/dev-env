@@ -29,6 +29,7 @@ Use the official Omarchy Installer from macOS, channel Stable. To start over, us
 sudo hostnamectl set-hostname omarchy-laptop
 omarchy-install-service-tailscale            # sign in with GitHub, not Google
 omarchy-setup-security-sshd --gh-keys AlharbiAbdullah
+tailscale set --ssh --operator=$USER         # the hub's scheduled sync logs in with no key
 ```
 
 On the hub, remove the old `omarchy-laptop` host key from `known_hosts`, add the new one, and
