@@ -4,4 +4,4 @@ OnFailure=alert@%N.service
 
 [Service]
 Type=oneshot
-ExecStart=%h/helm/03-rai/skills/rai/scheduled/run-maintenance-ubuntu.sh
+ExecStart=%h/helm/12-system/engine/jobs/maintenance/run-maintenance-ubuntu.sh

@@ -18,7 +18,7 @@ import pytest
 BACKUP = Path(__file__).with_name("backup-drive")
 MAINTENANCE = (
     Path(__file__).resolve().parents[3]
-    / "helm/03-rai/skills/rai/scheduled/run-maintenance-ubuntu.sh"
+    / "helm/12-system/engine/jobs/maintenance/run-maintenance-ubuntu.sh"
 )
 GATE = """
 touch "$HOME/$RUN_ID.enter"

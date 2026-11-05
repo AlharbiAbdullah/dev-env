@@ -20,7 +20,7 @@ step() { echo; echo "== $*"; }
 
 # --- guard: Omarchy 4 only ---
 [ "$(uname -s)" = "Linux" ] || { echo "Linux only."; exit 1; }
-[ "$(uname -m)" = x86_64 ] || { echo "This package bootstrap is x86_64 only; use the ARM replica procedure."; exit 1; }
+[ "$(uname -m)" = x86_64 ] || { echo "This package bootstrap is x86_64 only; follow replica/README.md."; exit 1; }
 command -v pacman >/dev/null || { echo "pacman not found: this targets Omarchy (Arch)."; exit 1; }
 [ -d /usr/share/omarchy ] || { echo "/usr/share/omarchy missing: not an Omarchy 4 install."; exit 1; }
 [ "$USER" = "abdullah" ] || echo "!! user is $USER, several units hardcode /home/abdullah"
@@ -100,11 +100,6 @@ install -m 0644 "$HERE/restic-excludes.txt" "$HOME/.config/restic/excludes.txt"
 systemctl --user disable --now darkreader-theme-catchup.service 2>/dev/null || true
 rm -f "$HOME/.local/bin/darkreader-theme" "$HOME/.local/bin/darkreader-theme-catchup" "$HOME/.config/omarchy/hooks/theme-set.d/darkreader-theme-set" "$HOME/.config/systemd/user/darkreader-theme-catchup.service"
 [ -d "$HOME/.tmux/plugins/tpm" ] || git clone -q https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-( cd "$HOME/.config/opencode" && [ -f package.json ] && command -v npm >/dev/null && npm i --silent ) || true
-# OpenCode subagents and its skill deny list are rendered from the vault (03-rai/agents, 03-rai/skills).
-_oc_render="$HOME/helm/03-rai/harness/opencode/render_config.py"
-[ -f "$_oc_render" ] && command -v uv >/dev/null && uv run "$_oc_render" "$HOME/.config/opencode" \
-  || echo "!! opencode agents not rendered: run uv run $_oc_render once the vault and uv are in"
 # IDE settings: common/vscode/settings.json is the one file for BOTH Cursor and VS Code
 # (ruling 2026-09-09). Keybindings stay per editor/platform but carry the same map
 # (config/{Cursor,Code}/User/keybindings.json, already deployed by the cp -R above).
@@ -153,6 +148,11 @@ step "[7/9] dev tools"
 # (copied to ~/.config/mise/ in step 4). No nvm, no npm -g, no bun, no curl installers.
 command -v mise >/dev/null || sudo pacman -S --needed --noconfirm mise
 mise install
+# opencode v1 is retired (2026-10-31): drop its installs and config leftovers.
+mise ls opencode 2>/dev/null | awk '$2 ~ /^1\./ {print $2}' | while read -r v; do mise uninstall "opencode@$v" >/dev/null 2>&1 || true; done
+rm -rf "$HOME/.config/opencode/package.json" "$HOME/.config/opencode/package-lock.json" \
+  "$HOME/.config/opencode/node_modules" "$HOME/.config/opencode/bun.lock" "$HOME/.config/opencode/.gitignore" "$HOME/.config/opencode/tui.json" "$HOME/.config/opencode/opencode.json" "$HOME/.config/opencode/agent" \
+  "$HOME"/.config/opencode/*bak* "$HOME/.local/share/opencode/auth.json"
 eval "$(mise activate bash --shims)"
 uv python install 3.12 >/dev/null 2>&1 || true
 # uv tools: common/uv-tools.txt is the one list for both machines (real CLIs only; ruff, ty, marimo are per project)
@@ -187,7 +187,7 @@ if [ "$MACHINE_ROLE" = producer ]; then
   done
 fi
 systemctl --user daemon-reload
-TIMERS="news-daily news-weekly news-x-collect rai-maintenance rai-knowledge paper-portfolio gold-skim backup-drive agents-local"
+TIMERS="news-daily news-weekly news-x-collect rai-maintenance paper-portfolio gold-skim backup-drive agents-local"
 loginctl enable-linger "$USER" >/dev/null 2>&1 || true
 if [ "$ENABLE_TIMERS" = "1" ]; then
   systemctl --user enable --now $(for u in $TIMERS; do printf '%s.timer ' "$u"; done)
@@ -206,5 +206,5 @@ cat <<MSG
   4. 1Password app sign-in, then Settings > Developer > SSH agent; gh auth status; opencode auth login
   5. Chrome: sign in, then log in to x.com, substack.com, medium.com (collectors read the Default profile cookies)
   6. restore-backup.sh --target /absolute/new/target   (staging only; inspect before applying)
-  7. omarchy update; then finish with workflow 16 steps 10-13 (helm/11-maze/inventory/playbooks/16-machines.md) and restore-backup.sh
+  7. omarchy update; then restore-backup.sh
 MSG
