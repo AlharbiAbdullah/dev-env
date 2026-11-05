@@ -96,6 +96,24 @@ patch(
     "    contentWidth: panel.fittedContentWidth(Style.space(480))",
     "panel width",
 )
+# A share under one percent is still use: the panel used to round it to 0, and
+# OpenCode Go's dollar allowance is large enough that a day sits below 1%.
+patch(
+    "  function currencyPrefix(currency) {\n",
+    '''  // A used share: whole percents above ten, one decimal above one, two below,
+  // so a window that is barely touched still reads as touched.
+  function formatPercent(value) {
+    var percent = Number(value) * 100
+    if (!isFinite(percent) || percent <= 0) return "0%"
+    if (percent >= 10) return Math.round(percent) + "%"
+    if (percent >= 1) return percent.toFixed(1) + "%"
+    return percent.toFixed(2) + "%"
+  }
+
+  function currencyPrefix(currency) {
+''',
+    "percent format",
+)
 # A limit carries the subscription and plan it belongs to through to the cards.
 patch(
     "      if (percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title))",
@@ -103,9 +121,26 @@ patch(
     "        var w = limitWindow(entry.label, percent, entry.resetsAt, entry.title)\n"
     "        w.sub = String(entry.sub || \"\")\n"
     "        w.plan = String(entry.plan || \"\")\n"
+    "        w.detail = w.resetAt !== \"\" ? String(entry.detail || \"\") : \"\"\n"
     "        out.push(w)\n"
     "      }",
     "limit subscription",
+)
+# The tab's limit rows read the same share as the cards, and say what the
+# window has cost when the record carries it (OpenCode Go does).
+patch(
+    "          ? Math.round(limitRow.window.percent * 100) + \"%\"",
+    "          ? root.formatPercent(limitRow.window.percent)",
+    "limit percent",
+)
+patch(
+    "        var remainingMs = root.resetMsFor(limitRow.window)\n"
+    "        return remainingMs > 0 ? \"Resets in \" + root.formatDuration(remainingMs) : \"\"",
+    "        var remainingMs = root.resetMsFor(limitRow.window)\n"
+    "        var reset = remainingMs > 0 ? \"Resets in \" + root.formatDuration(remainingMs) : \"\"\n"
+    "        var detail = limitRow.window ? String(limitRow.window.detail || \"\") : \"\"\n"
+    "        return [reset, detail].filter(function (part) { return part !== \"\" }).join(\" · \")",
+    "limit detail",
 )
 # One height for every tab: the tallest content the panel has shown this
 # session, never less than the stock 640. Switching tabs then never moves the
@@ -140,7 +175,8 @@ else:
     block = source[switch_start:switch_end]
     source = source[:switch_start] + source[switch_end:]
     source = source[:hero_start] + block + source[hero_start:]
-# The AI tab opens on one card per subscription (Claude, Google, Ollama), then
+# The tab bar is one tab per subscription (All, Claude, ChatGPT, Google,
+# OpenCode Go). The All tab opens on one card per subscription, then
 # tokens by day and by model over the same seven days, drawn on one grid
 # (ruling 2026-10-03: subscription cards).
 patch(
@@ -159,15 +195,17 @@ patch(
 patch(
     "  function resetMsFor(w) {\n",
     '''  // One card per subscription for the AI tab, in a fixed order: Claude, OpenAI,
-  // Google, Ollama. A window names its subscription (`sub`) when its record runs
-  // on more than one (opencode and pi run on Ollama and ChatGPT), and a
+  // Google, OpenCode Go. A window names its subscription (`sub`) when its record
+  // runs on more than one (opencode runs on OpenCode Go and ChatGPT), and a
   // subscription two records share is read from the first. Google's windows
   // split into its two pools, Gemini and the partner models.
   function quotaCards(list) {
-    var names = { "claude": "Claude", "agy": "Google", "opencode": "Ollama", "pi": "Ollama" }
-    var order = ["Claude", "OpenAI", "Google", "Ollama"]
+    var names = {
+      "1-claude": "Claude", "2-chatgpt": "ChatGPT", "3-google": "Google", "4-opencode-go": "OpenCode Go"
+    }
+    var order = ["Claude", "ChatGPT", "Google", "OpenCode Go"]
     function shortTitle(title) {
-      var text = String(title || "").replace(/^(Gemini|Claude\\/GPT|OpenAI|Ollama)\\s+/, "")
+      var text = String(title || "").replace(/^(Gemini|Claude\\/GPT|OpenAI|ChatGPT|OpenCode Go)\\s+/, "")
       if (text === "Session") return "5h"
       if (text === "Weekly") return "week"
       if (text === "Monthly") return "month"
@@ -195,7 +233,10 @@ patch(
           group = { title: pool, windows: [] }
           groups.push(group)
         }
-        group.windows.push({ title: shortTitle(w.title), used: clamp(w.percent, 0, 1), resetAt: w.resetAt })
+        group.windows.push({
+          title: shortTitle(w.title), used: clamp(w.percent, 0, 1), resetAt: w.resetAt,
+          detail: String(w.detail || "")
+        })
       }
     }
     var out = []
@@ -424,65 +465,83 @@ patch(
 
   // One window: label, a meter filling toward the cap, the share used, and the
   // time to its reset, in fixed columns so every card lines up.
-  component QuotaLine: Item {
+  component QuotaLine: Column {
     id: quotaLine
     property var line: null
     readonly property bool alarming: !!line && line.used >= 0.9
 
-    implicitHeight: Math.max(lineLabel.implicitHeight, lineUsed.implicitHeight)
+    spacing: Style.space(4)
 
-    Text {
-      id: lineLabel
-      textFormat: Text.PlainText
-      text: quotaLine.line ? quotaLine.line.title : ""
-      color: root.dim
-      font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
-      elide: Text.ElideRight
-      anchors.left: parent.left
-      anchors.verticalCenter: parent.verticalCenter
-      width: Style.space(40)
-    }
+    Item {
+      width: parent.width
+      implicitHeight: Math.max(lineLabel.implicitHeight, lineUsed.implicitHeight)
 
-    Meter {
-      anchors.left: lineLabel.right
-      anchors.right: lineUsed.left
-      anchors.leftMargin: Style.space(6)
-      anchors.rightMargin: Style.space(8)
-      anchors.verticalCenter: parent.verticalCenter
-      value: quotaLine.line ? quotaLine.line.used : -1
-      alarming: quotaLine.alarming
-    }
-
-    Text {
-      id: lineUsed
-      textFormat: Text.PlainText
-      text: quotaLine.line ? Math.round(quotaLine.line.used * 100) + "%" : ""
-      color: quotaLine.alarming ? root.urgent : root.foreground
-      font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
-      font.bold: true
-      horizontalAlignment: Text.AlignRight
-      anchors.right: lineReset.left
-      anchors.rightMargin: Style.space(6)
-      anchors.verticalCenter: parent.verticalCenter
-      width: Style.space(30)
-    }
-
-    Text {
-      id: lineReset
-      textFormat: Text.PlainText
-      text: {
-        var remainingMs = root.resetMsFor(quotaLine.line)
-        return remainingMs > 0 ? root.formatDuration(remainingMs) : ""
+      Text {
+        id: lineLabel
+        textFormat: Text.PlainText
+        text: quotaLine.line ? quotaLine.line.title : ""
+        color: root.dim
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        elide: Text.ElideRight
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: Style.space(40)
       }
+
+      Meter {
+        anchors.left: lineLabel.right
+        anchors.right: lineUsed.left
+        anchors.leftMargin: Style.space(6)
+        anchors.rightMargin: Style.space(8)
+        anchors.verticalCenter: parent.verticalCenter
+        value: quotaLine.line ? quotaLine.line.used : -1
+        alarming: quotaLine.alarming
+      }
+
+      Text {
+        id: lineUsed
+        textFormat: Text.PlainText
+        text: quotaLine.line ? root.formatPercent(quotaLine.line.used) : ""
+        color: quotaLine.alarming ? root.urgent : root.foreground
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        font.bold: true
+        horizontalAlignment: Text.AlignRight
+        anchors.right: lineReset.left
+        anchors.rightMargin: Style.space(6)
+        anchors.verticalCenter: parent.verticalCenter
+        width: Style.space(36)
+      }
+
+      Text {
+        id: lineReset
+        textFormat: Text.PlainText
+        text: {
+          var remainingMs = root.resetMsFor(quotaLine.line)
+          return remainingMs > 0 ? root.formatDuration(remainingMs) : ""
+        }
+        color: root.dim
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        horizontalAlignment: Text.AlignRight
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: Style.space(40)
+      }
+    }
+
+    // What the window has cost, when its record says: the Go plan meters in
+    // dollars, and a share that small needs the amount behind it.
+    Text {
+      id: lineDetail
+      visible: text !== ""
+      textFormat: Text.PlainText
+      text: quotaLine.line ? String(quotaLine.line.detail || "") : ""
       color: root.dim
       font.family: root.fontFamily
       font.pixelSize: Style.font.caption
-      horizontalAlignment: Text.AlignRight
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-      width: Style.space(40)
+      leftPadding: Style.space(46)
     }
   }
 

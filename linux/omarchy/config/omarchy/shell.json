@@ -51,7 +51,7 @@
           "id": "abdullah.agents",
           "providers": {
             "claude": {
-              "enabled": true
+              "enabled": false
             },
             "codex": {
               "enabled": false

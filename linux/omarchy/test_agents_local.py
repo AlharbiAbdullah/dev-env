@@ -39,14 +39,21 @@ def write_jsonl(path, entries):
     path.write_text("".join(json.dumps(entry) + "\n" for entry in entries))
 
 
-def opencode_db(path, messages):
+def opencode_db(path: Path, messages: list[dict]) -> None:
+    """Persist v2 message rows, with the type column separate from the JSON payload."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    conn.execute("CREATE TABLE message (session_id TEXT, data TEXT)")
-    rows = [("ses_1", json.dumps(m)) for m in messages]
-    conn.executemany("INSERT INTO message VALUES (?, ?)", rows)
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(path) as conn:
+        conn.execute(
+            "CREATE TABLE session_message (id TEXT PRIMARY KEY, session_id TEXT NOT NULL,"
+            " type TEXT NOT NULL, seq INTEGER NOT NULL, time_created INTEGER NOT NULL,"
+            " time_updated INTEGER NOT NULL, data TEXT NOT NULL)"
+        )
+        rows = [
+            (f"msg_{index}", "ses_1", message.get("type", "assistant"), index, NOW_MS, NOW_MS,
+             json.dumps({key: value for key, value in message.items() if key != "type"}))
+            for index, message in enumerate(messages)
+        ]
+        conn.executemany("INSERT INTO session_message VALUES (?, ?, ?, ?, ?, ?, ?)", rows)
 
 
 def week(stats):
@@ -105,11 +112,42 @@ def test_pi_counts_cache_reads_and_writes(agents, tmp_path):
 def test_opencode_counts_council_voice_databases(agents, tmp_path):
     # Each /council voice keeps a private opencode database. Its tokens still count.
     tokens = {"input": 10, "output": 3, "reasoning": 0, "cache": {"read": 50, "write": 0}}
-    message = {"role": "assistant", "modelID": "m", "time": {"created": NOW_MS}, "tokens": tokens}
+    message = {"model": {"id": "m", "variant": "high"},
+               "time": {"created": NOW_MS}, "tokens": tokens}
     opencode_db(tmp_path / "data" / "opencode" / "opencode.db", [message])
     opencode_db(tmp_path / "state" / "rai" / "council" / "opencode" / "glm" / "data" / "opencode"
                 / "opencode.db", [message])
     assert week(agents.scan_opencode(effort=True)) == (20, 6, 100, 0)
+
+
+@pytest.mark.parametrize("effort, model_key", [(False, "gpt-x"), (True, "gpt-x (high)")])
+def test_opencode_v2_assistant_tokens_and_effort(agents, tmp_path, effort, model_key):
+    tokens = {"input": 10, "output": 3, "reasoning": 5, "cache": {"read": 50, "write": 7}}
+    message = {"model": {"id": "openai/gpt-x", "variant": "high"},
+               "time": {"created": NOW_MS}, "tokens": tokens}
+    path = tmp_path / "data" / "opencode" / "opencode.db"
+    opencode_db(path, [message, {**message, "type": "user"},
+                       {**message, "type": "synthetic"}, {**message, "tokens": {}}])
+    before = path.read_bytes()
+    stats = agents.scan_opencode(effort=effort)
+    assert week(stats) == (10, 8, 50, 7)
+    assert stats.recent_model_usage == {
+        model_key: {"inputTokens": 10, "outputTokens": 8, "cacheReadInputTokens": 50,
+                    "cacheCreationInputTokens": 7},
+    }
+    assert stats.total_prompts == 1
+    assert stats.today_sessions == {"opencode:ses_1"}
+    assert path.read_bytes() == before
+
+
+def test_opencode_v2_skips_malformed_assistant_payload(agents, tmp_path):
+    message = {"model": {"id": "m"}, "time": {"created": NOW_MS}, "tokens": {"input": 4}}
+    path = tmp_path / "data" / "opencode" / "opencode.db"
+    opencode_db(path, [message, message, message])
+    with sqlite3.connect(path) as conn:
+        conn.execute("UPDATE session_message SET data = ? WHERE id = ?", ("{", "msg_1"))
+        conn.execute("UPDATE session_message SET data = ? WHERE id = ?", ("[]", "msg_2"))
+    assert week(agents.scan_opencode(effort=True)) == (4, 0, 0, 0)
 
 
 def test_ai_record_counts_every_token(agents, tmp_path):
@@ -133,7 +171,7 @@ def test_ai_record_rebuilds_on_every_run(agents, tmp_path, monkeypatch):
 
 def openai_window(resets_in_hours):
     reset = datetime.now(timezone.utc) + timedelta(hours=resets_in_hours)
-    return {"label": "Weekly (7-day)", "title": "OpenAI week", "sub": "OpenAI", "plan": "Prolite",
+    return {"label": "Weekly (7-day)", "title": "OpenAI week", "sub": "ChatGPT", "plan": "Prolite",
             "percent": 0.24, "resetsAt": reset.isoformat()}
 
 
@@ -148,7 +186,8 @@ def broken_codex(tmp_path, monkeypatch, agents):
 def test_openai_read_failure_keeps_the_last_windows(agents, tmp_path, monkeypatch, capsys):
     # One failed read must not drop the OpenAI card; a window past its reset is no longer true.
     live, expired = openai_window(48), openai_window(-1)
-    agents.write_record("codex-cli", {"id": "codex-cli", "limits": [live, expired]})
+    chatgpt = agents.SUBSCRIPTIONS["chatgpt"][0]
+    agents.write_record(chatgpt, {"id": chatgpt, "limits": [live, expired]})
     broken_codex(tmp_path, monkeypatch, agents)
     assert agents.openai_limits() == [live]
     assert "auth refresh failed" in capsys.readouterr().err
@@ -157,6 +196,29 @@ def test_openai_read_failure_keeps_the_last_windows(agents, tmp_path, monkeypatc
 def test_openai_read_failure_without_a_last_reading_is_empty(agents, tmp_path, monkeypatch):
     broken_codex(tmp_path, monkeypatch, agents)
     assert agents.openai_limits() == []
+
+
+def test_console_go_windows_meter_share_and_dollars(agents):
+    # The Go key endpoint rounds to whole percents, so the Console meters are the
+    # only place a used day shows: 0.35% of $60 is $0.21.
+    status = {"access": {"meters": {
+        "fiveHour": {
+            "limitMicroCents": "1200000000", "usedMicroCents": "7212881",
+            "resetsAt": "2026-11-01T02:58:12.000Z",
+        },
+        "week": {
+            "limitMicroCents": "3000000000", "usedMicroCents": "21236121",
+            "resetsAt": "2026-11-02T00:00:00.000Z",
+        },
+        "month": {
+            "limitMicroCents": "6000000000", "usedMicroCents": "21236121",
+            "resetsAt": "2026-11-30T12:11:21.000Z",
+        },
+    }}}
+    windows = agents.console_go_windows(status)
+    assert [w["detail"] for w in windows] == ["$0.07 of $12.00", "$0.21 of $30.00", "$0.21 of $60.00"]
+    assert [w["percent"] for w in windows] == pytest.approx([0.006010734167, 0.007078707, 0.0035393535])
+    assert windows[0]["resetsAt"] == "2026-11-01T02:58:12.000Z"
 
 
 def test_agy_keeps_general_gemini_week_and_argon_week_separate(agents, tmp_path, monkeypatch):
@@ -196,3 +258,22 @@ def test_agy_keeps_general_gemini_week_and_argon_week_separate(agents, tmp_path,
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_one_pass_splits_each_message_onto_its_subscription(agents, tmp_path):
+    # A tab is a subscription now: Go tokens land on OpenCode Go, ChatGPT's on
+    # ChatGPT, and All still counts both.
+    tokens = {"input": 10, "output": 3, "reasoning": 0, "cache": {"read": 50, "write": 0}}
+    opencode_db(tmp_path / "data" / "opencode" / "opencode.db", [
+        {"model": {"id": "deepseek-v4.1-flash", "providerID": "opencode-go"},
+         "time": {"created": NOW_MS}, "tokens": tokens},
+    ])
+    message = {"role": "assistant", "model": "gpt-6.1-sol", "provider": "openai",
+               "usage": {"input": 5, "output": 7}}
+    write_jsonl(tmp_path / ".pi" / "agent" / "sessions" / "s.jsonl",
+                [{"type": "message", "id": "e1", "timestamp": NOW_ISO, "message": message}])
+
+    everything = agents.scan_everything()
+    assert list(everything.subs["opencode-go"].recent_model_usage) == ["deepseek-v4.1-flash"]
+    assert list(everything.subs["chatgpt"].recent_model_usage) == ["gpt-6.1-sol"]
+    assert set(everything.model_usage) == {"deepseek-v4.1-flash", "gpt-6.1-sol"}

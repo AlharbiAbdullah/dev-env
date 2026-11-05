@@ -8,17 +8,17 @@
 Omarchy's `omarchy-agent-usage-update` owns claude, codex and fireworks and
 runs from `$OMARCHY_PATH/bin`, so a user collector cannot join its glob. The
 agents panel, however, just reads one JSON record per agent from the usage
-directory, so this companion writes the harness tabs the stock collectors do
-not cover: pi, opencode and agy. agy's record also carries the Google AI Pro
-quota windows, read from agy's own `/usage` command. pi and opencode carry two
-subscriptions: Ollama Pro's windows, read with the Ollama API key, and ChatGPT
-Plus's, read through the Codex CLI. Every window names its subscription (`sub`)
-and plan, so the AI tab can draw one card per subscription.
+directory, so this companion writes the tabs the stock collectors do not cover.
+A tab is a subscription, not a harness: Claude, ChatGPT, Google and OpenCode Go,
+each with its quota windows and its own tokens and models. Each message is
+tagged with the subscription that paid for it, so one scan feeds every tab.
+Claude's windows come from Omarchy's own Claude collector, ChatGPT's through the
+Codex CLI, Google's from agy's `/usage`, and OpenCode Go's from the Console
+sign-in's Go meters (its key endpoint when that sign-in is missing). The panel's
+"All" tab keeps the per-subscription cards and the whole seven days.
 
-Invoked by the `agents-local` systemd timer, which also refreshes the synthetic
-"AI" record: one row per model and effort across Claude Code, Codex, pi and opencode
-(every token: input, output, cache reads and cache writes, as on the Claude Code tab).
-opencode counts /council voices' private databases too. Pass agent ids to refresh a subset.
+Invoked by the `agents-local` systemd timer. Pass agent ids to refresh a subset;
+no argument refreshes All and every subscription.
 """
 
 import functools
@@ -41,18 +41,47 @@ RECENT_DATES = [
     (datetime.now() - timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(6, -1, -1)
 ]
 
-AGENTS = ["pi", "opencode", "agy", "codex-cli"]
-# The AI tab aggregates every harness by model and effort. It is rebuilt on every
-# timer run (~5 s for ~1.8 GB of Claude transcripts), so its seven days stay current.
+AGENTS = ["1-claude", "2-chatgpt", "3-google", "4-opencode-go"]
+# The All tab aggregates every subscription and harness by model and effort. It is
+# rebuilt on every timer run (~5 s for ~1.8 GB of Claude transcripts), so its seven
+# days stay current. One record per subscription carries that subscription's windows
+# and the models that ran on it; the harness tabs are gone.
 AI_ID = "0-ai"
+RETIRED = ["pi", "opencode", "agy", "codex-cli"]
 
 AGY_BIN = shutil.which("agy") or str(Path.home() / ".local" / "bin" / "agy")
 CODEX_BIN = shutil.which("codex") or str(Path.home() / ".local" / "share" / "mise" / "shims" / "codex")
-# Filled by `__op_env OLLAMA_USAGE_KEY` in ~/.bashrc.local (per-boot RAM, 0700 dir).
+CLAUDE_COLLECTOR = shutil.which("omarchy-agent-usage-claude") or "/usr/share/omarchy/bin/omarchy-agent-usage-claude"
+# Filled by `__op_env OPENCODE_GO_KEY` in ~/.bashrc.local (per-boot RAM, 0700 dir).
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
-OLLAMA_KEY = RUNTIME / "op-OLLAMA_USAGE_KEY"
-OLLAMA_PRO_CREDIT_USD = 60  # Pro: $60 of usage credit a month (ollama.com/pricing, 2026-10)
-OLLAMA_PRO_RENEWAL_DAY = 1  # Pro renews on the 1st of each month (02-ana/financial/subscriptions.md)
+GO_KEY = RUNTIME / "op-OPENCODE_GO_KEY"
+GO_USAGE_URL = "https://opencode.ai/inference/go/v1/usage"
+# The Console knows the Go plan in dollars; the key endpoint rounds the share
+# to a whole percent, so a used-up day still reads 0 there.
+GO_STATUS_URL = "https://opencode.ai/console/api/go/status"
+OPENCODE_DB = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "opencode" / "opencode.db"
+# Console meters are micro-cents: 100,000,000 of them make a dollar.
+MICRO_CENTS = 100_000_000
+
+# One row per subscription: record id, tab name, plan label. The ids start with a
+# digit so the panel's alphabetical tab order is All, Claude, ChatGPT, Google, Go.
+SUBSCRIPTIONS = {
+    "claude": ("1-claude", "Claude", "Max 20x"),
+    "chatgpt": ("2-chatgpt", "ChatGPT", "Pro"),
+    "google": ("3-google", "Google", "AI Ultra"),
+    "opencode-go": ("4-opencode-go", "OpenCode Go", "Go"),
+}
+# Which subscription paid for a provider's tokens. A provider missing here (a local
+# Ollama route, a dead key) counts on the All tab only, never on a subscription tab.
+SUB_OF_PROVIDER = {
+    "claude": "claude",
+    "anthropic": "claude",
+    "openai": "chatgpt",
+    "codex": "chatgpt",
+    "google": "google",
+    "agy": "google",
+    "opencode-go": "opencode-go",
+}
 
 
 def number(value):
@@ -82,11 +111,19 @@ def label(model, effort):
     """A model key that carries the effort when there is one, for the AI tab."""
     base = str(model or "unknown").split("/")[-1].replace(":cloud", "")
     effort = str(effort or "").strip()
-    return f"{base} ({effort})" if effort else base
+    # opencode labels an unpicked variant "default"; the bare model name says it.
+    if effort in ("", "default"):
+        return base
+    return f"{base} ({effort})"
 
 
 class Stats:
-    """Token and session accumulator for one agent."""
+    """Token and session accumulator for one agent, and one per subscription.
+
+    A scan tags each message with the subscription that paid for it; the tag
+    routes the same counts into a child Stats, so one pass feeds the All tab and
+    every subscription tab.
+    """
 
     def __init__(self):
         self.recent = {day: 0 for day in RECENT_DATES}
@@ -98,8 +135,9 @@ class Stats:
         self.total_prompts = 0
         self.total_sessions = set()
         self.active_days = set()
+        self.subs = {}
 
-    def add(self, day, session_key, model, input_tokens, output_tokens, cache_read, cache_write):
+    def add(self, day, session_key, model, input_tokens, output_tokens, cache_read, cache_write, sub=""):
         total = input_tokens + output_tokens + cache_read + cache_write
         self.total_prompts += 1
         self.total_sessions.add(session_key)
@@ -122,6 +160,10 @@ class Stats:
             self.today_prompts += 1
             self.today_sessions.add(session_key)
             self.today_tokens_by_model[model] = self.today_tokens_by_model.get(model, 0) + total
+        if sub:
+            self.subs.setdefault(sub, Stats()).add(
+                day, session_key, model, input_tokens, output_tokens, cache_read, cache_write
+            )
 
     def add_session(self, day, session_key):
         self.total_sessions.add(session_key)
@@ -212,8 +254,9 @@ def scan_pi(stats=None, effort=False):
                 model = str(message.get("model") or "unknown")
                 if effort:
                     model = label(model, level)
+                sub = SUB_OF_PROVIDER.get(str(message.get("provider") or ""), "")
                 day = local_day(entry.get("timestamp") or message.get("timestamp"))
-                stats.add(day, str(path), model, input_tokens, output_tokens, cache_read, cache_write)
+                stats.add(day, str(path), model, input_tokens, output_tokens, cache_read, cache_write, sub)
     return stats
 
 
@@ -233,19 +276,18 @@ def scan_opencode(stats=None, effort=False):
     return stats
 
 
-def scan_opencode_db(db, stats, effort):
+def scan_opencode_db(db: Path, stats: Stats, effort: bool) -> None:
+    """Read v2 assistant usage without changing the database."""
     conn = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
     try:
         conn.execute("PRAGMA query_only = ON")
         rows = conn.execute(
-            "SELECT session_id, data FROM message"
-            " WHERE data LIKE '%\"role\"%:%\"assistant\"%'"
-            " AND CASE WHEN json_valid(data) THEN json_extract(data, '$.role') END = 'assistant'"
+            "SELECT session_id, data FROM session_message WHERE type = ?", ("assistant",)
         )
         for session_id, raw in rows:
             try:
                 entry = json.loads(raw)
-                if not isinstance(entry, dict) or entry.get("role") != "assistant":
+                if not isinstance(entry, dict):
                     continue
                 tokens = entry.get("tokens") or {}
                 cache = tokens.get("cache") or {}
@@ -256,12 +298,16 @@ def scan_opencode_db(db, stats, effort):
                 if not (input_tokens or output_tokens or cache_read or cache_write):
                     continue
                 day = local_day((entry.get("time") or {}).get("created"))
-                model = str(entry.get("modelID") or "unknown").rstrip("/").split("/")[-1]
+                model_info = entry.get("model") or {}
+                model = str(model_info.get("id") or "unknown").rstrip("/").split("/")[-1]
                 if effort:
-                    model = label(model, entry.get("variant"))
+                    model = label(model, model_info.get("variant"))
+                sub = SUB_OF_PROVIDER.get(str(model_info.get("providerID") or ""), "")
             except Exception:
                 continue
-            stats.add(day, "opencode:" + str(session_id), model, input_tokens, output_tokens, cache_read, cache_write)
+            stats.add(
+                day, "opencode:" + str(session_id), model, input_tokens, output_tokens, cache_read, cache_write, sub
+            )
     finally:
         conn.close()
 
@@ -319,7 +365,7 @@ def scan_claude(stats=None):
                 else:
                     row[3:] = [max(old, new) for old, new in zip(row[3:], counts)]
     for day, session, model, *counts in replies.values():
-        stats.add(day, session, model, *counts)
+        stats.add(day, session, model, *counts, sub="claude")
     return stats
 
 
@@ -369,20 +415,43 @@ def scan_codex(stats=None, effort=False):
                 if not (input_tokens or output_tokens or cache_read):
                     continue
                 key = label(model, level) if effort else model
-                stats.add(local_day(entry.get("timestamp")), str(path), key, input_tokens, output_tokens, cache_read, 0)
+                stats.add(
+                    local_day(entry.get("timestamp")), str(path), key,
+                    input_tokens, output_tokens, cache_read, 0, sub="chatgpt",
+                )
+    return stats
+
+
+@functools.cache
+def scan_everything():
+    """Every harness that counts tokens, once, with each message tagged by the
+    subscription that paid for it. Both tab kinds read this one pass."""
+    stats = Stats()
+    scan_claude(stats)
+    scan_codex(stats, effort=True)
+    scan_pi(stats, effort=True)
+    scan_opencode(stats, effort=True)
     return stats
 
 
 def scan_ai():
-    """One row per model and effort across every harness that counts tokens."""
-    stats = Stats()
-    scan_pi(stats, effort=True)
-    scan_opencode(stats, effort=True)
-    scan_claude(stats)
-    scan_codex(stats, effort=True)
-    record = stats.record(AI_ID, "AI", "every model")
+    """The All tab: one row per model and effort across every subscription."""
+    stats = scan_everything()
+    record = stats.record(AI_ID, "All", "every subscription")
     # The model chart covers the same seven days as the day chart above it.
     record["modelUsage"] = stats.recent_model_usage
+    return record
+
+
+def subscription_record(sub, limits):
+    """One subscription tab: its own windows, tokens and models."""
+    agent_id, name, tier = SUBSCRIPTIONS[sub]
+    stats = scan_everything().subs.get(sub) or Stats()
+    record = stats.record(agent_id, name, tier)
+    record["modelUsage"] = stats.recent_model_usage
+    record["limits"] = [
+        {**window, "sub": name, "plan": window.get("plan") or tier} for window in limits
+    ]
     return record
 
 
@@ -444,7 +513,7 @@ def agy_limits():
         payload = json.loads(result.stdout[result.stdout.index("{"):])
         groups = payload["command"]["data"]["groups"]
     except Exception:
-        return carried_limits("agy")
+        return carried_limits(SUBSCRIPTIONS["google"][0])
     windows = []
     for group in groups:
         gname = str(group.get("name", ""))
@@ -478,41 +547,140 @@ def agy_record():
     return record
 
 
-def ollama_reset_at():
-    """The date Ollama Pro's monthly credit renews: the 1st of next month.
-
-    The usage API reports no reset time, so the panel's countdown would sit
-    empty while every other card counts down. His billing date is fixed (the
-    1st), so compute it locally.
-    """
-    now = datetime.now().astimezone()
-    if now.month == 12:
-        return datetime(now.year + 1, 1, OLLAMA_PRO_RENEWAL_DAY, tzinfo=now.tzinfo).isoformat()
-    return datetime(now.year, now.month + 1, OLLAMA_PRO_RENEWAL_DAY, tzinfo=now.tzinfo).isoformat()
-
-
 @functools.cache
-def ollama_limits():
-    """Ollama Pro's usage, as the fraction of its monthly credit spent.
+@functools.cache
+def claude_limits():
+    """Claude Max's windows, read by Omarchy's own Claude collector.
 
-    Since October 2026 /api/usage reports spend in USD over a range (24h, 7d or 30d), with no
-    limits or reset times, and Pro is $60 of credit a month (ollama.com/pricing). The bar is
-    the last 30 days' spend over that credit. The key comes from the RAM cache a shell's
-    `__op_env` fills; the timer never calls op itself. No key or no answer means no bar.
+    That collector owns the read, and its limits-only run is under a second.
+    The panel carries a Claude subscription tab now, not a Claude Code tab, so
+    this supplies the windows that tab shows.
     """
     try:
-        request = urllib.request.Request(
-            "https://ollama.com/api/usage?range=30d",
-            headers={"Authorization": f"Bearer {OLLAMA_KEY.read_text().strip()}"},
+        result = subprocess.run(
+            [CLAUDE_COLLECTOR, "--limits-only"], capture_output=True, text=True, timeout=120, check=False,
         )
-        with urllib.request.urlopen(request, timeout=10) as response:
-            spent = float((json.load(response).get("totals") or {})["usage_usd"])
+        return json.loads(result.stdout).get("limits") or []
     except Exception:
         return []
-    return [{
-        "label": f"30 days: ${spent:.2f} of ${OLLAMA_PRO_CREDIT_USD}", "title": "Ollama 30d",
-        "sub": "Ollama", "plan": "Pro", "percent": spent / OLLAMA_PRO_CREDIT_USD, "resetsAt": ollama_reset_at(),
-    }]
+
+
+def opencode_console():
+    """The Console sign-in opencode keeps: its bearer token and workspace id.
+
+    The Go status call is account-scoped, and a Go API key is refused there. The
+    token sits in opencode's own database, which is only read. A missing or
+    expired token means the key endpoint answers instead.
+    """
+    try:
+        conn = sqlite3.connect(OPENCODE_DB.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
+    except sqlite3.Error:
+        return None
+    try:
+        conn.execute("PRAGMA query_only = ON")
+        row = conn.execute(
+            "SELECT value FROM credential WHERE integration_id = 'opencode'"
+            " AND active = 1 ORDER BY time_updated DESC LIMIT 1"
+        ).fetchone()
+    except sqlite3.Error:
+        return None
+    finally:
+        conn.close()
+    if not row:
+        return None
+    try:
+        value = json.loads(row[0]) or {}
+        access = str(value.get("access") or "")
+        org = str((value.get("metadata") or {}).get("orgID") or "")
+        expires = number(value.get("expires"))
+    except (TypeError, ValueError):
+        return None
+    if not access or not org:
+        return None
+    if expires and expires <= datetime.now(timezone.utc).timestamp() * 1000:
+        return None
+    return access, org
+
+
+def console_go_windows(status):
+    """The Console's Go meters as windows: exact dollars used against each limit."""
+    meters = (status.get("access") or {}).get("meters") or {}
+    windows = []
+    for key, title, label in (
+        ("fiveHour", "OpenCode Go 5h", "Session (5-hour)"),
+        ("week", "OpenCode Go week", "Weekly (7-day)"),
+        ("month", "OpenCode Go month", "Monthly"),
+    ):
+        meter = meters.get(key) or {}
+        limit = number(meter.get("limitMicroCents"))
+        if limit <= 0:
+            continue
+        used = number(meter.get("usedMicroCents"))
+        windows.append({
+            "label": label, "title": title, "sub": "OpenCode Go", "plan": "Go",
+            "percent": max(0.0, used / limit),
+            "resetsAt": meter.get("resetsAt") or "",
+            # The console's own words: what the window has cost out of its cap.
+            "detail": f"${used / MICRO_CENTS:,.2f} of ${limit / MICRO_CENTS:,.2f}",
+        })
+    return windows
+
+
+def opencode_go_limits():
+    """OpenCode Go's three quota windows: 5-hour, weekly and monthly.
+
+    The Console status carries each window's meter in dollars, so the share is
+    exact: the Go key's usage endpoint rounds it to a whole percent. Without a
+    Console sign-in the key endpoint still answers, from the RAM cache a shell's
+    `__op_env` fills; the timer never calls op itself. No sign-in and no key
+    means no card.
+    """
+    session = opencode_console()
+    if session:
+        access, org = session
+        try:
+            request = urllib.request.Request(
+                GO_STATUS_URL,
+                headers={
+                    "Authorization": f"Bearer {access}",
+                    "x-opencode-org-id": org,
+                    "User-Agent": "agents-local/1.0",
+                },
+            )
+            with urllib.request.urlopen(request, timeout=10) as response:
+                windows = console_go_windows(json.load(response) or {})
+            if windows:
+                return windows
+        except Exception:
+            pass
+    try:
+        request = urllib.request.Request(
+            GO_USAGE_URL,
+            headers={
+                "Authorization": f"Bearer {GO_KEY.read_text().strip()}",
+                # Go refuses a generic library user agent (403), as its docs ask.
+                "User-Agent": "agents-local/1.0",
+            },
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            usage = (json.load(response) or {}).get("usage") or {}
+    except Exception:
+        return []
+    windows = []
+    for key, title, label in (
+        ("rolling", "OpenCode Go 5h", "Session (5-hour)"),
+        ("weekly", "OpenCode Go week", "Weekly (7-day)"),
+        ("monthly", "OpenCode Go month", "Monthly"),
+    ):
+        bucket = usage.get(key) or {}
+        if bucket.get("percent") is None:
+            continue
+        windows.append({
+            "label": label, "title": title, "sub": "OpenCode Go", "plan": "Go",
+            "percent": max(0.0, float(bucket.get("percent") or 0)) / 100,
+            "resetsAt": bucket.get("resetsAt") or "",
+        })
+    return windows
 
 
 def codex_rpc(proc, request_id, method, params=None):
@@ -539,7 +707,7 @@ def last_openai_windows(reason):
     """
     print(f"agents-local: OpenAI limits read failed ({reason}); kept the last reading", file=sys.stderr)
     try:
-        record = json.loads((USAGE_DIR / "codex-cli.json").read_text())
+        record = json.loads((USAGE_DIR / (SUBSCRIPTIONS["chatgpt"][0] + ".json")).read_text())
     except (OSError, ValueError):
         return []
     now = datetime.now(timezone.utc)
@@ -549,7 +717,7 @@ def last_openai_windows(reason):
             live = datetime.fromisoformat(window["resetsAt"]) > now
         except (KeyError, TypeError, ValueError):
             live = False
-        if window.get("sub") == "OpenAI" and live:
+        if window.get("sub") == "ChatGPT" and live:
             kept.append(window)
     return kept
 
@@ -607,27 +775,26 @@ def openai_limits():
     return windows
 
 
-def codex_record():
-    record = scan_codex().record("codex-cli", "Codex", "ChatGPT Plus")
-    record["limits"] = openai_limits()
-    return record
+def google_record():
+    """Google's tab: agy's activity, its AI Ultra windows, and no token chart.
 
-
-def subscription_record(scan, agent_id):
-    """opencode and pi run on two subscriptions, Ollama Pro and ChatGPT Plus, so
-    both carry both sets of windows; each window names its subscription."""
-    record = scan().record(agent_id, agent_id, "Ollama Pro · ChatGPT Plus")
-    record["limits"] = ollama_limits() + openai_limits()
+    agy keeps no readable token counts, so the day and model charts stay empty
+    rather than drawing seven empty bars.
+    """
+    record = scan_agy().record(SUBSCRIPTIONS["google"][0], *SUBSCRIPTIONS["google"][1:], has_prompt_stats=False)
+    record["recentDays"] = []
+    record["limits"] = [
+        {**window, "sub": "Google", "plan": "AI Ultra"} for window in agy_limits()
+    ]
     return record
 
 
 COLLECTORS = {
-    "pi": lambda: subscription_record(scan_pi, "pi"),
-    "opencode": lambda: subscription_record(scan_opencode, "opencode"),
-    "agy": agy_record,
-    # Omarchy's own codex record counts every ChatGPT-plan harness (opencode and
-    # pi too), so it stays off; this tab is the Codex CLI alone.
-    "codex-cli": codex_record,
+    AI_ID: scan_ai,
+    "1-claude": lambda: subscription_record("claude", claude_limits()),
+    "2-chatgpt": lambda: subscription_record("chatgpt", openai_limits()),
+    "3-google": google_record,
+    "4-opencode-go": lambda: subscription_record("opencode-go", opencode_go_limits()),
 }
 
 
@@ -647,13 +814,14 @@ def write_record(agent_id, record):
 
 def main():
     args = sys.argv[1:]
-    requested = [arg for arg in args if not arg.startswith("-")] or AGENTS + [AI_ID]
+    requested = [arg for arg in args if not arg.startswith("-")] or [AI_ID] + AGENTS
     status = 0
+    # The harness tabs are gone; their records would still draw a tab.
+    for retired in RETIRED:
+        (USAGE_DIR / f"{retired}.json").unlink(missing_ok=True)
     for agent_id in requested:
         try:
-            if agent_id == AI_ID:
-                write_record(AI_ID, scan_ai())
-            elif agent_id in COLLECTORS:
+            if agent_id in COLLECTORS:
                 write_record(agent_id, COLLECTORS[agent_id]())
             else:
                 print(f"agents-local: unknown agent {agent_id}", file=sys.stderr)

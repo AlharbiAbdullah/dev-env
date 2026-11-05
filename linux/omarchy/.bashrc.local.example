@@ -12,3 +12,5 @@ __op_env() {  # __op_env VAR 'op://vault/item/field'
   [[ -s $f ]] && export "$1"="$(<"$f")"
 }
 __op_env OPENROUTER_API_KEY 'op://Abdullah/OpenRouter API key/credential'
+# OpenCode Go quota for the agents bar panel (agents-local reads this cache).
+__op_env OPENCODE_GO_KEY 'op://Abdullah/opencode-api-key/password'
