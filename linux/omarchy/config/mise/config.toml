@@ -5,7 +5,7 @@ d2 = "latest"
 gcloud = "latest"
 gh = "latest"
 node = "26.7.0"
-opencode = "1.18.34"
+opencode = { version = "latest", allow_builds = ["@opencode/cli"] }
 pi = "latest"
 vale = "latest"
 
