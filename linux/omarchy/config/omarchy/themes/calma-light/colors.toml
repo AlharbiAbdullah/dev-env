@@ -1,0 +1,30 @@
+# Calma Light. Palette from archive/theming/themes/calma-light/theme.lua.
+mode = "light"
+
+accent = "#6c782e"
+selection = "#e3d3a6"
+selection_foreground = "#393836"
+muted = "#a89984"
+
+background = "#f2e5bc"
+lighter_background = "#e6d9b4"
+
+foreground = "#393836"
+dark_foreground = "#a89984"
+light_foreground = "#5a524c"
+bright_foreground = "#393836"
+
+red = "#c14a4a"
+yellow = "#b47109"
+orange = "#c35e0a"
+green = "#6c782e"
+cyan = "#4c7a5d"
+blue = "#45707a"
+magenta = "#945e80"
+
+bright_red = "#c35e0a"
+bright_yellow = "#d8a657"
+bright_green = "#7f8a3a"
+bright_cyan = "#5f9070"
+bright_blue = "#5a8a8f"
+bright_magenta = "#a86f96"

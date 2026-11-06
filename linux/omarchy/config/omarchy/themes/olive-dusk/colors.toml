@@ -1,0 +1,22 @@
+# Olive Dusk. Everforest's lifted ground, Gruvbox's warm text, a Nord blue.
+mode = "dark"
+
+accent = "#dcb774"
+selection = "#3f423b"
+muted = "#8a8a76"
+
+background = "#30332d"
+lighter_background = "#3d403a"
+
+foreground = "#d6c29f"
+dark_foreground = "#7a7a68"
+light_foreground = "#b8a988"
+bright_foreground = "#e2d0b0"
+
+red = "#e07b78"
+yellow = "#dcb774"
+orange = "#d99a6c"
+green = "#a9bd75"
+cyan = "#86c0b6"
+blue = "#83a5c0"
+magenta = "#cf98ae"

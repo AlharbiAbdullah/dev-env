@@ -132,14 +132,16 @@ fi
 # --- [6] themes ---
 step "[6/9] themes (native Omarchy)"
 # Custom theming retired 2026-10-04 (archive/theming/). Drop what older runs installed.
-rm -rf "$HOME/.config/themes" "$HOME/.config/omarchy/themes/calma-dark" "$HOME/.config/omarchy/themes/calma-light"
+rm -rf "$HOME/.config/themes"
 rm -f "$HOME/.local/bin/theme" "$HOME/.local/bin/theme-render" "$HOME/.config/omarchy/hooks/theme-set.d/rai-theme-set" \
   "$HOME/.config/tmux/theme.conf" "$HOME/.config/glow/rai.json" "$HOME/.config/opencode/tui-plugins/theme-sync.ts"
 rm -rf "$HOME"/.vscode/extensions/rai.rai-themes-* "$HOME"/.cursor/extensions/rai.rai-themes-*
 omarchy-toggle skip-cursor-theme-changes off; omarchy-toggle skip-vscode-theme-changes off
-# Omarchy-only community theme, managed by the built-in theme installer.
-if [ ! -d "$HOME/.config/omarchy/themes/gruvbox-material" ]; then
-  omarchy theme install https://github.com/curbol/omarchy-gruvbox-material
+# Calma Dark's archived wallpapers are untracked (Syncthing only); the themes and Calma Light's
+# wallpapers come from config/omarchy.
+if [ -d "$HERE/../../archive/theming/wallpapers/calma-dark" ]; then
+  mkdir -p "$HOME/.config/omarchy/backgrounds/calma-dark"
+  cp -Rn "$HERE/../../archive/theming/wallpapers/calma-dark/." "$HOME/.config/omarchy/backgrounds/calma-dark/"
 fi
 
 # --- [7] dev tools ---

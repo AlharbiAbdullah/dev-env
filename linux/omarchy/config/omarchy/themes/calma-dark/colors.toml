@@ -1,0 +1,30 @@
+# Calma Dark. Palette from archive/theming/themes/calma-dark/theme.lua.
+mode = "dark"
+
+accent = "#a9b665"
+selection = "#564934"
+selection_foreground = "#f5deb3"
+muted = "#708090"
+
+background = "#282828"
+lighter_background = "#454340"
+
+foreground = "#f5deb3"
+dark_foreground = "#708090"
+light_foreground = "#f5deb3"
+bright_foreground = "#f8e6c5"
+
+red = "#ea6962"
+yellow = "#d8a657"
+orange = "#d08770"
+green = "#a9b665"
+cyan = "#89b482"
+blue = "#7daea3"
+magenta = "#d3869b"
+
+bright_red = "#d08770"
+bright_yellow = "#ebc06d"
+bright_green = "#abb87f"
+bright_cyan = "#89b482"
+bright_blue = "#83a598"
+bright_magenta = "#c3a5d8"
