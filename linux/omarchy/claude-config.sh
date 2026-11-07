@@ -29,16 +29,12 @@ ln -sfn "$RAI/harness/claude-code/user-instructions.md"              "$CLAUDE/CL
 ln -sfn "$RAI/config/settings.json"   "$CLAUDE/settings.json"
 echo "  ~/.claude/{hooks,CLAUDE.md,settings.json} -> helm/03-rai"
 
-# Auto-memory store: Claude Code keys it by project path (~/helm -> -home-abdullah-helm). The notes
-# live in the vault (2026-09-26) so git backs them up and every machine shares one store. A real
-# dir here holds this machine's own notes: merge them into the vault by hand, never clobber them.
+# Auto-memory belongs to Claude Code, which keeps its own folder per project. Older installs linked
+# helm's folder into the vault: drop that link so the tool makes a real folder again.
 MEM="$CLAUDE/projects/-home-abdullah-helm/memory"
-mkdir -p "$(dirname "$MEM")"
-if [ -d "$MEM" ] && [ ! -L "$MEM" ]; then
-    echo "  !! $MEM is a real dir: merge its notes into $RAI/auto-memory, move it aside, re-run." >&2
-else
-    ln -sfn "$RAI/auto-memory" "$MEM"
-    echo "  ~/.claude/projects/-home-abdullah-helm/memory -> helm/03-rai/auto-memory"
+if [ -L "$MEM" ]; then
+    rm "$MEM"
+    echo "  removed the old auto-memory link: ~/.claude/projects/-home-abdullah-helm/memory"
 fi
 
 # Context7 MCP server at user scope (~/.claude.json, where Claude Code reads MCP servers).
