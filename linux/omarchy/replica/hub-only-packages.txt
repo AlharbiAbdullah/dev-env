@@ -1,0 +1,22 @@
+# Packages the hub carries on purpose that the laptop must not be asked to match.
+# Sanity check MIRROR-2 reads this. One name per line; # starts a comment.
+
+# x86 kernel, firmware and GPU
+amd-ucode
+linux
+linux-firmware
+linux-omarchy
+linux-omarchy-headers
+sof-firmware
+vulkan-radeon
+
+# not in the ARM repos
+dbeaver
+docker-sbx
+harper
+
+# the laptop has the ARM form instead
+dotnet-runtime      # laptop: dotnet-runtime-bin
+vi                  # laptop: ex-vi-compat
+xremap-hypr-bin     # laptop: official aarch64 binary in /usr/local/bin
+pipewire-jack       # conflicts with jack2 on the laptop

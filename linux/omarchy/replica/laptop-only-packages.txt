@@ -1,0 +1,38 @@
+# Packages the laptop carries on purpose that the hub must not be asked to match.
+# Sanity check MIRROR-2 reads this. One name per line; # starts a comment.
+
+# Apple Silicon kernel, boot, firmware and GPU
+asahi-fwextract
+asahi-scripts
+aurora-bless
+avd-fw
+libva-v4l2_request-avd
+linux-aurora
+linux-aurora-headers
+m1n1-aurora
+mesa-aurora
+omarchy-aurora-firmware
+omarchy-mac
+omarchy-mac-boot
+uboot-aurora
+vulkan-aurora
+
+# Apple Silicon audio
+alsa-ucm-conf-aurora
+aurora-audio
+rtkit
+speakerguardd
+
+# ARM keyrings
+archlinuxarm-keyring
+asahi-alarm-keyring
+
+# set by the Omarchy ARM installer on 2026-11-05, absent from the hub's x86 set
+fcitx5-table-extra
+iwd
+signed
+widevine
+
+# the ARM form of a hub package
+dotnet-runtime-bin  # hub: dotnet-runtime
+ex-vi-compat        # hub: vi
