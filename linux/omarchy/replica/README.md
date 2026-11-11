@@ -57,6 +57,10 @@ Delete the file and repeat the rebuild once upstream pins the hash.
 4. On the hub, replace the old laptop device with the new ID at `tcp://127.0.0.1:22200`, and share
    the six folders with it.
 5. On the hub: `systemctl --user enable --now syncthing-replica-tunnel`.
+6. Live config: folder `config` at `~/.config`, send-only on the hub and receive-only on the
+   laptop. `~/.config/.stignore` is an allow-list, identical on both machines: only the `!/name`
+   lines sync, and the last line `*` ignores the rest. Copy it from the hub before adding the
+   folder, and seed the listed files with `rsync -a` first so the laptop starts identical.
 
 ## 6. Vault
 
