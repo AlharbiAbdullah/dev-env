@@ -5,4 +5,4 @@ After=graphical-session.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/helm/12-system/engine/jobs/news/scheduled/run-news-ubuntu.sh weekly
+ExecStart=%h/helm/12-system/engine/jobs/news/scheduled/run-news.sh weekly

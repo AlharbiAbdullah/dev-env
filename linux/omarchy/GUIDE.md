@@ -52,7 +52,7 @@ Terminal is `Super+Return` (foot until step 3 installs Ghostty).
    ```bash
    loginctl enable-linger abdullah
    systemctl --user enable --now news-daily.timer news-weekly.timer news-x-collect.timer rai-maintenance.timer paper-portfolio.timer
-   ~/helm/12-system/engine/jobs/maintenance/run-maintenance-ubuntu.sh   # dry run, should exit 0
+   ~/helm/12-system/engine/jobs/maintenance/run-maintenance.sh   # dry run, should exit 0
    ```
 
 8. Next morning: `ls ~/helm/08-bawaba/daily/ | tail -1` is today's digest. Then walk `checklist.md` phase 8 (plugins, cleanup) at leisure.
