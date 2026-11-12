@@ -72,6 +72,7 @@ rsync -a ~/helm/.git/objects/ replica:helm/.git/objects/
 head=$(git -C ~/helm rev-parse HEAD)
 ssh replica "cd ~/helm && git update-ref refs/remotes/hub/main $head && git checkout -q -f -B main refs/remotes/hub/main"
 ssh replica 'git -C ~/helm remote add origin https://github.com/AlharbiAbdullah/helm.git'
+ssh replica 'git -C ~/helm remote set-url --push origin DISABLED'   # only the hub pushes to origin
 ```
 
 ## 7. Harnesses
