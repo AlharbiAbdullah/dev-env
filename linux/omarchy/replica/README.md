@@ -86,7 +86,7 @@ cd ~/helm
 uv sync --script 12-system/engine/cli/rai
 (cd 12-system/engine/host && uv sync)
 (cd 12-system/engine/cli && uv sync)
-03-rai/semantic-memory/scripts/py-chroma.sh -c "import chromadb"
+12-system/engine/jobs/memory/py-chroma.sh -c "import chromadb"
 ```
 
 Copy the hub's `~/.local/bin/rai` wrapper to the same path, and the hub's
