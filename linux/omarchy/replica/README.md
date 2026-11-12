@@ -26,13 +26,13 @@ Use the official Omarchy Installer from macOS, channel Stable. To start over, us
 ## 3. Reach it from the hub
 
 ```bash
-sudo hostnamectl set-hostname omarchy-laptop
+sudo hostnamectl set-hostname laptop
 omarchy-install-service-tailscale            # sign in with GitHub, not Google
 omarchy-setup-security-sshd --gh-keys AlharbiAbdullah
 tailscale set --ssh --operator=$USER         # the hub's scheduled sync logs in with no key
 ```
 
-On the hub, remove the old `omarchy-laptop` host key from `known_hosts`, add the new one, and
+On the hub, remove the old `laptop` host key from `known_hosts`, add the new one, and
 test `ssh replica`.
 
 ## 4. GPU

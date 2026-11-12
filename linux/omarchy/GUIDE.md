@@ -37,7 +37,7 @@ Terminal is `Super+Return` (foot until step 3 installs Ghostty).
    separate steps for root-owned files and Tailscale identity.
 
 5. **Logins** (no script can do these)
-   - `tailscale up --ssh --hostname linux`
+   - `tailscale up --ssh --hostname pc`
    - `claude` (browser login), then `claude plugin marketplace add jarrodwatts/claude-hud && claude plugin install claude-hud@claude-hud`
    - 1Password app: sign in, enable the SSH agent
    - Chrome: Google sign-in, then log in to x.com, substack.com, medium.com (news collectors read these cookies)
