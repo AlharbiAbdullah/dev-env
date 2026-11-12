@@ -71,5 +71,6 @@ Browser and application sign-ins are completed on the new machine.
 `backup-drive` adds `~/.ssh` and `~/.config` to its `home-state` snapshot. A second snapshot streams
 `/etc` and `/var/lib/tailscale` directly from the existing noninteractive sudo command into restic.
 No plaintext machine archive is left on the source machine. Both snapshots must succeed and be
-fresh before retention runs. Backup waits for maintenance's shared lock and holds it through
-the whole job. `install.sh` copies the exclusion list without changing local credentials.
+fresh before retention runs. A listed folder that is missing fails the run before any backup.
+Backup waits for maintenance's shared lock and holds it through the whole job. `install.sh`
+copies the exclusion list without changing local credentials.

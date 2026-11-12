@@ -45,6 +45,10 @@ def sandbox(tmp_path: Path) -> Iterator[Sandbox]:
     (config / "env").write_text("# No credentials: external commands are stubs.\n")
     (config / "excludes.txt").touch()
     (tmp_path / "helm").mkdir()
+    # backup-drive fails on a listed folder that is missing, so the fake home holds each one.
+    folders = next(line for line in BACKUP.read_text().splitlines() if line.startswith("FOLDERS=("))
+    for folder in folders.removeprefix("FOLDERS=(").removesuffix(")").split():
+        (tmp_path / folder).mkdir(parents=True, exist_ok=True)
     stubs = {
         # Maintenance asks machine.py for its role first; the hub is the producer.
         "uv": '#!/bin/bash\n[ "${*: -1}" != role ] || { echo producer; exit 0; }\n'

@@ -19,6 +19,15 @@ HERE = Path(__file__).resolve().parent
 REAL_RESTIC = shutil.which("restic")
 REAL_UV = os.environ.get("UV", shutil.which("uv"))
 type Machine = tuple[Path, dict[str, str]]
+
+
+def listed_folders() -> list[str]:
+    """Return the folders backup-drive lists, so the fake home can hold each one."""
+    script = (HERE / "backup-drive").read_text().splitlines()
+    line = next(line for line in script if line.startswith("FOLDERS=("))
+    return line.removeprefix("FOLDERS=(").removesuffix(")").split()
+
+
 FAKE_COMMANDS = r"""
 import datetime, json, os, pathlib, shutil, subprocess, sys
 command, *args = sys.argv[1:]
@@ -127,6 +136,8 @@ def machine(tmp_path: Path) -> Machine:
     (home / ".config/app/link").symlink_to("settings")
     (home / "helm").mkdir()
     (home / "helm/skip-me").write_text("exclude fixture\n")
+    for folder in listed_folders():
+        (home / folder).mkdir(parents=True, exist_ok=True)
     archive = system_archive(tmp_path)
     (home / "fake_commands.py").write_text(FAKE_COMMANDS)
     for command in (
@@ -193,6 +204,24 @@ def test_home_and_machine_sources_are_both_backed_up(machine: Machine) -> None:
     assert "machine-state" in backups[1]
     assert (home / "machine-backed-up").exists()
     assert calls(home, "sudo")
+
+
+def test_keep_and_transcripts_are_backed_up(machine: Machine) -> None:
+    home, env = machine
+    result = run_script("backup-drive", env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    home_backup = next(entry for entry in calls(home) if entry[0] == "backup")
+    assert str(home / "keep") in home_backup
+    assert str(home / ".local/share/rai/transcripts") in home_backup
+
+
+def test_missing_listed_folder_fails_before_any_backup(machine: Machine) -> None:
+    home, env = machine
+    (home / "keep").rmdir()
+    result = run_script("backup-drive", env)
+    assert result.returncode != 0
+    assert "keep" in (home / ".local/state/backup-drive/status").read_text()
+    assert not any(entry[0] == "backup" for entry in calls(home))
 
 
 @pytest.mark.parametrize("failure", ["FAIL_PRODUCER", "FAIL_TEE"])

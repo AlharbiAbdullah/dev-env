@@ -5,7 +5,7 @@ set -uo pipefail
 source "$HOME/.config/restic/env" || { echo "FAIL: cannot read restic environment" >&2; exit 1; }
 STATE="$HOME/.local/state/backup-drive"; mkdir -p "$STATE"
 LOG="$STATE/last-run.log"
-FOLDERS=(dev-env personal playground projects reads work helm .ssh .config .local/state/rai .local/state/rai-maintenance .local/state/news-digest)
+FOLDERS=(dev-env personal playground projects keep work helm .ssh .config .local/state/rai .local/state/rai-maintenance .local/state/news-digest .local/share/rai/transcripts)
 log(){ printf '%s %s\n' "$(date '+%F %T')" "$*" | tee -a "$LOG"; }
 fail(){ log "FAIL: $*"; echo "$(date +%F) FAIL $*" > "$STATE/status"; notify-send -u critical 'Backup to Google Drive FAILED' "$*" 2>/dev/null; exit 1; }
 
@@ -20,7 +20,12 @@ flock -w "$LOCK_WAIT" 9 || fail "maintenance lock still held after ${LOCK_WAIT}s
 
 : > "$LOG" || fail "cannot open backup log"
 log "backup start" || fail "cannot write backup log"
-paths=(); for f in "${FOLDERS[@]}"; do [ -d "$HOME/$f" ] && paths+=("$HOME/$f"); done
+# A listed folder that is gone is a backup gap: stop and name it, never skip it.
+paths=(); missing=()
+for f in "${FOLDERS[@]}"; do
+  if [ -d "$HOME/$f" ]; then paths+=("$HOME/$f"); else missing+=("$f"); fi
+done
+[ ${#missing[@]} -eq 0 ] || fail "listed folders are missing: ${missing[*]}"
 restic backup "${paths[@]}" --exclude-file="$HOME/.config/restic/excludes.txt" --exclude-caches --tag weekly --tag home-state --one-file-system 2>&1 | tee -a "$LOG" \
   || fail "home backup or logging exited non-zero"
 
