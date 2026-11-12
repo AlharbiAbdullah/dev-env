@@ -20,6 +20,17 @@ case "$class" in
 
   com.mitchellh.ghostty|ghostty)   exec ghostty ;;
 
+  # Chrome web apps (the Alt keys). Class is chrome-<host>__<path><profile>, so
+  # recover the full URL from the installed launcher rather than rebuilding it
+  # from the host, which would drop a path like substack.com/home.
+  chrome-*__*)
+    host=${class#chrome-}
+    host=${host%%__*}
+    url=$(sed -nE "s|^Exec=omarchy-launch-webapp +\"?(https?://[^\" ]*${host}[^\" ]*)\"?.*|\1|p" \
+      "$HOME"/.local/share/applications/*.desktop 2>/dev/null | head -n1)
+    exec omarchy-launch-webapp "${url:-https://$host}"
+    ;;
+
   Code|code|code-url-handler)      exec code -n ;;
 
   # Unknown app: try launching its class, then a lowercased class as a
